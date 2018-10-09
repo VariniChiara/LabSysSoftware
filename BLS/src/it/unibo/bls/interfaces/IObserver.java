@@ -1,7 +1,6 @@
 package it.unibo.bls.interfaces;
 
-import java.util.Observer;
-
-public interface IObserver extends Observer {
-
+public interface IObserver  {
+	
+	void update(String state);
 }
