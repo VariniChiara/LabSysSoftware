@@ -1,4 +1,4 @@
-package in.unibo.controller;
+package in.unibo.bls.controller;
 
 import it.unibo.bls.interfaces.ILed;
 import it.unibo.bls.interfaces.IObserver;

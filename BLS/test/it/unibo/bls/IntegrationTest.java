@@ -4,14 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import in.unibo.bls.main.Configurator;
+import in.unibo.bls.main.ConfiguratorMock;
 import it.unibo.bls.interfaces.IButton;
 import it.unibo.bls.interfaces.ILed;
-import it.unibo.mock.*;
+import it.unibo.bls.mock.*;
 
 class IntegrationTest {
 	
-	Configurator configurator = Configurator.getInstance();
+	ConfiguratorMock configurator = ConfiguratorMock.getInstance();
 
 	@Test
 	void testSystem() {

@@ -1,6 +1,6 @@
 package it.unibo.bls.interfaces;
 
-public interface ILed {
+public interface ILed extends IObservable {
 	
 	void turnOn();
 	void turnOff();

@@ -1,19 +1,19 @@
 package in.unibo.bls.main;
 
-import in.unibo.controller.Controller;
+import in.unibo.bls.controller.Controller;
 import it.unibo.bls.interfaces.IButton;
 import it.unibo.bls.interfaces.ILed;
-import it.unibo.mock.ButtonMock;
-import it.unibo.mock.LedMock;
+import it.unibo.bls.mock.ButtonMock;
+import it.unibo.bls.mock.LedMock;
 
-public class Configurator {
+public class ConfiguratorMock {
 	
 	private IButton button;
 	private ILed led;
 	private Controller controller;
-	private static Configurator istance;
+	private static ConfiguratorMock istance;
 	
-	private Configurator() {};
+	private ConfiguratorMock() {};
 	
 	public void createComponents() {
 		button = new ButtonMock();
@@ -36,9 +36,9 @@ public class Configurator {
 		}
 	}
 	
-	public static Configurator getInstance() {
+	public static ConfiguratorMock getInstance() {
 		if(istance == null) {
-			istance = new Configurator();
+			istance = new ConfiguratorMock();
 		}
 		return istance;
 	}
@@ -55,6 +55,6 @@ public class Configurator {
 	 * Just for a fast test
 	 */
 	public static void main(String[] args) {
-		Configurator.getInstance().start();
+		ConfiguratorMock.getInstance().start();
 	}
 }

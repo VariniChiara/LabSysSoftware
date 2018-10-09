@@ -1,4 +1,4 @@
-package it.unibo.mock;
+package it.unibo.bls.mock;
 
 
 import java.util.*;
@@ -20,6 +20,12 @@ public class ButtonMock implements IButton{
 	 */
 	public void press() {
 		this.observers.forEach(o -> o.update("press"));
+	}
+
+	@Override
+	public void update(String state) {
+		// update version bls2
+		
 	}
 
 }
