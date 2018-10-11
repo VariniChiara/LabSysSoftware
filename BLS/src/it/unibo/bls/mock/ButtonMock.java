@@ -28,4 +28,10 @@ public class ButtonMock implements IButton{
 		
 	}
 
+	@Override
+	public void notifyObservers(String state) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

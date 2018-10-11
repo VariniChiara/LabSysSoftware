@@ -27,8 +27,6 @@ public class ButtonGui extends Observable implements ActionListener{
 
 	@Override //from ActionListener
 	public void actionPerformed(ActionEvent e) {
-		observers.forEach(o->o.update("press"));
+		super.notifyObservers("press");
 	}
-
-
 }

@@ -33,4 +33,10 @@ public class LedMock implements ILed{
 		
 	}
 
+	@Override
+	public void notifyObservers(String state) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

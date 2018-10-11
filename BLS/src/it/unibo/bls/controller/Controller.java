@@ -15,5 +15,4 @@ public class Controller implements IObserver{
 	public void update(String state) {
 		this.led.ledSwitch();
 	}
-
 }
