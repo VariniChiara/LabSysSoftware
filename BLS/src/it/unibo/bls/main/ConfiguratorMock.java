@@ -1,6 +1,6 @@
-package in.unibo.bls.main;
+package it.unibo.bls.main;
 
-import in.unibo.bls.controller.Controller;
+import it.unibo.bls.controller.Controller;
 import it.unibo.bls.interfaces.IButton;
 import it.unibo.bls.interfaces.ILed;
 import it.unibo.bls.mock.ButtonMock;

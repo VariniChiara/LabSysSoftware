@@ -14,5 +14,9 @@ public class Observable implements IObservable{
 	public void addObserver(IObserver observer) {
 		this.observers.add(observer);
 	}
+	
+	public void notifyObservers(String state) {
+		this.observers.forEach(o -> o.update(state));
+	}
 
 }

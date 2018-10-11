@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import in.unibo.bls.main.ConfiguratorMock;
 import it.unibo.bls.interfaces.IButton;
 import it.unibo.bls.interfaces.ILed;
+import it.unibo.bls.main.ConfiguratorMock;
 import it.unibo.bls.mock.*;
 
 class IntegrationTest {

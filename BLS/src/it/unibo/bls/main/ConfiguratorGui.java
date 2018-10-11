@@ -1,8 +1,8 @@
-package in.unibo.bls.main;
+package it.unibo.bls.main;
 
 import java.awt.Frame;
 
-import in.unibo.bls.controller.Controller;
+import it.unibo.bls.controller.Controller;
 import it.unibo.bls.gui.ButtonGui;
 import it.unibo.bls.gui.LedGui;
 import it.unibo.bls.interfaces.IButton;
