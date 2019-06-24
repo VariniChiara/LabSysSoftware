@@ -38,6 +38,11 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/org.scala-lang.modules/scala-java8-compat_2.11/0.7.0/a31b1b36bcf0d53657733b5d40c78d5f090a5dea/scala-java8-compat_2.11-0.7.0.jar" sourcepath="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/org.scala-lang.modules/scala-java8-compat_2.11/0.7.0/fffca5653859d428c99e7b09ff2d503fae8c9477/scala-java8-compat_2.11-0.7.0-sources.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/com.typesafe.akka/akka-protobuf_2.11/2.5.1/9bd5907ccd9efa2a5bf3ccd6103656603b158486/akka-protobuf_2.11-2.5.1.jar" sourcepath="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/com.typesafe.akka/akka-protobuf_2.11/2.5.1/500f8d6a4aef3fdf518343d9ad2a774d364bcf59/akka-protobuf_2.11-2.5.1-sources.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
@@ -49,11 +54,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/org.scala-lang.modules/scala-parser-combinators_2.11/1.0.4/7369d653bcfa95d321994660477a4d7e81d7f490/scala-parser-combinators_2.11-1.0.4.jar" sourcepath="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/org.scala-lang.modules/scala-parser-combinators_2.11/1.0.4/2c66955d5543265eb450de4e9ec7ac467d94be54/scala-parser-combinators_2.11-1.0.4-sources.jar">
-		<attributes>
-			<attribute name="gradle_used_by_scope" value="main,test"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/org.scala-lang.modules/scala-java8-compat_2.11/0.7.0/a31b1b36bcf0d53657733b5d40c78d5f090a5dea/scala-java8-compat_2.11-0.7.0.jar" sourcepath="/Users/chiaravarini/.gradle/caches/modules-2/files-2.1/org.scala-lang.modules/scala-java8-compat_2.11/0.7.0/fffca5653859d428c99e7b09ff2d503fae8c9477/scala-java8-compat_2.11-0.7.0-sources.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
@@ -113,32 +113,32 @@
 			<attribute name="gradle_used_by_scope" value="test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/chiaravarini/eclipse-workspace/iss2018Lab/it.unibo.libs2018/libs/unibo/uniboInterfaces.jar">
+	<classpathentry kind="lib" path="/Users/chiaravarini/Documents/GitHub/LabSysSoftware/it.unibo.libs2018/libs/unibo/uniboInterfaces.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/chiaravarini/eclipse-workspace/iss2018Lab/it.unibo.libs2018/libs/unibo/unibonoawtsupports.jar">
+	<classpathentry kind="lib" path="/Users/chiaravarini/Documents/GitHub/LabSysSoftware/it.unibo.libs2018/libs/unibo/unibonoawtsupports.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/chiaravarini/eclipse-workspace/iss2018Lab/it.unibo.libs2018/libs/unibo/uniboEnvBaseAwt.jar">
+	<classpathentry kind="lib" path="/Users/chiaravarini/Documents/GitHub/LabSysSoftware/it.unibo.libs2018/libs/unibo/uniboEnvBaseAwt.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/chiaravarini/eclipse-workspace/iss2018Lab/it.unibo.libs2018/libs/unibo/2p301.jar">
+	<classpathentry kind="lib" path="/Users/chiaravarini/Documents/GitHub/LabSysSoftware/it.unibo.libs2018/libs/unibo/2p301.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/chiaravarini/eclipse-workspace/iss2018Lab/it.unibo.libs2018/libs/unibo/qa18Akka.jar">
+	<classpathentry kind="lib" path="/Users/chiaravarini/Documents/GitHub/LabSysSoftware/it.unibo.libs2018/libs/unibo/qa18Akka.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/chiaravarini/eclipse-workspace/iss2018Lab/it.unibo.libs2018/libs/http/nanoHTTPD.jar">
+	<classpathentry kind="lib" path="/Users/chiaravarini/Documents/GitHub/LabSysSoftware/it.unibo.libs2018/libs/http/nanoHTTPD.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
