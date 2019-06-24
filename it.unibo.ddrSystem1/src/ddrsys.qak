@@ -1,0 +1,10 @@
+System ddrsys
+
+Context ctx ip [host="localhost" port=8090]
+
+QActor console context ctx{
+	State s0 initial{
+		
+		println("Console initialised!")
+	}
+}
