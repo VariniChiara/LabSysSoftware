@@ -1,28 +1,27 @@
 
 System ddrsys
 
-//
-////robot state update event
-//Event consoleUpdate: consoleUpdate(X)
-//
-////temperature change event
-//Event tempOk: tempOk(X)
-//
-////Message from console to robot
-//Dispatch explore: explore(X)
-//Dispatch stopExplore: stopExplore(X)
-//Dispatch backHome: backHome(X)
-//Dispatch continueExplore: continueExplore(X)
-//Dispatch backHomeSinceBomb: backHomeSinceBomb(X)
-//Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
-//
-////Message from robot to console
-//Dispatch sendPhoto: sendPhoto(X)
-//
-////Message from robot to robot
-//Dispatch reachBag: reachBag(X)
-//
-//
+
+//robot state update event
+Event consoleUpdate: consoleUpdate(X)
+
+//temperature change event
+Event tempOk: tempOk(X)
+
+//Message from console to robot
+Dispatch explore: explore(X)
+Dispatch stopExplore: stopExplore(X)
+Dispatch backHome: backHome(X)
+Dispatch continueExplore: continueExplore(X)
+Dispatch backHomeSinceBomb: backHomeSinceBomb(X)
+Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
+
+//Message from robot to console
+Dispatch sendPhoto: sendPhoto(X)
+
+//Message from robot to robot
+Dispatch reachBag: reachBag(X)
+
 
 Context ctx ip [host="localhost" port=8090] //-g cyan
 
@@ -33,10 +32,10 @@ QActor console context ctx {
 	}
 }
 
-//
-//QActor robot context ctx { 
-//	Plan init normal [
-//		
-//		println("Robot intialized")
-//	]
-//} 
+
+QActor robot context ctx { 
+	
+	State s0 initial {
+		println("Robot intialized")
+	}
+} 
