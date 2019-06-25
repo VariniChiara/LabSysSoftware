@@ -1,10 +1,41 @@
+
 System ddrsys
 
-Context ctx ip [host="localhost" port=8090]
 
-QActor console context ctx{
-	State s0 initial{
-		
-		println("Console initialised!")
+//robot state update event
+Event consoleUpdate: consoleUpdate(X)
+
+//temperature change event
+Event tempOk: tempOk(X)
+
+//Message from console to robot
+Dispatch explore: explore(X)
+Dispatch stopExplore: stopExplore(X)
+Dispatch backHome: backHome(X)
+Dispatch continueExplore: continueExplore(X)
+Dispatch backHomeSinceBomb: backHomeSinceBomb(X)
+Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
+
+//Message from robot to console
+Dispatch sendPhoto: sendPhoto(X)
+
+//Message from robot to robot
+Dispatch reachBag: reachBag(X)
+
+
+Context ctx ip [host="localhost" port=8090] //-g cyan
+
+QActor console context ctx { 
+	
+	State s0 initial {
+		println("Console intialized")
 	}
 }
+
+
+QActor robot context ctx { 
+	
+	State s0 initial {
+		println("Robot intialized")
+	}
+} 

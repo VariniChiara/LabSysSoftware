@@ -18,7 +18,7 @@ class Console ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, sco
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("Console initialised!")
+						println("Console intialized")
 					}
 				}	 
 			}
