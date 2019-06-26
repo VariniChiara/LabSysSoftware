@@ -73,7 +73,7 @@
 <!-- ZONA 1  -->
 <div class="demo-charts mdl-color--yellow mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid">
 <div class="mdl-card__supporting-text mdl-color-text--light-blue-900"> 
- Copy here  the text of the requirements given by the user.
+ <a class="mdl-navigation__link" href="temafinale.pdf">Tema finale</a>
 </div>
 </div>    
 
@@ -81,9 +81,82 @@
 <div class="mdl-card__supporting-text mdl-color-text--light-blue-900">  
 Insert here key points discussed with the user
 <ul>
-<li></li>
-<li></li>
+
+<li>
+<b> Di che sistema necessita il committente?</b> <br>
+Il committente necessita di un sistema composto da un robot che deve esplorare tutta la hall di un aeroporto (R-explore) e scattare una foto (R- takePhoto) quando giunge in prossimit`a di una valigia. Ogni foto viene successivamente inviata ad un’altra parte del sistema denominata console (R-sendPhoto). Nel caso in cui la valigia risulti pericolosa un secondo robot deve provvedere al disinnescamento della bomba (R-reachBag). Si tratta dunque di un sistema distribuito eterogeneo.
+</li>
+
+<li>
+<b> Da quanti componenti `e composto il sistema?</b> <br>
+Il sistema `e formato da 3 componenti: 1 console e 2 robot (uno per l’esplorazione e l’altro per il disinnescamento). Anche se il committente ipotizza l’utilizzo di 2 robot fisici differenti, questi non saranno attivi con- temporaneamente, dunque essi possono essere modellati come due com- portamenti distinti dello stesso robot fisico.
+</li>
+
+<li>
+<b> Qual `e il compito della console?</b> <br>
+Il compito della console `e interpretare i comandi ricevuti dall’operatore e, nel caso in cui siano validi, inviarli al robot. Inoltre la console deve riuscire a comunicare con i robot ad esempio, ricevere le foto ed inviare i comandi.
+</li>
+
+<li>
+<b>Che cosa si intende per ostacolo?</b> <br>
+ Gli ostacoli modellati nel sistema sono:
+	 <ul>
+		<li> valige: lasciate dai passeggeri nella stanza al momento dell’evacuazione;</li>
+ 		<li> muri della stanza.</li>
+ 	</ul>
+ 	
+</li>
+
+<li>
+<b>Quando il robot pu`o partire con l’esplorazione?</b><br>
+Il robot pu`o partire con l’esplorazione quando sono verificate due con- dizioni nel sistema, ossia il robot riceve un comando di inizio esplorazione e la temperatura della stanza `e inferiore ad un certa soglia.
+</li>
+
+<li>
+<b>Che cosa si intende per esplorazione autonoma di un robot?</b><br>
+ Per esplorazione autonoma di un robot si intende la capacit`a di perlustrare interamente una stanza con ostacoli fissi (valigie e muri) ed una superficie piana. Durante questa fase il robot deve far blinkare un led posto su di esso (R-blinkLed).
+</li>
+
+<li>
+<b>Quando il robot si deve fermare?</b><br>
+	Il robot si deve fermare in 3 casi:
+	<ul>
+	<li>quando riceve un comando di stop (RstopExplore) dalla console;</li>
+	<li>quando si trova in prossimit`a di una valigia non ancora esaminata
+(RstopAtBag);</li>
+	<li>quando la temperatura della hall supera la soglia fissata</li>
+	</ul>
+
+</li>
+
+<li>
+<b>Quando il robot deve tornare alla base?</b><br>
+Il robot deve tornare alla base quando riceve dalla console il comando RbackHomeSinceBomb o RbackHome.
+</li>
+
+<li>
+<b>Cosa fa il robot quando incontra un ostacolo?</b><br>
+Quando il robot incontra un ostacolo, se `e una valigia si ferma, fa la foto, la manda alla console e aspetta un comando dalla console, invece, se `e un muro, il robot cambia direzione e continua l’esplorazione.
+</li>
+
+<li>
+<b>Cosa fa il robot una volta terminata l’esplorazione della hall?</b><br>
+ Dopo che il robot ha controllato tutta la hall senza trovare nessuna valigia sospetta, esso torna alla sua base.
+</li>
+
+<li>
+<b>Quali informazioni deve conoscere la console sul robot?</b><br>
+La console deve avere delle informazioni riguardanti lo stato del robot per sapere se `e in stato di esplorazione, se `e fermo o se si trova nella posizione iniziale. Inoltre, deve poter ricevere le foto dei bagagli inviati dal robot e memorizzare le relative informazioni (orario e posizione del robot al momento dello scatto della foto).
+</li>
+
+<li>
+<b>Cosa deve fare il robot se in fase di esplorazione la temperatura della hall supera una certa soglia?</b><br>
+ //TO DO
+
 </ul>
+
+
+
  </div>
  </div>
 <!-- ZONA 2  -->
