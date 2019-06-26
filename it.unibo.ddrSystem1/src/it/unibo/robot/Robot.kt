@@ -18,7 +18,7 @@ class Robot ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("Robot intialized")
+						println("Robot initialised!")
 					}
 				}	 
 			}
