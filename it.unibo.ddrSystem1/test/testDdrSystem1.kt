@@ -15,14 +15,14 @@ class TestDdrSystem1 {
 	
 	var console : ActorBasic? = null
 	var robot : ActorBasic? = null
-	var loadedMapStr: String? = null
+	var loadedMapStr: String = ""
 	
 	@Before
 	@Throws(Exception::class)
 	fun systemSetUp() {
 		
 		loadedMapStr = loadMapToString("testMap.txt")
-		itunibo.planner.plannerUtil.loadMap(loadedMapStr)
+		itunibo.planner.plannerUtil.loadRoomMap(loadedMapStr)
 		
 		GlobalScope.launch{it.unibo.ddrSystem1.main()}
 		delay(4000)
