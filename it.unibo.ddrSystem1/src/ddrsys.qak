@@ -78,12 +78,12 @@ QActor robot context ctx {
 	Goto handeObstacle  if "obstacle" else waitForEvents 
 	
 	State handeObstacle{		
-		println("handleObstacle: Obstacle detected")  
+		println("handleObstacle: going backward")  
  		forward robot -m robotCmd : robotCmd( s ) 		
  			//UPDATE the model : supported action
  			//run itunibo.robot.resourceModelSupport.updateModel( myself, "s" )
  		delay 300
- 		println("handeObstacle: going back STOP")  
+ 		println("handeObstacle: stopping")  
 	    forward robot -m robotCmd : robotCmd( h )
  			//UPDATE the model : supported action
  			//run itunibo.robot.resourceModelSupport.updateModel( myself, "h" )

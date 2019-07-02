@@ -59,10 +59,10 @@ class Robot ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope
 				}	 
 				state("handeObstacle") { //this:State
 					action { //it:State
-						println("handleObstacle: Obstacle detected")
+						println("handleObstacle: going backward")
 						forward("robotCmd", "robotCmd(s)" ,"robot" ) 
 						delay(300) 
-						println("handeObstacle: going back STOP")
+						println("handeObstacle: stopping")
 						forward("robotCmd", "robotCmd(h)" ,"robot" ) 
 					}
 					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
