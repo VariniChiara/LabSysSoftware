@@ -3,7 +3,7 @@
 %===============================================================
 
  
-model( actuator, robot, state(stopped), direction(east), position(0,0)). %% initial state
+model( actuator, robot, state(stopped), direction(south), position(0,0)). %% initial state
 
 action(robot, move(w)) :- changeModel( actuator, robot, movingForward  ).
 action(robot, move(s)) :- changeModel( actuator, robot, movingBackward ).
