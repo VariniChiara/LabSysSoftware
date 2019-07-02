@@ -7,6 +7,8 @@ Event consoleUpdate: consoleUpdate(X)
 //temperature change event
 Event tempOk: tempOk(X)
 
+Event  sonarRobot   : sonarRobot( DISTANCE )	    //from  sonar on robot      
+
 //Message from console to robot
 Dispatch explore: explore(X)
 Dispatch stopExplore: stopExplore(X)
@@ -21,8 +23,9 @@ Dispatch sendPhoto: sendPhoto(X)
 //Message from robot to robot
 Dispatch reachBag: reachBag(X)
 
-//Message from console to robot
-Dispatch userCmd   : userCmd( CMD )
+
+Dispatch userCmd   : userCmd( CMD ) //Message from console to robot
+Dispatch robotCmd  : robotCmd (CMD) //Selfsending robot message
 
 
 Context ctx ip [host="localhost" port=8090] //-g cyan
@@ -38,23 +41,54 @@ QActor console context ctx {
 
 
 QActor robot context ctx { 
-	
+["var obstacle = false"]
 	State s0 initial {
 		solve (consult ("ddrsys.pl")) 
 		solve (consult ("resourceModel.pl")) 
 		println("Robot intialized")
 		
 	} 
+	Goto waitForEvents
+	  
+	State waitForEvents {		} 
 	
 	Transition t0   whenMsg userCmd  -> handleCmd
+					whenMsg robotCmd -> handleCmd
+					whenEvent sonarRobot -> handleSonarRobot
  	 
 	State handleCmd{  
 		printCurrentMessage
 		onMsg (userCmd   : userCmd( CMD )){
 			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
 		}
+		onMsg (robotCmd   : robotCmd( CMD )){
+			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
+		}
 	}
 	
-	Transition t1   whenMsg userCmd  -> handleCmd
+	Goto waitForEvents
+	
+	State handleSonarRobot{
+ 		printCurrentMessage
+ 		onMsg ( sonarRobot : sonarRobot(DISTANCE) ){
+			["obstacle = Integer.parseInt( payloadArg(0) ) < 10 "]
+ 		} 	 
+ 	}
+ 	
+	Goto handeObstacle  if "obstacle" else waitForEvents 
+	
+	State handeObstacle{		
+		println("handleObstacle: Obstacle detected")  
+ 		forward robot -m robotCmd : robotCmd( s ) 		
+ 			//UPDATE the model : supported action
+ 			//run itunibo.robot.resourceModelSupport.updateModel( myself, "s" )
+ 		delay 300
+ 		println("handeObstacle: going back STOP")  
+	    forward robot -m robotCmd : robotCmd( h )
+ 			//UPDATE the model : supported action
+ 			//run itunibo.robot.resourceModelSupport.updateModel( myself, "h" )
+  	}
+  	
+	Goto waitForEvents
 
 } 

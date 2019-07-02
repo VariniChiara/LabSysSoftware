@@ -101,13 +101,13 @@ class TestDdrSystem1 {
 	
 	fun moveForwardWithWall() {
 		println(" %%%%%%% moveForwardWithWall %%%%%%%")
-	 		GlobalScope.launch{
-				delay(1000)
- 			    println(" %%%%%%% SIMULATES OBSTACLE")
-				robot!!.emit("sonarRobot", "sonar(8)")
- 			}
-		moveRobot( robot!!, "w")			
-		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(D), position(X,Y))" )
+	 	GlobalScope.launch{
+			//delay(1000)
+ 			println(" %%%%%%% SIMULATES OBSTACLE")
+			robot!!.emit("sonarRobot", "sonarRobot(8)")
+ 		}
+		delay(1000)
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), _, _)" )
 	}
 
 	fun loadMapToString(filename: String): String{
@@ -127,8 +127,7 @@ class TestDdrSystem1 {
 		println( "FINAL ROBOT STATE= [actuator, robot, "+state+","+direction+","+position+"]")
 	}
 	
-	//some tests to check robot behaviour
-	
+	//some tests to check robot behaviour	
 	@Test
 	fun initialStateTest(){
 		println("%%%%%%%%%%%%%% initialStateTest %%%%%%%%%%%%%%")
@@ -162,10 +161,12 @@ class TestDdrSystem1 {
 		printRobotState()
  	}
 	
-	//@Test
+	@Test
 	fun wallDetectingTest() {
 		moveForward()	//no obstacle assumed
 		moveForwardWithWall()
+		
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), _, _)" )
 		printRobotState()
 	}
 	

@@ -15,6 +15,7 @@ class Robot ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope
 	}
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
+		var obstacle = false
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -22,7 +23,14 @@ class Robot ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope
 						solve("consult('resourceModel.pl')","") //set resVar	
 						println("Robot intialized")
 					}
+					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
+				}	 
+				state("waitForEvents") { //this:State
+					action { //it:State
+					}
 					 transition(edgeName="t00",targetState="handleCmd",cond=whenDispatch("userCmd"))
+					transition(edgeName="t01",targetState="handleCmd",cond=whenDispatch("robotCmd"))
+					transition(edgeName="t02",targetState="handleSonarRobot",cond=whenEvent("sonarRobot"))
 				}	 
 				state("handleCmd") { //this:State
 					action { //it:State
@@ -31,8 +39,33 @@ class Robot ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								solve("action(robot,move(${payloadArg(0)}))","") //set resVar	
 						}
+						if( checkMsgContent( Term.createTerm("robotCmd(CMD)"), Term.createTerm("robotCmd(CMD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								solve("action(robot,move(${payloadArg(0)}))","") //set resVar	
+						}
 					}
-					 transition(edgeName="t11",targetState="handleCmd",cond=whenDispatch("userCmd"))
+					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
+				}	 
+				state("handleSonarRobot") { //this:State
+					action { //it:State
+						println("$name in ${currentState.stateName} | $currentMsg")
+						if( checkMsgContent( Term.createTerm("sonarRobot(DISTANCE)"), Term.createTerm("sonarRobot(DISTANCE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								obstacle = Integer.parseInt( payloadArg(0) ) < 10 
+						}
+					}
+					 transition( edgeName="goto",targetState="handeObstacle", cond=doswitchGuarded({obstacle}) )
+					transition( edgeName="goto",targetState="waitForEvents", cond=doswitchGuarded({! obstacle}) )
+				}	 
+				state("handeObstacle") { //this:State
+					action { //it:State
+						println("handleObstacle: Obstacle detected")
+						forward("robotCmd", "robotCmd(s)" ,"robot" ) 
+						delay(300) 
+						println("handeObstacle: going back STOP")
+						forward("robotCmd", "robotCmd(h)" ,"robot" ) 
+					}
+					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
 				}	 
 			}
 		}
