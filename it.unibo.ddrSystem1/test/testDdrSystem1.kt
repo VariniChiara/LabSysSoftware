@@ -21,12 +21,8 @@ class TestDdrSystem1 {
 	@Throws(Exception::class)
 	fun systemSetUp() {
 		
-		loadedMapStr = loadMapToString("test/testMap.txt")
-		itunibo.planner.plannerUtil.loadRoomMap(loadedMapStr)
-		
-		println("AAAA")
-		println(loadedMapStr)
-		
+//		loadedMapStr = loadMapToString("test/testMap.txt")
+//		itunibo.planner.plannerUtil.loadRoomMap(loadedMapStr)	
 		
 		GlobalScope.launch{it.unibo.ctx.main()}
 		delay(4000)
@@ -114,12 +110,11 @@ class TestDdrSystem1 {
 		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), _, _)" )
 	}
 
-	fun loadMapToString(filename: String): String{
-		val mapStr: String = ""
-		File(filename).forEachLine { println(it) }
-		println("BBBB " +mapStr)
-		return mapStr
-	}
+//	fun loadMapToString(filename: String): String{
+//		val mapStr: String = ""
+//		File(filename).forEachLine { println(it) }
+//		return mapStr
+//	}
 	
 	fun printRobotState() {
 		robot!!.solve( "model( actuator, robot, S, _, _ )", "S"  )
@@ -133,7 +128,7 @@ class TestDdrSystem1 {
 	}
 	
 	//some tests to check robot behaviour	
-	//@Test
+	@Test
 	fun initialStateTest(){
 		println("%%%%%%%%%%%%%% initialStateTest %%%%%%%%%%%%%%")
 		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(south), position(0,0))")
@@ -142,17 +137,15 @@ class TestDdrSystem1 {
 	}
 
 	
-	//@Test
+	@Test
 	fun moveTest() {
 		println("%%%%%%%%%%%%%% moveTest  %%%%%%%%%%%%%%")
 		
 		rotateRight()
 		delay(700)
 		
-		
 		rotateLeft()
 		delay(500)
-		
 		
 		moveForward()
 		delay(700)
@@ -166,7 +159,7 @@ class TestDdrSystem1 {
 		printRobotState()
  	}
 	
-	//@Test
+	@Test
 	fun wallDetectingTest() {
 		moveForward()	//no obstacle assumed
 		moveForwardWithWall()
