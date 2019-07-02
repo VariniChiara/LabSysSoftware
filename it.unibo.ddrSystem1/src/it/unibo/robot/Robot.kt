@@ -18,8 +18,21 @@ class Robot ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
+						solve("consult('ddrsys.pl')","") //set resVar	
+						solve("consult('resourceModel.pl')","") //set resVar	
 						println("Robot intialized")
 					}
+					 transition(edgeName="t00",targetState="handleCmd",cond=whenDispatch("userCmd"))
+				}	 
+				state("handleCmd") { //this:State
+					action { //it:State
+						println("$name in ${currentState.stateName} | $currentMsg")
+						if( checkMsgContent( Term.createTerm("userCmd(CMD)"), Term.createTerm("userCmd(CMD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								solve("action(robot,move(${payloadArg(0)}))","") //set resVar	
+						}
+					}
+					 transition(edgeName="t11",targetState="handleCmd",cond=whenDispatch("userCmd"))
 				}	 
 			}
 		}

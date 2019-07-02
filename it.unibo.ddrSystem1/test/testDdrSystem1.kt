@@ -21,10 +21,10 @@ class TestDdrSystem1 {
 	@Throws(Exception::class)
 	fun systemSetUp() {
 		
-		loadedMapStr = loadMapToString("testMap.txt")
+		loadedMapStr = loadMapToString("test/testMap.txt")
 		itunibo.planner.plannerUtil.loadRoomMap(loadedMapStr)
 		
-		GlobalScope.launch{it.unibo.ddrSystem1.main()}
+		GlobalScope.launch{it.unibo.ctx.main()}
 		delay(4000)
 		startUpDone = true
 		getActors()
@@ -50,7 +50,6 @@ class TestDdrSystem1 {
 	//	}
 	//}
 	
-	
 	fun solveCheckGoal( actor : ActorBasic, goal : String ){
 		actor.solve( goal  )
 		var result =  robot!!.resVar
@@ -62,7 +61,9 @@ class TestDdrSystem1 {
 	
 	fun moveRobot( actor : ActorBasic, move : String ){
 		actor.scope.launch{
-			MsgUtil.sendMsg("modelChange", "modelChange(robot, $move)", robot!!)
+			MsgUtil.sendMsg("userCmd", "userCmd( $move )", robot!!)
+			
+			//MsgUtil.sendMsg("modelChange", "modelChange(robot, $move)", robot!!)
 		}
 		delay(100)
 	}
@@ -70,32 +71,32 @@ class TestDdrSystem1 {
 	fun stoprobot() {
 		println(" %%%%%%% stoprobot %%%%%%%")
 		moveRobot( robot!!, "h")			
-		solveCheckGoal( robot!!,  "model( actuator, robot, state(stopped), position(X,Y))" )
+		solveCheckGoal( robot!!,  "model( actuator, robot, state(stopped), direction(D), position(X,Y))" )
 	}
 	fun moveForward(  ) {
 		println(" %%%%%%% moveForward %%%%%%%")
 		moveRobot( robot!!, "w")			
-		solveCheckGoal( robot!!, "model( actuator, robot, state(movingForward), position(X,Y))" )
+		solveCheckGoal( robot!!, "model( actuator, robot, state(movingForward), direction(D), position(X,Y))" )
  	}
 	
 	fun moveBackward(  ) {
 		println(" %%%%%%% moveBackward %%%%%%%")
 		moveRobot( robot!!, "s")			
-		solveCheckGoal( robot!!, "model( actuator, robot, state(movingBackward), position(X,Y))" )
+		solveCheckGoal( robot!!, "model( actuator, robot, state(movingBackward), direction(D), position(X,Y))" )
  	}
 
 	 
 	fun rotateLeft() {
 		println(" %%%%%%% rotateLeft %%%%%%%")
 		moveRobot( robot!!, "a")			
-		solveCheckGoal( robot!!, "model( actuator, robot, state(rotateLeft), position(X,Y))" )
+		solveCheckGoal( robot!!, "model( actuator, robot, state(rotateLeft), direction(D), position(X,Y))" )
 	}
 	
 	 
 	fun rotateRight() {
 		println(" %%%%%%% rotateRight %%%%%%%")
-		moveRobot( robot!!, "d")			
-		solveCheckGoal( robot!!, "model( actuator, robot, state(rotateRight), position(X,Y))" )
+		moveRobot( robot!!, "d")
+		solveCheckGoal(robot!!, "model(actuator,robot,state(rotateRight),direction(D), position(X,Y))")
 	}
 	
 	fun moveForwardWithWall() {
@@ -106,7 +107,7 @@ class TestDdrSystem1 {
 				robot!!.emit("sonarRobot", "sonar(8)")
  			}
 		moveRobot( robot!!, "w")			
-		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), position(X,Y))" )
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(D), position(X,Y))" )
 	}
 
 	fun loadMapToString(filename: String): String{
@@ -115,46 +116,57 @@ class TestDdrSystem1 {
 		return mapStr
 	}
 	
+	fun printRobotState() {
+		robot!!.solve( "model( actuator, robot, S, _, _ )", "S"  )
+		var state = "${robot!!.resVar}"
+		robot!!.solve( "model( actuator, robot, _, D, _ )", "D"  )
+		var direction = "${robot!!.resVar}"
+		robot!!.solve( "model( actuator, robot, _, _, P )", "P"  )
+		var position = "${robot!!.resVar}"
+		
+		println( "FINAL ROBOT STATE= [actuator, robot, "+state+","+direction+","+position+"]")
+	}
+	
 	//some tests to check robot behaviour
 	
 	@Test
 	fun initialStateTest(){
 		println("%%%%%%%%%%%%%% initialStateTest %%%%%%%%%%%%%%")
-		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), position(X,Y))")
-		println( "FINAL ROBOT STATE = ${robot!!.resVar}")
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(east), position(0,0))")
+		printRobotState()
 		
 	}
-	
-	@Test
-	fun initialPositionTest(){
-		println("%%%%%%%%%%%%%% initialStateTest %%%%%%%%%%%%%%")
-		solveCheckGoal( robot!!, "model( actuator, robot, state(S), position(0,0))")
-		println( "FINAL ROBOT STATE = ${robot!!.resVar}")
-	}
+
 	
 	@Test
 	fun moveTest() {
 		println("%%%%%%%%%%%%%% moveTest  %%%%%%%%%%%%%%")
+		
 		rotateRight()
 		delay(700)
+		
+		
 		rotateLeft()
 		delay(500)
+		
+		
 		moveForward()
 		delay(700)
+		
 		moveBackward()
 		delay(700)
+		
 		stoprobot()
 		
-		robot!!.solve( "model( actuator, robot, state(STATE), position(0,0))", "STATE"  )
-		println( "FINAL ROBOT STATE= ${robot!!.resVar}")
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(east), position(0,0))")
+		printRobotState()
  	}
 	
-	@Test
+	//@Test
 	fun wallDetectingTest() {
 		moveForward()	//no obstacle assumed
 		moveForwardWithWall()
-		robot!!.solve( "model( actuator, robot, state(STATE) )", "STATE"  )
-		println( "FINAL ROBOT STATE= ${robot!!.resVar}")
+		printRobotState()
 	}
 	
 	fun exploringAllTest(){		

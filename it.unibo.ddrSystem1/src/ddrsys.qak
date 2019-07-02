@@ -1,7 +1,6 @@
 
 System ddrsys
 
-
 //robot state update event
 Event consoleUpdate: consoleUpdate(X)
 
@@ -22,6 +21,9 @@ Dispatch sendPhoto: sendPhoto(X)
 //Message from robot to robot
 Dispatch reachBag: reachBag(X)
 
+//Message from console to robot
+Dispatch userCmd   : userCmd( CMD )
+
 
 Context ctx ip [host="localhost" port=8090] //-g cyan
 
@@ -29,13 +31,30 @@ QActor console context ctx {
 	
 	State s0 initial {
 		println("Console intialized")
-	}
+		forward robot -m  userCmd   : userCmd( h ) 
+	} 
+ 
 }
 
 
 QActor robot context ctx { 
 	
 	State s0 initial {
+		solve (consult ("ddrsys.pl")) 
+		solve (consult ("resourceModel.pl")) 
 		println("Robot intialized")
+		
+	} 
+	
+	Transition t0   whenMsg userCmd  -> handleCmd
+ 	 
+	State handleCmd{  
+		printCurrentMessage
+		onMsg (userCmd   : userCmd( CMD )){
+			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
+		}
 	}
+	
+	Transition t1   whenMsg userCmd  -> handleCmd
+
 } 
