@@ -18,7 +18,7 @@ Dispatch backHomeSinceBomb: backHomeSinceBomb(X)
 Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
 
 //Message from robot to console
-Dispatch sendPhoto: sendPhoto(X)
+Dispatch sendPhoto: sendPhoto(X) 
 
 //Message from robot to robot
 Dispatch reachBag: reachBag(X)
