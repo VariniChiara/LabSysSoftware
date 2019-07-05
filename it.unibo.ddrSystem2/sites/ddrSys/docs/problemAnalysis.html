@@ -73,7 +73,30 @@
 <!-- ZONA 1  -->
 <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid">
 <div class="mdl-card__supporting-text mdl-color-text--light-blue-900"> 
- Write here the key point of the analysis
+Le problematiche iniziali emerse dall'analisi dei requisiti e riguardanti i componenti sono:
+
+<ul>
+<li><b>distribuzione</b>:  il robot e la console sono fisicamente in due posti diversi, quindi il sistema deve essere distribuito;</li>
+<li><b>eterogeneità</b>: il robot e la console potrebbero utilizzare tecnologie diverse, quindi il sistema deve essere eterogeneo;</li>
+<li><b>interazione</b>: trattandosi di un sistema distribuito eterogeneo, il sistema deve essere message-based e event-based per permettere alle entità di interagire tra di loro;</li> 
+<li><b>coordinazione</b>:  il robot e la console devono coordinarsi tra loro, quindi è opportuno stabilire una policy per definire quando e come determinate azioni devono verificarsi.</li>
+</ul>
+
+Altre problematiche chiave da analizzare sono relative alle informazioni da salvare e utilizzare nel sistema: 
+
+<ul>
+<li>La stanza viene modellata come una griglia formata da celle di dimensioni uguali a quelle del robot e identificate da una tripla 
+cell(X,Y,V) in cui X e Y sono la colonna e la riga in cui si trova la cella mentre V (visited) e può assumere il valore
+ 0 nel caso in cui il robot non ci sia ancora passato sopra e 1 nel caso opposto</li>
+
+<li>Lo stato del robot viene modellato come model(actuator, robot, state(S), dir(D), pos(X,Y)) in cui 
+S rappresenta lo stato del robot e può essere (movingForward, movingBackward, rotateLeft,, rotateRight, stopped)
+D rappresenta la direzione e può essere (north, east, south, west)
+X,Y rappresentano le coordinate della cella in cui si trova il robot</li>
+
+</ul>
+
+
 </div>
 </div>    
 
