@@ -20,7 +20,7 @@ Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
 //Message from robot to console
 Dispatch sendPhoto: sendPhoto(X) 
 
-//Message from robot to robot
+//Message from robot to robot 
 Dispatch reachBag: reachBag(X)
 
 
@@ -55,6 +55,7 @@ QActor robotmind context ctx {
 ["var obstacle = false 
 var Curmove     = \"\"  
 var IterCounter = 0
+var backHome = true
 "]	
 
 	State s0 initial {
@@ -65,40 +66,76 @@ var IterCounter = 0
 	} 
 
 	Goto waitForStart
-	
-	State waitForStart {	}
+	  
+	State waitForStart {	
+		printCurrentMessage
+	}
 	
 	Transition t0 whenMsg startCmd -> initMap
-	
-	
-	State initMap {
 		
+	State initMap {
+	
 		println("&&&  robotmind STARTED")
 		run itunibo.planner.plannerUtil.initAI()
 		println("INITIAL MAP") 
  		run itunibo.planner.plannerUtil.showMap() 
-		run itunibo.planner.plannerUtil.setGoal("1","1")
+		run itunibo.planner.plannerUtil.setGoal("1", "1")
  		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+ 
 	}
 		
+	//get the cell
 	Goto doPlan 
+	
+	/*State nextStep{
+		run itunibo.planner.plannerUtil.setGoal(goalX, goalY)
+		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+ 		["goalX = goalX + 1
+		goalY = goalY + 1
+ 		"]
+	}
+	
+	Goto doPlan */
 	
 	State doPlan {		
 		solve( retract( move(M) ) ) 	//consume a move
 			ifSolved {   
-				["Curmove = getCurSol(\"M\").toString()"]  
-			
+				["Curmove = getCurSol(\"M\").toString()"] 		
 				run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 				forward robotactuator -m robotCmd  : robotCmd($Curmove) 
-				delay 1000
+				delay 700
 			} else { 
 				["Curmove=\"nomove\" "]
 				forward robotactuator -m robotCmd  : robotCmd(h) 
-			} 
-		
+				
+			}  
+			
 	}
 	
-	Goto doPlan if "(Curmove != \"nomove\")" else endOfJob
+	Goto doPlan if "(Curmove != \"nomove\")" else choose
+	
+	State choose {}
+	Goto goBackHome if "backHome" else nextStep
+	
+	State goBackHome {
+		["backHome = false"]
+		println ("&&& returnToHome")
+		run itunibo.planner.plannerUtil.setGoal(0,0)
+		run itunibo.planner.moveUtils.doPlan(myself)
+		delay 700
+	}
+	
+	Goto doPlan
+	
+	State nextStep{
+		["IterCounter++
+		backHome = true"]
+		println ("&&& nextStep")
+		run itunibo.planner.plannerUtil.setGoal(IterCounter, IterCounter)
+ 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+	}
+	
+	Goto endOfJob if "(IterCounter == 5)" else doPlan
 		
 	State endOfJob{
 		println("FINAL MAP")   
@@ -106,16 +143,7 @@ var IterCounter = 0
 		println("&&&  planex0 ENDS")
  	}
  	
- 	Goto goBackHome
  	
- 	/* ROBOT PLANS TO GO BACK HOME */
- 	
- 	State goBackHome {
- 			run itunibo.planner.plannerUtil.setGoal("0","0")
- 			run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
- 	}
- 	
- 	Goto doPlan
  	
 	/*Transition t0  whenMsg startCmd  -> waitForEvents
 	  
