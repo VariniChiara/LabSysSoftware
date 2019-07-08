@@ -19,7 +19,14 @@ class Console ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, sco
 				state("s0") { //this:State
 					action { //it:State
 						println("Console intialized")
-						forward("userCmd", "userCmd(h)" ,"robot" ) 
+					}
+					 transition( edgeName="goto",targetState="sendMsg", cond=doswitch() )
+				}	 
+				state("sendMsg") { //this:State
+					action { //it:State
+						forward("robotCmd", "robotCmd(w)" ,"basicrobot" ) 
+						delay(8000) 
+						forward("robotCmd", "robotCmd(h)" ,"basicrobot" ) 
 					}
 				}	 
 			}

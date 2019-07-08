@@ -10,7 +10,7 @@ Event tempOk: tempOk(X)
 Event  sonarRobot   : sonarRobot( DISTANCE )	    //from  sonar on robot      
 
 //Message from console to robot
-Dispatch explore: explore(X)
+Dispatch explore: explore(X) 
 Dispatch stopExplore: stopExplore(X)
 Dispatch backHome: backHome(X)
 Dispatch continueExplore: continueExplore(X)
@@ -34,13 +34,21 @@ QActor console context ctx {
 	
 	State s0 initial {
 		println("Console intialized")
-		forward robot -m  userCmd   : userCmd( h ) 
 	} 
+	
+	Goto sendMsg
+	
+	State sendMsg {
+		forward basicrobot -m robotCmd : robotCmd (w)
+		delay 8000
+		forward basicrobot -m robotCmd : robotCmd (h)
+		
+	}
  
 }
 
-
-QActor robot context ctx { 
+/* 
+QActor robotmind context ctx { 
 ["var obstacle = false"]
 	State s0 initial {
 		solve (consult ("ddrsys.pl")) 
@@ -48,6 +56,7 @@ QActor robot context ctx {
 		println("Robot intialized")
 		
 	} 
+		
 	Goto waitForEvents
 	  
 	State waitForEvents {		} 
@@ -60,9 +69,12 @@ QActor robot context ctx {
 		printCurrentMessage
 		onMsg (userCmd   : userCmd( CMD )){
 			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
+			//forward basicrobot -m  robotCmd  : robotCmd( CMD ) 
+			
 		}
 		onMsg (robotCmd   : robotCmd( CMD )){
 			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
+			//forward basicrobot -m  robotCmd  : robotCmd( CMD )
 		}
 	}
 	
@@ -79,16 +91,60 @@ QActor robot context ctx {
 	
 	State handeObstacle{		
 		println("handleObstacle: going backward")  
- 		forward robot -m robotCmd : robotCmd( s ) 		
+ 		forward robotmind -m robotCmd : robotCmd( s ) 		
  			//UPDATE the model : supported action
  			//run itunibo.robot.resourceModelSupport.updateModel( myself, "s" )
  		delay 300
  		println("handeObstacle: stopping")  
-	    forward robot -m robotCmd : robotCmd( h )
+	    forward robotmind -m robotCmd : robotCmd( h )
  			//UPDATE the model : supported action
  			//run itunibo.robot.resourceModelSupport.updateModel( myself, "h" )
   	}
   	
 	Goto waitForEvents
 
-} 
+}
+
+
+ /*
+  * --------------------------------------------------------
+  * Basic robot: just an actuator of move commands
+  * --------------------------------------------------------
+  */ 
+  QActor basicrobot context ctx {	 
+	State s0 initial {  
+		["  
+//CREATE A PIPE for the sonar-data stream
+val filter = itunibo.robot.sonaractorfilter( \"sonaractorfilter\" , myself  ) 
+val logger = itunibo.robot.Logger(\"logFiltered\")
+filter.subscribe(logger)  
+"] 		
+ 			 
+   		solve( consult("basicRobotConfig.pl") )   
+ 		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
+  		ifSolved { 
+     		println( "USING ROBOT : ${getCurSol(\"R\")},  port= ${getCurSol(\"PORT\")} " )
+  			run itunibo.robot.robotSupport.create( myself, @R, @PORT, filter )
+  		} 
+  		else{ println("no robot") }
+    		
+   		run itunibo.robot.robotSupport.move( "msg(a)" )
+   		delay 700
+   		run itunibo.robot.robotSupport.move( "msg(d)" )
+   		delay 700
+   		run itunibo.robot.robotSupport.move( "msg(h)" )
+ 	}  
+	Goto waitCmd   
+ 	 
+	State waitCmd{  } //robotCmd comes from a console OUTSIDE this (sub)system
+	Transition t0  whenMsg   robotCmd  -> handleRobotCmd
+	
+	State handleRobotCmd{ //does not handle alarms 
+		printCurrentMessage 
+		onMsg( robotCmd : robotCmd( MOVE ) ) { //MOVE = w | a | s | d | h
+			run itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})" ) 
+		}	
+ 	}   
+	Goto waitCmd 
+}  
+ 

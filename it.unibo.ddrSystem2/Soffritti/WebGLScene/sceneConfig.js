@@ -9,16 +9,16 @@ const config = {
         speed: 0.2
     },
     sonars: [
-        {
-            name: "sonar1",
-            position: { x: 0.064, y: 0.05 },
-            senseAxis: { x: false, y: true }
-        },
-        {
-            name: "sonar2",
-            position: { x: 0.94, y: 0.88},
-            senseAxis: { x: true, y: false }
-        }
+//        {
+//            name: "sonar1",
+//            position: { x: 0.064, y: 0.05 },
+//            senseAxis: { x: false, y: true }
+//        },
+//        {
+//            name: "sonar2",
+//            position: { x: 0.94, y: 0.88},
+//            senseAxis: { x: true, y: false }
+//        }
      ],
     movingObstacles: [
        // {
