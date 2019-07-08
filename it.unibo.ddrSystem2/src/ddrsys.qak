@@ -26,6 +26,7 @@ Dispatch reachBag: reachBag(X)
 
 Dispatch userCmd   : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd  : robotCmd (CMD) //Selfsending robot message
+Dispatch startCmd  : startCmd () //message to start the robot, it will wait for events
 
 
 Context ctx ip [host="localhost" port=8090] //-g cyan
@@ -39,34 +40,95 @@ QActor console context ctx {
 	Goto sendMsg
 	
 	State sendMsg {
-		forward basicrobot -m robotCmd : robotCmd (w)
-		delay 8000
-		forward basicrobot -m robotCmd : robotCmd (h)
+		forward robotmind -m startCmd : startCmd
+			println("sent start message")
+				
+		
 		
 	}
+	
  
 }
 
-/* 
+
 QActor robotmind context ctx { 
-["var obstacle = false"]
+["var obstacle = false 
+var Curmove     = \"\"  
+var IterCounter = 0
+"]	
+
 	State s0 initial {
 		solve (consult ("ddrsys.pl")) 
 		solve (consult ("resourceModel.pl")) 
-		println("Robot intialized")
+		println("Robot mind intialized")
 		
 	} 
+
+	Goto waitForStart
+	
+	State waitForStart {	}
+	
+	Transition t0 whenMsg startCmd -> initMap
+	
+	
+	State initMap {
 		
-	Goto waitForEvents
+		println("&&&  robotmind STARTED")
+		run itunibo.planner.plannerUtil.initAI()
+		println("INITIAL MAP") 
+ 		run itunibo.planner.plannerUtil.showMap() 
+		run itunibo.planner.plannerUtil.setGoal("1","1")
+ 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+	}
+		
+	Goto doPlan 
+	
+	State doPlan {		
+		solve( retract( move(M) ) ) 	//consume a move
+			ifSolved {   
+				["Curmove = getCurSol(\"M\").toString()"]  
+			
+				run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
+				forward robotactuator -m robotCmd  : robotCmd($Curmove) 
+				delay 1000
+			} else { 
+				["Curmove=\"nomove\" "]
+				forward robotactuator -m robotCmd  : robotCmd(h) 
+			} 
+		
+	}
+	
+	Goto doPlan if "(Curmove != \"nomove\")" else endOfJob
+		
+	State endOfJob{
+		println("FINAL MAP")   
+ 		run itunibo.planner.plannerUtil.showMap() 
+		println("&&&  planex0 ENDS")
+ 	}
+ 	
+ 	Goto goBackHome
+ 	
+ 	/* ROBOT PLANS TO GO BACK HOME */
+ 	
+ 	State goBackHome {
+ 			run itunibo.planner.plannerUtil.setGoal("0","0")
+ 			run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+ 	}
+ 	
+ 	Goto doPlan
+ 	
+	/*Transition t0  whenMsg startCmd  -> waitForEvents
 	  
 	State waitForEvents {		} 
 	
-	Transition t0   whenMsg userCmd  -> handleCmd
+	Transition t1   whenMsg userCmd  -> handleCmd
 					whenMsg robotCmd -> handleCmd
 					whenEvent sonarRobot -> handleSonarRobot
  	 
 	State handleCmd{  
 		printCurrentMessage
+		
+		
 		onMsg (userCmd   : userCmd( CMD )){
 			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
 			//forward basicrobot -m  robotCmd  : robotCmd( CMD ) 
@@ -101,7 +163,7 @@ QActor robotmind context ctx {
  			//run itunibo.robot.resourceModelSupport.updateModel( myself, "h" )
   	}
   	
-	Goto waitForEvents
+	Goto waitForEvents*/
 
 }
 
@@ -111,7 +173,7 @@ QActor robotmind context ctx {
   * Basic robot: just an actuator of move commands
   * --------------------------------------------------------
   */ 
-  QActor basicrobot context ctx {	 
+  QActor robotactuator context ctx {	 
 	State s0 initial {  
 		["  
 //CREATE A PIPE for the sonar-data stream
