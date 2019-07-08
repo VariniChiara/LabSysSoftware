@@ -3,4 +3,5 @@
 %====================================================================================
 context(ctx, "localhost",  "TCP", "8090" ).
  qactor( console, ctx, "it.unibo.console.Console").
-  qactor( basicrobot, ctx, "it.unibo.basicrobot.Basicrobot").
+  qactor( robotmind, ctx, "it.unibo.robotmind.Robotmind").
+  qactor( robotactuator, ctx, "it.unibo.robotactuator.Robotactuator").

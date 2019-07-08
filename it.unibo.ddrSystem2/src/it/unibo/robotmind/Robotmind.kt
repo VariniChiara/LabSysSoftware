@@ -16,6 +16,9 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		var obstacle = false
+		var Curmove     = ""  
+		var IterCounter = 0 
+		var backHome = true
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -23,49 +26,74 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						solve("consult('resourceModel.pl')","") //set resVar	
 						println("Robot intialized")
 					}
-					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
+					 transition( edgeName="goto",targetState="waitForStart", cond=doswitch() )
 				}	 
-				state("waitForEvents") { //this:State
-					action { //it:State
-					}
-					 transition(edgeName="t00",targetState="handleCmd",cond=whenDispatch("userCmd"))
-					transition(edgeName="t01",targetState="handleCmd",cond=whenDispatch("robotCmd"))
-					transition(edgeName="t02",targetState="handleSonarRobot",cond=whenEvent("sonarRobot"))
-				}	 
-				state("handleCmd") { //this:State
+				state("waitForStart") { //this:State
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("userCmd(CMD)"), Term.createTerm("userCmd(CMD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								solve("action(robot,move(${payloadArg(0)}))","") //set resVar	
-						}
-						if( checkMsgContent( Term.createTerm("robotCmd(CMD)"), Term.createTerm("robotCmd(CMD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								solve("action(robot,move(${payloadArg(0)}))","") //set resVar	
-						}
 					}
-					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
+					 transition(edgeName="t00",targetState="initMap",cond=whenDispatch("startCmd"))
 				}	 
-				state("handleSonarRobot") { //this:State
+				state("initMap") { //this:State
 					action { //it:State
-						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("sonarRobot(DISTANCE)"), Term.createTerm("sonarRobot(DISTANCE)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								obstacle = Integer.parseInt( payloadArg(0) ) < 10 
-						}
+						println("&&&  robotmind STARTED")
+						itunibo.planner.plannerUtil.initAI(  )
+						println("INITIAL MAP")
+						itunibo.planner.plannerUtil.showMap(  )
+						itunibo.planner.plannerUtil.setGoal( "1", "1"  )
+						itunibo.planner.moveUtils.doPlan(myself)
 					}
-					 transition( edgeName="goto",targetState="handeObstacle", cond=doswitchGuarded({obstacle}) )
-					transition( edgeName="goto",targetState="waitForEvents", cond=doswitchGuarded({! obstacle}) )
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
 				}	 
-				state("handeObstacle") { //this:State
+				state("doPlan") { //this:State
 					action { //it:State
-						println("handleObstacle: going backward")
-						forward("robotCmd", "robotCmd(s)" ,"robotmind" ) 
-						delay(300) 
-						println("handeObstacle: stopping")
-						forward("robotCmd", "robotCmd(h)" ,"robotmind" ) 
+						solve("retract(move(M))","") //set resVar	
+						if(currentSolution.isSuccess()) { Curmove = getCurSol("M").toString()
+						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
+						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
+						delay(700) 
+						 }
+						else
+						{ Curmove="nomove" 
+						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+						 }
 					}
-					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({(Curmove != "nomove")}) )
+					transition( edgeName="goto",targetState="choose", cond=doswitchGuarded({! (Curmove != "nomove")}) )
+				}	 
+				state("choose") { //this:State
+					action { //it:State
+					}
+					 transition( edgeName="goto",targetState="goBackHome", cond=doswitchGuarded({backHome}) )
+					transition( edgeName="goto",targetState="nextStep", cond=doswitchGuarded({! backHome}) )
+				}	 
+				state("goBackHome") { //this:State
+					action { //it:State
+						backHome = false
+						println("&&&  returnToHome")
+						itunibo.planner.plannerUtil.setGoal( 0, 0  )
+						itunibo.planner.moveUtils.doPlan(myself)
+						delay(700) 
+					}
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+				}	 
+				state("nextStep") { //this:State
+					action { //it:State
+						IterCounter++
+							backHome = true
+						println("&&&  nextStep")
+						itunibo.planner.plannerUtil.setGoal( IterCounter, IterCounter  )
+						itunibo.planner.moveUtils.doPlan(myself)
+					}
+					 transition( edgeName="goto",targetState="endOfJob", cond=doswitchGuarded({(IterCounter==5)}) )
+					transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({! (IterCounter==5)}) )
+				}	 
+				state("endOfJob") { //this:State
+					action { //it:State
+						println("FINAL MAP")
+						itunibo.planner.plannerUtil.showMap(  )
+						println("&&&  planex0 ENDS")
+					}
 				}	 
 			}
 		}
