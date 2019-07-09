@@ -17,7 +17,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		var obstacle = false
 		var Curmove     = ""  
-		var IterCounter = 0 
+		var IterCounter = 1 
 		var backHome = true
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -52,10 +52,10 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
 						delay(700) 
+						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						 }
 						else
 						{ Curmove="nomove" 
-						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						 }
 					}
 					 transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({(Curmove != "nomove")}) )

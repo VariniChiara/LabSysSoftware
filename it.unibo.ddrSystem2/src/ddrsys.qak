@@ -10,7 +10,7 @@ Event tempOk: tempOk(X)
 Event  sonarRobot   : sonarRobot( DISTANCE )	    //from  sonar on robot      
 
 //Message from console to robot
-Dispatch explore: explore(X) 
+Dispatch explore: explore(X)  
 Dispatch stopExplore: stopExplore(X)
 Dispatch backHome: backHome(X)
 Dispatch continueExplore: continueExplore(X)
@@ -31,7 +31,7 @@ Dispatch startCmd :	startCmd
 
 Context ctx ip [host="localhost" port=8090] //-g cyan
 
-QActor console context ctx { 
+QActor console context ctx {  
 	
 	State s0 initial {
 		println("Console intialized")
@@ -50,7 +50,7 @@ QActor console context ctx {
 QActor robotmind context ctx { 
 ["var obstacle = false
 var Curmove     = \"\"  
-var IterCounter = 0 
+var IterCounter = 1 
 var backHome = true
 "]
 	State s0 initial {
@@ -72,7 +72,7 @@ var backHome = true
 		println("INITIAL MAP") 
 		run itunibo.planner.plannerUtil.showMap() 
 		run itunibo.planner.plannerUtil.setGoal("1","1")
- 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
 		
 	}
 	
@@ -86,9 +86,12 @@ var backHome = true
 			run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 			forward robotactuator -m robotCmd : robotCmd($Curmove)
 			delay 700
-		} else { ["Curmove=\"nomove\" "] 
 			forward robotactuator -m robotCmd : robotCmd(h)
-		} 
+			
+		} else { ["Curmove=\"nomove\" "]  
+			
+		}
+		
 	}  
 	
 	Goto doPlan if "(Curmove != \"nomove\")" else choose
@@ -115,7 +118,7 @@ var backHome = true
 		println("&&&  nextStep")
  		//solve( retractall( move(_) ))		//clean the actor kb
  		run itunibo.planner.plannerUtil.setGoal(IterCounter,IterCounter)
-  		run itunibo.planner.moveUtils.doPlan( myself )
+ 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
 	}
 
 	Goto endOfJob if "(IterCounter==5)" else doPlan
@@ -186,15 +189,15 @@ var backHome = true
   * Basic robot: just an actuator of move commands
   * --------------------------------------------------------
   */ 
-  QActor robotactuator context ctx {	 
+QActor robotactuator context ctx {	 
 	State s0 initial {  
 		["  
 //CREATE A PIPE for the sonar-data stream
 val filter = itunibo.robot.sonaractorfilter( \"sonaractorfilter\" , myself  ) 
 val logger = itunibo.robot.Logger(\"logFiltered\")
 filter.subscribe(logger)  
-"] 		
- 			 
+"] 	 	
+ 			  
    		solve( consult("basicRobotConfig.pl") )   
  		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
   		ifSolved { 
