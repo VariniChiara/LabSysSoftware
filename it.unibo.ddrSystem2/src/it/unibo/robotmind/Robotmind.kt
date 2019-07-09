@@ -15,16 +15,16 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 	}
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
-		var obstacle = false 
+		var obstacle = false
 		var Curmove     = ""  
-		var IterCounter = 0
+		var IterCounter = 1 
 		var backHome = true
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						solve("consult('ddrsys.pl')","") //set resVar	
 						solve("consult('resourceModel.pl')","") //set resVar	
-						println("Robot mind intialized")
+						println("Robot intialized")
 					}
 					 transition( edgeName="goto",targetState="waitForStart", cond=doswitch() )
 				}	 
@@ -52,10 +52,10 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
 						delay(700) 
+						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						 }
 						else
 						{ Curmove="nomove" 
-						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						 }
 					}
 					 transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({(Curmove != "nomove")}) )
@@ -70,7 +70,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("goBackHome") { //this:State
 					action { //it:State
 						backHome = false
-						println("&&& returnToHome")
+						println("&&&  returnToHome")
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						itunibo.planner.moveUtils.doPlan(myself)
 						delay(700) 
@@ -80,13 +80,13 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("nextStep") { //this:State
 					action { //it:State
 						IterCounter++
-								backHome = true
-						println("&&& nextStep")
+							backHome = true
+						println("&&&  nextStep")
 						itunibo.planner.plannerUtil.setGoal( IterCounter, IterCounter  )
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
-					 transition( edgeName="goto",targetState="endOfJob", cond=doswitchGuarded({(IterCounter == 5)}) )
-					transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({! (IterCounter == 5)}) )
+					 transition( edgeName="goto",targetState="endOfJob", cond=doswitchGuarded({(IterCounter==5)}) )
+					transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({! (IterCounter==5)}) )
 				}	 
 				state("endOfJob") { //this:State
 					action { //it:State

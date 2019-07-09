@@ -6,32 +6,32 @@ Event consoleUpdate: consoleUpdate(X)
 
 //temperature change event
 Event tempOk: tempOk(X)
-
+ 
 Event  sonarRobot   : sonarRobot( DISTANCE )	    //from  sonar on robot      
 
 //Message from console to robot
-Dispatch explore: explore(X) 
+Dispatch explore: explore(X)  
 Dispatch stopExplore: stopExplore(X)
 Dispatch backHome: backHome(X)
 Dispatch continueExplore: continueExplore(X)
 Dispatch backHomeSinceBomb: backHomeSinceBomb(X)
 Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
-
+ 
 //Message from robot to console
 Dispatch sendPhoto: sendPhoto(X) 
-
-//Message from robot to robot 
+ 
+//Message from robot to robot
 Dispatch reachBag: reachBag(X)
 
 
-Dispatch userCmd   : userCmd( CMD ) //Message from console to robot
-Dispatch robotCmd  : robotCmd (CMD) //Selfsending robot message
-Dispatch startCmd  : startCmd () //message to start the robot, it will wait for events
+Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
+Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
+Dispatch startCmd :	startCmd 
 
 
 Context ctx ip [host="localhost" port=8090] //-g cyan
 
-QActor console context ctx { 
+QActor console context ctx {  
 	
 	State s0 initial {
 		println("Console intialized")
@@ -41,112 +41,100 @@ QActor console context ctx {
 	
 	State sendMsg {
 		forward robotmind -m startCmd : startCmd
-			println("sent start message")
-				
-		
-		
+		println("Sent start  message")
 	}
-	
  
 }
 
 
 QActor robotmind context ctx { 
-["var obstacle = false 
+["var obstacle = false
 var Curmove     = \"\"  
-var IterCounter = 0
+var IterCounter = 1 
 var backHome = true
-"]	
-
+"]
 	State s0 initial {
 		solve (consult ("ddrsys.pl")) 
 		solve (consult ("resourceModel.pl")) 
-		println("Robot mind intialized")
+		println("Robot intialized")
 		
 	} 
-
+	
 	Goto waitForStart
-	  
-	State waitForStart {	
-		printCurrentMessage
-	}
 	
-	Transition t0 whenMsg startCmd -> initMap
-		
+	State waitForStart {	printCurrentMessage }
+	
+	Transition t0  whenMsg startCmd  -> initMap
+	
 	State initMap {
-	
 		println("&&&  robotmind STARTED")
 		run itunibo.planner.plannerUtil.initAI()
 		println("INITIAL MAP") 
- 		run itunibo.planner.plannerUtil.showMap() 
-		run itunibo.planner.plannerUtil.setGoal("1", "1")
- 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
- 
-	}
-		
-	//get the cell
-	Goto doPlan 
-	
-	/*State nextStep{
-		run itunibo.planner.plannerUtil.setGoal(goalX, goalY)
+		run itunibo.planner.plannerUtil.showMap() 
+		run itunibo.planner.plannerUtil.setGoal("1","1")
 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
- 		["goalX = goalX + 1
-		goalY = goalY + 1
- 		"]
+		
 	}
 	
-	Goto doPlan */
+	Goto doPlan
 	
-	State doPlan {		
+	//raggiungo la cella
+	State doPlan {	
 		solve( retract( move(M) ) ) 	//consume a move
-			ifSolved {   
-				["Curmove = getCurSol(\"M\").toString()"] 		
-				run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
-				forward robotactuator -m robotCmd  : robotCmd($Curmove) 
-				delay 700
-			} else { 
-				["Curmove=\"nomove\" "]
-				forward robotactuator -m robotCmd  : robotCmd(h) 
-				
-			}  
+		ifSolved {   
+			["Curmove = getCurSol(\"M\").toString()"]  
+			run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
+			forward robotactuator -m robotCmd : robotCmd($Curmove)
+			delay 700
+			forward robotactuator -m robotCmd : robotCmd(h)
 			
-	}
+		} else { ["Curmove=\"nomove\" "]  
+			
+		}
+
+	}  
 	
 	Goto doPlan if "(Curmove != \"nomove\")" else choose
 	
 	State choose {}
 	Goto goBackHome if "backHome" else nextStep
 	
-	State goBackHome {
-		["backHome = false"]
-		println ("&&& returnToHome")
-		run itunibo.planner.plannerUtil.setGoal(0,0)
-		run itunibo.planner.moveUtils.doPlan(myself)
-		delay 700
-	}
+ 	//torno a casa
+	State goBackHome{
+	["backHome = false"]
+		println("&&&  returnToHome")
+ 		//solve( retractall( move(_) ))		//clean the actor kb
+ 		run itunibo.planner.plannerUtil.setGoal(0,0)
+  		run itunibo.planner.moveUtils.doPlan( myself )
+  
+  		delay 700
+    } 
 	
 	Goto doPlan
 	
-	State nextStep{
-		["IterCounter++
-		backHome = true"]
-		println ("&&& nextStep")
-		run itunibo.planner.plannerUtil.setGoal(IterCounter, IterCounter)
+	State nextStep {
+	["IterCounter++
+	backHome = true"]
+		println("&&&  nextStep")
+ 		//solve( retractall( move(_) ))		//clean the actor kb
+ 		run itunibo.planner.plannerUtil.setGoal(IterCounter,IterCounter)
  		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
 	}
+
+	Goto endOfJob if "(IterCounter==5)" else doPlan
 	
-	Goto endOfJob if "(IterCounter == 5)" else doPlan
-		
 	State endOfJob{
+		
 		println("FINAL MAP")   
  		run itunibo.planner.plannerUtil.showMap() 
 		println("&&&  planex0 ENDS")
  	}
- 	
- 	
- 	
-	/*Transition t0  whenMsg startCmd  -> waitForEvents
+
+	/* 
+	Transition t0  whenMsg startCmd  -> waitForEvents 
 	  
+	//starting proactive behaviour
+	
 	State waitForEvents {		} 
 	
 	Transition t1   whenMsg userCmd  -> handleCmd
@@ -155,8 +143,6 @@ var backHome = true
  	 
 	State handleCmd{  
 		printCurrentMessage
-		
-		
 		onMsg (userCmd   : userCmd( CMD )){
 			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
 			//forward basicrobot -m  robotCmd  : robotCmd( CMD ) 
@@ -191,7 +177,9 @@ var backHome = true
  			//run itunibo.robot.resourceModelSupport.updateModel( myself, "h" )
   	}
   	
-	Goto waitForEvents*/
+	Goto waitForEvents
+	
+	*/
 
 }
 
@@ -201,20 +189,20 @@ var backHome = true
   * Basic robot: just an actuator of move commands
   * --------------------------------------------------------
   */ 
-  QActor robotactuator context ctx {	 
+QActor robotactuator context ctx {	 
 	State s0 initial {  
-		["  
+		/*["  
 //CREATE A PIPE for the sonar-data stream
 val filter = itunibo.robot.sonaractorfilter( \"sonaractorfilter\" , myself  ) 
 val logger = itunibo.robot.Logger(\"logFiltered\")
 filter.subscribe(logger)  
-"] 		
- 			 
+"] 	*/	 
+ 			  
    		solve( consult("basicRobotConfig.pl") )   
  		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
   		ifSolved { 
      		println( "USING ROBOT : ${getCurSol(\"R\")},  port= ${getCurSol(\"PORT\")} " )
-  			run itunibo.robot.robotSupport.create( myself, @R, @PORT, filter )
+  			run itunibo.robot.robotSupport.create( myself, @R, @PORT, null )
   		} 
   		else{ println("no robot") }
     		

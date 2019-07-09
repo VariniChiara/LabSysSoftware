@@ -25,7 +25,7 @@ class Console ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, sco
 				state("sendMsg") { //this:State
 					action { //it:State
 						forward("startCmd", "startCmd" ,"robotmind" ) 
-						println("sent start message")
+						println("Sent start  message")
 					}
 				}	 
 			}

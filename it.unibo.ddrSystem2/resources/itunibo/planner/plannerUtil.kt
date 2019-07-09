@@ -221,7 +221,6 @@ object plannerUtil {
 		val pw = PrintWriter( FileWriter(fname+".txt") )
 		pw.print( RoomMap.getRoomMap().toString() )
 		pw.close()
-		
 		val os = ObjectOutputStream( FileOutputStream(fname+".bin") )
 		os.writeObject(RoomMap.getRoomMap())
 		os.flush()
