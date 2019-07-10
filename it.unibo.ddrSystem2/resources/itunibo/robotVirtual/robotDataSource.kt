@@ -38,7 +38,12 @@ class robotDataSource(name : String, val owner : ActorBasicFsm , val filter : Ac
                            }
                             "collision" -> { 
   								val event = MsgUtil.buildEvent(name,"sonarRobot","sonar( 5 )")
-								emitLocalStreamEvent(event) 
+								//emitLocalStreamEvent(event)							
+  								emit(event)
+								// INVIAMO UN MESSAGGIO PER AVVISARE onestepahead CHE C'è UNA PARETE
+								owner.forward("sonarRobot", "sonarRobot(5)" ,"onestepahead" ) 
+								
+								
                            }
                         }
                     } catch (e: Exception) {

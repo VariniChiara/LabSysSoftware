@@ -15,10 +15,17 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 	}
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
-		var obstacle = false
 		var Curmove     = ""  
 		var IterCounter = 1 
 		var backHome = true
+		var maxX = 0
+		var maxY = 0
+		var finish = false
+		
+		//VIRTUAL ROBOT 
+		var StepTime   = 330	 
+		
+		var Tback = 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -47,19 +54,90 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("doPlan") { //this:State
 					action { //it:State
+						itunibo.planner.plannerUtil.showMap(  )
 						solve("retract(move(M))","") //set resVar	
 						if(currentSolution.isSuccess()) { Curmove = getCurSol("M").toString()
-						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
-						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
-						delay(700) 
-						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						 }
 						else
 						{ Curmove="nomove" 
 						 }
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({(Curmove != "nomove")}) )
+					 transition( edgeName="goto",targetState="handleMove", cond=doswitchGuarded({(Curmove != "nomove")}) )
 					transition( edgeName="goto",targetState="choose", cond=doswitchGuarded({! (Curmove != "nomove")}) )
+				}	 
+				state("handleMove") { //this:State
+					action { //it:State
+					}
+					 transition( edgeName="goto",targetState="doMove", cond=doswitchGuarded({(Curmove !="w")}) )
+					transition( edgeName="goto",targetState="attemptToGoAhead", cond=doswitchGuarded({! (Curmove !="w")}) )
+				}	 
+				state("doMove") { //this:State
+					action { //it:State
+						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
+						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
+						delay(700) 
+						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+					}
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+				}	 
+				state("attemptToGoAhead") { //this:State
+					action { //it:State
+						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
+					}
+					 transition(edgeName="t01",targetState="stepDone",cond=whenDispatch("stepOk"))
+					transition(edgeName="t02",targetState="stepFailed",cond=whenDispatch("stepFail"))
+				}	 
+				state("stepDone") { //this:State
+					action { //it:State
+						itunibo.planner.moveUtils.doPlannedMove(myself ,"w" )
+					}
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+				}	 
+				state("stepFailed") { //this:State
+					action { //it:State
+						println("&&&  FOUND WALL")
+						
+						var TbackLong   = 0L
+						if( checkMsgContent( Term.createTerm("stepFail(R,T)"), Term.createTerm("stepFail(Obs,Time)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								Tback=payloadArg(1).toString().toInt()
+											TbackLong=Tback.toLong()
+								println("stepFailed ${payloadArg(1).toString()}")
+						}
+						println("moveUtils backToCompensate stepTime=$Tback")
+						forward("robotCmd", "robotCmd(s)" ,"robotactuator" ) 
+						delay(TbackLong)
+						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+						delay(700) 
+						itunibo.planner.plannerUtil.wallFound(  )
+					}
+					 transition( edgeName="goto",targetState="setGoalAfterWall", cond=doswitch() )
+				}	 
+				state("setGoalAfterWall") { //this:State
+					action { //it:State
+						var dir = itunibo.planner.plannerUtil.getDirection()
+													
+								if(dir == "downDir" ){
+									maxY = IterCounter-1
+									if(maxX == 0){
+										itunibo.planner.plannerUtil.setGoal(IterCounter,maxY)
+									}else {
+										itunibo.planner.plannerUtil.setGoal(maxX,maxY)
+									}
+						
+								}else if(dir == "rightDir"){
+									maxX = IterCounter-1
+									itunibo.planner.plannerUtil.setGoal(maxX,IterCounter)
+									if(maxY == 0){
+										itunibo.planner.plannerUtil.setGoal(maxX, IterCounter)
+									}else {
+										itunibo.planner.plannerUtil.setGoal(maxX,maxY)
+									}
+						
+								}
+						itunibo.planner.moveUtils.doPlan(myself)
+					}
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
 				}	 
 				state("choose") { //this:State
 					action { //it:State
@@ -79,14 +157,29 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("nextStep") { //this:State
 					action { //it:State
+					}
+					 transition( edgeName="goto",targetState="endOfJob", cond=doswitchGuarded({finish}) )
+					transition( edgeName="goto",targetState="calculateNextStep", cond=doswitchGuarded({! finish}) )
+				}	 
+				state("calculateNextStep") { //this:State
+					action { //it:State
 						IterCounter++
 							backHome = true
-						println("&&&  nextStep")
-						itunibo.planner.plannerUtil.setGoal( IterCounter, IterCounter  )
+								
+							if(maxX==0 && maxY==0){
+								itunibo.planner.plannerUtil.setGoal(IterCounter, IterCounter)
+							}else if(maxX!=0 && maxY == 0){
+								itunibo.planner.plannerUtil.setGoal(maxX, IterCounter)			
+							}else if(maxX==0 && maxY != 0){
+								itunibo.planner.plannerUtil.setGoal(IterCounter, maxY)		
+							}else{
+								itunibo.planner.plannerUtil.setGoal(maxX, maxY)	
+								finish = true	
+							}
+						println("&&& nextstep")
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
-					 transition( edgeName="goto",targetState="endOfJob", cond=doswitchGuarded({(IterCounter==5)}) )
-					transition( edgeName="goto",targetState="doPlan", cond=doswitchGuarded({! (IterCounter==5)}) )
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
 				}	 
 				state("endOfJob") { //this:State
 					action { //it:State
