@@ -30,7 +30,7 @@ Dispatch startCmd :	startCmd
 
 Dispatch onestep       : onestep(DURATION)
 Dispatch stepOk        : stepOk()		
-Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
+Dispatch stepFail      : stepFail(R,T) //R=obstacole | obstacle, T = time
 
 
 Context ctx ip [host="localhost" port=8090] //-g cyan
@@ -185,6 +185,8 @@ var TbackLong   = 0L
 				itunibo.planner.plannerUtil.setGoal(maxX,maxY)
 			}
 
+		}else{
+			itunibo.planner.plannerUtil.setGoal(0,0)
 		}"]
 		
 		run itunibo.planner.moveUtils.doPlan( myself )
@@ -194,6 +196,7 @@ var TbackLong   = 0L
 
 	State choose {}
 	
+	 
 	Goto goBackHome if "backHome" else nextStep
 	
  	//torno a casa

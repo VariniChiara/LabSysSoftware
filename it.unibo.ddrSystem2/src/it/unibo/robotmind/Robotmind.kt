@@ -134,6 +134,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 										itunibo.planner.plannerUtil.setGoal(maxX,maxY)
 									}
 						
+								}else{
+									itunibo.planner.plannerUtil.setGoal(0,0)
 								}
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
