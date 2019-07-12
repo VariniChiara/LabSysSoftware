@@ -26,6 +26,7 @@ Dispatch reachBag: reachBag(X)
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Dispatch startCmd :	startCmd 
+Dispatch startTest : startTesT (X,Y)
 
 //message try to do a step
 Dispatch onestep       : onestep(DURATION)
@@ -46,7 +47,8 @@ QActor console context ctx {
 	Goto sendMsg
 	
 	State sendMsg {
-		forward robotmind -m startCmd : startCmd
+		delay 3000
+		//forward robotmind -m startCmd : startCmd
 		println("Sent start  message")
 	}
  
@@ -110,8 +112,8 @@ QActor console context ctx {
 
 QActor robotmind context ctx { 
 ["var Curmove     = \"\"  
-var IterCounter = 1 
-var backHome = true
+var IterCounter = 0 
+var backHome = false
 var maxX = 0
 var maxY = 0
 var finish = false
@@ -122,9 +124,13 @@ var StepTime   = 330
 var Tback       = 0
 "]
 	State s0 initial {
+		println("&&&  robotmind STARTED")
 		solve (consult ("ddrsys.pl")) 
 		solve (consult ("resourceModel.pl")) 
 		println("Robot intialized")
+		run itunibo.planner.plannerUtil.initAI()
+		println("INITIAL MAP") 
+		run itunibo.planner.plannerUtil.showMap() 
 		
 	} 
 	
@@ -132,16 +138,33 @@ var Tback       = 0
 	
 	State waitForStart {	printCurrentMessage }
 	
-	Transition t0  whenMsg startCmd  -> initMap
+	Transition t0  whenMsg startCmd  -> startExploration
+				   whenMsg startTest -> startExplorationTest
 	
-	State initMap {
-		println("&&&  robotmind STARTED")
-		run itunibo.planner.plannerUtil.initAI()
-		println("INITIAL MAP") 
-		run itunibo.planner.plannerUtil.showMap() 
+	State startExplorationTest {
+		["finish = true
+		  backHome = false
+
+		  var x = \"\"
+		  var y = \"\"	"]
+		println("&&&  exploration TEST")
+		
+		printCurrentMessage		        
+ 		onMsg( startTest : startTest(X, Y) ) { 
+ 			[" x =payloadArg(0) 
+			   y =payloadArg(1) "]
+ 			println(x)
+ 		}
+		run itunibo.planner.plannerUtil.setGoal("0","0")
+		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb	
+	}
+	Goto doPlan
+	
+	
+	State startExploration {
+		println("&&&  exploration STARTED")
 		run itunibo.planner.plannerUtil.setGoal("1","1")
 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
-		
 	}
 	
 	Goto doPlan
@@ -152,7 +175,6 @@ var Tback       = 0
 		solve( retract( move(M) ) ) 	//consume a move
 		ifSolved {  ["Curmove = getCurSol(\"M\").toString()"]  }
 		 else { ["Curmove=\"nomove\" "]  }
-		
 	}  
 	
 	Goto handlemove if "(Curmove != \"nomove\")" else choose
@@ -178,8 +200,7 @@ var Tback       = 0
 					whenMsg stepFail -> stepFailed 
 	 
  	State stepDone{  
- 		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")
- 		//run itunibo.planner.moveUtils.updateMapAfterAheadOk(myself)		
+ 		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")	
  	}
  	
  	Goto doPlan
@@ -190,12 +211,12 @@ var Tback       = 0
  	  	
 		//printCurrentMessage		        
  		onMsg( stepFail : stepFail(Obs, Time) ) { 
- 			["Tback=payloadArg(1).toLong().toString().toInt() 
+ 			["Tback=payloadArg(1).toLong().toString().toInt() / 2
 			TbackLong = Tback.toLong()"]
  			println("stepFailed ${payloadArg(1).toString()}")
  		}
   		
- 		println("moveUtils backToCompensate stepTime=$Tback")
+ 		println(" backToCompensate stepTime=$Tback")
  		forward robotactuator -m robotCmd : robotCmd(s)
 		delayVar TbackLong
 		forward robotactuator -m robotCmd : robotCmd(h)
@@ -208,16 +229,16 @@ var Tback       = 0
 	Goto setGoalAfterWall
 	
 	State setGoalAfterWall{
+		solve( retractall( move(_) ))
 	["
-	println( itunibo.planner.plannerUtil.getDirection())
 	if( itunibo.planner.plannerUtil.getDirection() == \"downDir\" ){ 
-		maxY = IterCounter-1
+		maxY = itunibo.planner.plannerUtil.getPosY()
 		if(maxX == 0 ){
 			itunibo.planner.plannerUtil.setGoal(IterCounter, maxY)
 		} else {itunibo.planner.plannerUtil.setGoal(maxX, maxY)}
 	} 
 	else if( itunibo.planner.plannerUtil.getDirection() == \"rightDir\" ){ 
-		maxX = IterCounter-1
+		maxX = itunibo.planner.plannerUtil.getPosX()
 		if (maxY == 0 ){
 			itunibo.planner.plannerUtil.setGoal(maxX, IterCounter)
 		} else { itunibo.planner.plannerUtil.setGoal(maxX, maxY) }
@@ -241,20 +262,19 @@ var Tback       = 0
  		//solve( retractall( move(_) ))		//clean the actor kb
  		run itunibo.planner.plannerUtil.setGoal(0,0)
   		run itunibo.planner.moveUtils.doPlan( myself )
-  
+	
   		delay 700
-    } 
+    }  
 	
 	Goto doPlan
-	
-	State nextStep {	}
+	 
+	State nextStep {}
 
 	Goto endOfJob if "finish" else calculatenextstep
 	
 	State calculatenextstep{
 ["IterCounter++
 	backHome = true
-	println (\"$maxX --- $maxY\")
 	if (maxX == 0 && maxY == 0){ itunibo.planner.plannerUtil.setGoal(IterCounter,IterCounter) }
 	else if( maxX != 0 && maxY == 0 ){ itunibo.planner.plannerUtil.setGoal(maxX,IterCounter) } 
 	else if( maxX == 0 && maxY != 0 ){ itunibo.planner.plannerUtil.setGoal(IterCounter, maxY) } 
@@ -264,13 +284,13 @@ var Tback       = 0
 }
 "]
 		println("&&&  nextStep")
- 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+ 		run itunibo.planner.moveUtils.doPlan( myself )
 	}
 	Goto doPlan
 	
 	State endOfJob{
+		["if (maxX != 0 && maxY != 0) {itunibo.planner.plannerUtil.fixwalls(maxX, maxY)}"]
 		
-		run itunibo.planner.plannerUtil.fixwalls(maxX, maxY)
 		println("FINAL MAP")   
  		run itunibo.planner.plannerUtil.showMap() 
 		println("&&&  planex0 ENDS")
@@ -304,7 +324,7 @@ var Duration=0
 		}      
 	}          
 	Transition t0 whenTimeVar StepTime  -> endDoMoveForward		
- 		         	whenEvent sonarRobot  -> stepFail  
+ 		         	whenMsg sonarRobot  -> stepFail  
  		    
 	State endDoMoveForward{
 		forward robotactuator -m robotCmd : robotCmd(h)

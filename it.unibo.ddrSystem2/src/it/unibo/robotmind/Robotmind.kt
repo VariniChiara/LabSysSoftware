@@ -16,8 +16,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		var Curmove     = ""  
-		var IterCounter = 1 
-		var backHome = true
+		var IterCounter = 0 
+		var backHome = false
 		var maxX = 0
 		var maxY = 0
 		var finish = false
@@ -29,9 +29,13 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
+						println("&&&  robotmind STARTED")
 						solve("consult('ddrsys.pl')","") //set resVar	
 						solve("consult('resourceModel.pl')","") //set resVar	
 						println("Robot intialized")
+						itunibo.planner.plannerUtil.initAI(  )
+						println("INITIAL MAP")
+						itunibo.planner.plannerUtil.showMap(  )
 					}
 					 transition( edgeName="goto",targetState="waitForStart", cond=doswitch() )
 				}	 
@@ -39,14 +43,32 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
 					}
-					 transition(edgeName="t00",targetState="initMap",cond=whenDispatch("startCmd"))
+					 transition(edgeName="t00",targetState="startExploration",cond=whenDispatch("startCmd"))
+					transition(edgeName="t01",targetState="startExplorationTest",cond=whenDispatch("startTest"))
 				}	 
-				state("initMap") { //this:State
+				state("startExplorationTest") { //this:State
 					action { //it:State
-						println("&&&  robotmind STARTED")
-						itunibo.planner.plannerUtil.initAI(  )
-						println("INITIAL MAP")
-						itunibo.planner.plannerUtil.showMap(  )
+						finish = true
+								  backHome = false
+						
+								  var x = ""
+								  var y = ""	
+						println("&&&  exploration TEST")
+						println("$name in ${currentState.stateName} | $currentMsg")
+						if( checkMsgContent( Term.createTerm("startTesT(X,Y)"), Term.createTerm("startTest(X,Y)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 x =payloadArg(0) 
+											   y =payloadArg(1) 
+								println(x)
+						}
+						itunibo.planner.plannerUtil.setGoal( "0", "0"  )
+						itunibo.planner.moveUtils.doPlan(myself)
+					}
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+				}	 
+				state("startExploration") { //this:State
+					action { //it:State
+						println("&&&  exploration STARTED")
 						itunibo.planner.plannerUtil.setGoal( "1", "1"  )
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
@@ -84,8 +106,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
-					 transition(edgeName="t01",targetState="stepDone",cond=whenDispatch("stepOk"))
-					transition(edgeName="t02",targetState="stepFailed",cond=whenDispatch("stepFail"))
+					 transition(edgeName="t02",targetState="stepDone",cond=whenDispatch("stepOk"))
+					transition(edgeName="t03",targetState="stepFailed",cond=whenDispatch("stepFail"))
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
@@ -99,11 +121,11 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						var TbackLong = 0L
 						if( checkMsgContent( Term.createTerm("stepFail(R,T)"), Term.createTerm("stepFail(Obs,Time)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								Tback=payloadArg(1).toLong().toString().toInt() 
+								Tback=payloadArg(1).toLong().toString().toInt() / 2
 											TbackLong = Tback.toLong()
 								println("stepFailed ${payloadArg(1).toString()}")
 						}
-						println("moveUtils backToCompensate stepTime=$Tback")
+						println(" backToCompensate stepTime=$Tback")
 						forward("robotCmd", "robotCmd(s)" ,"robotactuator" ) 
 						delay(TbackLong)
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
@@ -114,16 +136,16 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("setGoalAfterWall") { //this:State
 					action { //it:State
+						solve("retractall(move(_))","") //set resVar	
 						
-							println( itunibo.planner.plannerUtil.getDirection())
 							if( itunibo.planner.plannerUtil.getDirection() == "downDir" ){ 
-								maxY = IterCounter-1
+								maxY = itunibo.planner.plannerUtil.getPosY()
 								if(maxX == 0 ){
 									itunibo.planner.plannerUtil.setGoal(IterCounter, maxY)
 								} else {itunibo.planner.plannerUtil.setGoal(maxX, maxY)}
 							} 
 							else if( itunibo.planner.plannerUtil.getDirection() == "rightDir" ){ 
-								maxX = IterCounter-1
+								maxX = itunibo.planner.plannerUtil.getPosX()
 								if (maxY == 0 ){
 									itunibo.planner.plannerUtil.setGoal(maxX, IterCounter)
 								} else { itunibo.planner.plannerUtil.setGoal(maxX, maxY) }
@@ -160,7 +182,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						IterCounter++
 							backHome = true
-							println ("$maxX --- $maxY")
 							if (maxX == 0 && maxY == 0){ itunibo.planner.plannerUtil.setGoal(IterCounter,IterCounter) }
 							else if( maxX != 0 && maxY == 0 ){ itunibo.planner.plannerUtil.setGoal(maxX,IterCounter) } 
 							else if( maxX == 0 && maxY != 0 ){ itunibo.planner.plannerUtil.setGoal(IterCounter, maxY) } 
@@ -175,7 +196,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("endOfJob") { //this:State
 					action { //it:State
-						itunibo.planner.plannerUtil.fixwalls( maxX, maxY  )
+						if (maxX != 0 && maxY != 0) {itunibo.planner.plannerUtil.fixwalls(maxX, maxY)}
 						println("FINAL MAP")
 						itunibo.planner.plannerUtil.showMap(  )
 						println("&&&  planex0 ENDS")

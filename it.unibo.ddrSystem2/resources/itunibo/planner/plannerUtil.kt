@@ -19,6 +19,7 @@ import itunibo.planner.model.RobotState.Direction
 import itunibo.planner.model.RobotAction
 import itunibo.planner.model.RoomMap
 import itunibo.planner.model.Box
+import it.unibo.kactor.ActorBasic
 
 object plannerUtil { 
     private var initialState: RobotState? = null
@@ -137,6 +138,7 @@ object plannerUtil {
         }
 		
         //println("plannerUtil doPlan actions=$actions")
+	
         return actions
     }
 	
@@ -147,6 +149,7 @@ object plannerUtil {
             plannerUtil.doMove(iter.next().toString())
         }
     }
+	
 
 
 /*

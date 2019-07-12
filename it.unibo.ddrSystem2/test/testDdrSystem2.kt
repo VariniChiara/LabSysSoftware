@@ -3,11 +3,12 @@ import it.unibo.kactor.*
 import kotlinx.coroutines.*
 import org.junit.Assert.*
 import org.junit.*
+import itunibo.planner.model.RobotState.Direction
 
 import java.io.File
 
 
-class TestDdrSystem1 {
+class TestDdrSystem2 {
 	
 	companion object{
 		var startUpDone = false 
@@ -15,7 +16,6 @@ class TestDdrSystem1 {
 	
 	var console : ActorBasic? = null
 	var robot : ActorBasic? = null
-	
 	
 	@Before
 	@Throws(Exception::class)
@@ -113,56 +113,82 @@ class TestDdrSystem1 {
 //		return mapStr
 //	}
 	
+	fun getRobotState(): String {
+		val dir = itunibo.planner.plannerUtil.getDirection()
+		val pos = getRobotPos()
+		return dir+ ", "+pos 
+	}
+	
+	fun getRobotPos(): String {
+		val x = itunibo.planner.plannerUtil.getPosX()
+		val y = itunibo.planner.plannerUtil.getPosY()
+		return "("+x+","+y+")"
+	}
+	
 	fun printRobotState() {
-		robot!!.solve( "model( actuator, robot, S, _, _ )", "S"  )
-		var state = "${robot!!.resVar}"
-		robot!!.solve( "model( actuator, robot, _, D, _ )", "D"  )
-		var direction = "${robot!!.resVar}"
-		robot!!.solve( "model( actuator, robot, _, _, P )", "P"  )
-		var position = "${robot!!.resVar}"
-		
-		println( "FINAL ROBOT STATE= [actuator, robot, "+state+","+direction+","+position+"]")
+		var state = getRobotState()
+		println( "ROBOT STATE= [actuator, robot,"+state+"]")
 	}
 	
 	//some tests to check robot behaviour	
-	@Test
+	//@Test
 	fun initialStateTest(){
 		println("%%%%%%%%%%%%%% initialStateTest %%%%%%%%%%%%%%")
-		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(south), position(0,0))")
+		val state = getRobotState()
+		assertTrue(state == "downDir, (0,0)")
 		printRobotState()
+	}
+
+	//@Test
+	fun cheGoalTest() {
 		
+		GlobalScope.launch{
+ 			console!!.forward("startTest", "startTest(1,1)", "robotmind")
+ 		}
+		delay(10000)
+		val pos = getRobotPos()
+		assertTrue(pos == "(1,1)")
+		
+		printRobotState()
 	}
 
 	
+	/*
+ 	Turn on the Virtual robot
+ 		Simulator config
+ 	floor: {
+        size: { x: 35, y: 35 }
+    },
+    player: {
+        position: { x: 0.075, y: 0.075 },		//INIT
+        speed: 0.2
+    },
+	 */
 	@Test
-	fun moveTest() {
-		println("%%%%%%%%%%%%%% moveTest  %%%%%%%%%%%%%%")
+	fun finalMapTest() {
 		
-		rotateRight()
-		delay(700)
-		
-		rotateLeft()
-		delay(500)
-		
-		moveForward()
-		delay(700)
-		
-		moveBackward()
-		delay(700)
-		
-		stoprobot()
-		
-		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(south), position(0,0))")
-		printRobotState()
- 	}
+		val testRoomMap = """|r, 1, 1, 1, 1, 1, 1, 1, X,  
+|1, 1, 1, 1, 1, 1, 1, 1, X, 
+|1, 1, 1, 1, 1, 1, 1, 1, X, 
+|1, 1, 1, 1, 1, 1, 1, 1, X, 
+|1, 1, 1, 1, 1, 1, 1, 1, X, 
+|1, 1, 1, 1, 1, 1, 1, 1, X, 
+|1, 1, 1, 1, 1, 1, 1, 1, X, 
+|1, 1, 1, 1, 1, 1, 1, 1, X, 
+|X, X, X, X, X, X, X, X, X, """
+
 	
-	@Test
-	fun wallDetectingTest() {
-		moveForward()	//no obstacle assumed
-		moveForwardWithWall()
+		GlobalScope.launch{
+ 			console!!.forward("startCmd", "startCmd", "robotmind")
+ 		}
+		delay(99000)
 		
-		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), _, _)" )
-		printRobotState()
+		println(testRoomMap)
+		println(itunibo.planner.plannerUtil.getMap())
+		assert(itunibo.planner.plannerUtil.getMap() == testRoomMap)
+		
+		
+		
 	}
 	
 }
