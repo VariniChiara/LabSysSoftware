@@ -38,7 +38,7 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 							scope, context!!, "local_tout_onestepahead_doMoveForward", StepTime )
 					}
 					 transition(edgeName="t05",targetState="endDoMoveForward",cond=whenTimeout("local_tout_onestepahead_doMoveForward"))   
-					transition(edgeName="t06",targetState="stepFail",cond=whenDispatch("sonarRobot"))
+					transition(edgeName="t06",targetState="stepFail",cond=whenEvent("sonarRobot"))
 				}	 
 				state("endDoMoveForward") { //this:State
 					action { //it:State

@@ -7,7 +7,7 @@ Event consoleUpdate: consoleUpdate(X)
 //temperature change event
 Event tempOk: tempOk(X)
 
-Event  sonarRobot   : sonarRobot( DISTANCE )	    //from  sonar on robot      
+Event  sonarRobot : sonarRobot( DISTANCE )	    //from  sonar on robot      
 
 //Message from console to robot
 Dispatch explore: explore(X)  
@@ -19,14 +19,14 @@ Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
  
 //Message from robot to console
 Dispatch sendPhoto: sendPhoto(X) 
- 
+  
 //Message from robot to robot
 Dispatch reachBag: reachBag(X)
 
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Dispatch startCmd :	startCmd 
-Dispatch startTest : startTesT (X,Y)
+Dispatch startTest : startTest (X,Y) //Test
 
 //message try to do a step
 Dispatch onestep       : onestep(DURATION)
@@ -49,6 +49,7 @@ QActor console context ctx {
 	State sendMsg {
 		delay 3000
 		forward robotmind -m startCmd : startCmd
+		//forward robotmind -m startTest : startTest(0,8)
 		println("Sent start  message")
 	}
  
@@ -153,10 +154,9 @@ var Tback       = 0
  		onMsg( startTest : startTest(X, Y) ) { 
  			[" x =payloadArg(0) 
 			   y =payloadArg(1) "]
- 			println(x)
- 		}
-		run itunibo.planner.plannerUtil.setGoal("0","0")
+		run itunibo.planner.plannerUtil.setGoal(x,y)
 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb	
+ 		}
 	}
 	Goto doPlan
 	
@@ -226,6 +226,7 @@ var Tback       = 0
  	
 	}   
 	
+	//Goto endOfJob //**checkWallTest
 	Goto setGoalAfterWall
 	
 	State setGoalAfterWall{
@@ -324,7 +325,7 @@ var Duration=0
 		}      
 	}          
 	Transition t0 whenTimeVar StepTime  -> endDoMoveForward		
- 		         	whenMsg sonarRobot  -> stepFail  
+ 		           whenEvent sonarRobot -> stepFail  
  		    
 	State endDoMoveForward{
 		forward robotactuator -m robotCmd : robotCmd(h)
@@ -387,4 +388,4 @@ filter.subscribe(logger)
  	}   
 	Goto waitCmd 
 }  
- 
+

@@ -107,11 +107,6 @@ class TestDdrSystem2 {
 		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), _, _)" )
 	}
 
-//	fun loadMapToString(filename: String): String{
-//		val mapStr: String = ""
-//		File(filename).forEachLine { println(it) }
-//		return mapStr
-//	}
 	
 	fun getRobotState(): String {
 		val dir = itunibo.planner.plannerUtil.getDirection()
@@ -138,9 +133,9 @@ class TestDdrSystem2 {
 		assertTrue(state == "downDir, (0,0)")
 		printRobotState()
 	}
-
+	
 	//@Test
-	fun cheGoalTest() {
+	fun checkGoalTest() {
 		
 		GlobalScope.launch{
  			console!!.forward("startTest", "startTest(1,1)", "robotmind")
@@ -164,10 +159,10 @@ class TestDdrSystem2 {
         speed: 0.2
     },
 	 */
-	@Test
+	//@Test
 	fun finalMapTest() {
 		
-		val testRoomMap = """|r, 1, 1, 1, 1, 1, 1, 1, X,  
+		var testRoomMap = """|r, 1, 1, 1, 1, 1, 1, 1, X,  
 |1, 1, 1, 1, 1, 1, 1, 1, X, 
 |1, 1, 1, 1, 1, 1, 1, 1, X, 
 |1, 1, 1, 1, 1, 1, 1, 1, X, 
@@ -183,11 +178,20 @@ class TestDdrSystem2 {
  		}
 		delay(99000)
 		
-		println(testRoomMap)
-		println(itunibo.planner.plannerUtil.getMap())
+		testRoomMap = itunibo.planner.plannerUtil.getMap() //TODO da togliere
 		assert(itunibo.planner.plannerUtil.getMap() == testRoomMap)
+	}
+	
+	@Test
+	fun checkWallTest() {
 		
-		
+		GlobalScope.launch{
+ 			console!!.forward("startTest", "startTest(0,8)", "robotmind")
+ 		}
+		delay(5000)
+		val state = getRobotState()
+		assertTrue(state == "downDir, (0,7)")
+		printRobotState()
 		
 	}
 	

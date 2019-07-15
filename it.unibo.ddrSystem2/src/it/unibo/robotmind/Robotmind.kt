@@ -55,14 +55,13 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 								  var y = ""	
 						println("&&&  exploration TEST")
 						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("startTesT(X,Y)"), Term.createTerm("startTest(X,Y)"), 
+						if( checkMsgContent( Term.createTerm("startTest(X,Y)"), Term.createTerm("startTest(X,Y)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 x =payloadArg(0) 
 											   y =payloadArg(1) 
-								println(x)
+								itunibo.planner.plannerUtil.setGoal( x, y  )
+								itunibo.planner.moveUtils.doPlan(myself)
 						}
-						itunibo.planner.plannerUtil.setGoal( "0", "0"  )
-						itunibo.planner.moveUtils.doPlan(myself)
 					}
 					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
 				}	 
