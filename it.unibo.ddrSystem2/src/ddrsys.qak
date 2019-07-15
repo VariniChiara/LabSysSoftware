@@ -48,7 +48,7 @@ QActor console context ctx {
 	
 	State sendMsg {
 		delay 3000
-		//forward robotmind -m startCmd : startCmd
+		forward robotmind -m startCmd : startCmd
 		println("Sent start  message")
 	}
  
