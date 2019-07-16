@@ -19,7 +19,7 @@ Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
  
 //Message from robot to console
 Dispatch sendPhoto: sendPhoto(X) 
-  
+   
 //Message from robot to robot
 Dispatch reachBag: reachBag(X)
 
@@ -45,7 +45,7 @@ QActor console context ctx {
 	} 
 	
 	Goto sendMsg
-	
+	 
 	State sendMsg {
 		delay 3000
 		forward robotmind -m startCmd : startCmd
