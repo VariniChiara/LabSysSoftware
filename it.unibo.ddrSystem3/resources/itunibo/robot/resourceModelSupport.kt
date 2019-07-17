@@ -13,12 +13,12 @@ lateinit var resourcecoap : modelResourceCoap
 	
 	fun updateRobotModel( actor: ActorBasic, content: String ){
  			actor.solve(  "action(robot, move($content) )" ) //change the robot state model
-			actor.solve(  "model( A, robot, STATE )" )
+			actor.solve(  "model( A, robot, STATE, DIR, POS)" )
 			val RobotState = actor.getCurSol("STATE")
 			//println("			resourceModelSupport updateModel RobotState=$RobotState")
 			actor.scope.launch{
  				actor.emit( "modelChanged" , "modelChanged(  robot,  $content)" )  //for the robotmind
-				actor.emit( "modelContent" , "content( robot( $RobotState ) )" )
+				actor.emit( "modelContent" , "content( robot( $RobotState ) )" ) //for the web server
 				resourcecoap.updateState( "robot( $RobotState )" )
   			}	
 	}	
@@ -31,7 +31,15 @@ lateinit var resourcecoap : modelResourceCoap
  				actor.emit( "modelContent" , "content( sonarRobot( $SonarState ) )" )
 				resourcecoap.updateState( "sonarRobot( $SonarState )" )
  			}	
-	}	
+	}
+	
+	fun updateRoomMapModel( actor: ActorBasic, content: String ){
+	println("			resourceModelSupport updateRoomMapModel content=$content")
+		actor.scope.launch{
+			actor.emit( "modelContent" , "content( roomMap( state( '$content' ) ) )" )
+			resourcecoap.updateState( "roomMap( '$content' )" )
+		}	
+	}
  	
 }
 

@@ -4,6 +4,8 @@
 
  
 model( actuator, robot, state(stopped), direction(south), position(0,0)). %% initial state
+model( sensor,   sonarRobot, state(unknown) ).   %% initial state
+
 
 action(robot, move(w)) :- changeModel( actuator, robot, movingForward  ).
 action(robot, move(s)) :- changeModel( actuator, robot, movingBackward ).
@@ -11,14 +13,16 @@ action(robot, move(a)) :- changeModel( actuator, robot, rotateLeft     ).
 action(robot, move(d)) :- changeModel( actuator, robot, rotateRight    ).
 action(robot, move(h)) :- changeModel( actuator, robot, stopped        ).
 
+action(sonarRobot, V)  :- changeModel( sensor, sonarRobot, V  ).
 
-changeModel( CATEG, NAME, VALUE) :-
+changeModel( CATEG, robot, VALUE) :-
    update_pos(VALUE, ND, NP),
    replaceRule( model(C, N, _, _, _),  model(C, N, state(VALUE), ND, NP) ),
    showResourceModel1.	%% at each change, show the model
-
-%initResourceTheory :- output("resourceModel loaded").
-%:- initialization(initResourceTheory).
+  
+changeModel( CATEG, sonarRobot, VALUE ) :-
+	replaceRule( model(CATEG,sonarRobot,_),  model(CATEG,sonarRobot,state(VALUE)) ).
+%% showResourceModel.	%% at each change, show the model
 
 update_pos(stopped, D, P):-	model(_,_,_,D, P),!.
 
@@ -85,4 +89,7 @@ showResourceModel1 :-
 	print(" ]").
  			
 output( M ) :- stdout <- println( M ).
+
+initResourceTheory :- output("resourceModel loaded").
+:- initialization(initResourceTheory).
 		

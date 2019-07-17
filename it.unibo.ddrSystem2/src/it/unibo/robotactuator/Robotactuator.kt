@@ -23,7 +23,6 @@ class Robotactuator ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						val filter = itunibo.robot.sonaractorfilter( "sonaractorfilter" , myself  ) 
 						val logger = itunibo.robot.Logger("logFiltered")
 						filter.subscribe(logger)  
-						
 						solve("consult('basicRobotConfig.pl')","") //set resVar	
 						solve("robot(R,PORT)","") //set resVar	
 						if(currentSolution.isSuccess()) { println("USING ROBOT : ${getCurSol("R")},  port= ${getCurSol("PORT")} ")

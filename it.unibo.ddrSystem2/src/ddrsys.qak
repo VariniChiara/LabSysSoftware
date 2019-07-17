@@ -1,6 +1,8 @@
 
 System ddrsys
 
+mqttBroker "localhost" : 1883  
+
 //robot state update event
 Event consoleUpdate: consoleUpdate(X) 
 
@@ -34,9 +36,9 @@ Dispatch stepOk        : stepOk
 Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
 
 
-Context ctx ip [host="localhost" port=8090] //-g cyan
+Context ctx ip [host="localhost" port=8090] -mqtt //-g cyan 
 
-ExternalQActor robotDataSource context ctx
+//ExternalQActor robotDataSource context ctx
 
 QActor console context ctx {  
 	
@@ -358,7 +360,6 @@ QActor robotactuator context ctx {
 val filter = itunibo.robot.sonaractorfilter( \"sonaractorfilter\" , myself  ) 
 val logger = itunibo.robot.Logger(\"logFiltered\")
 filter.subscribe(logger)  
-
 "] 	 	
  			  
    		solve( consult("basicRobotConfig.pl") )   

@@ -18,16 +18,10 @@ class Robotactuator ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						  
-						//CREATE A PIPE for the sonar-data stream
-						val filter = itunibo.robot.sonaractorfilter( "sonaractorfilter" , myself  ) 
-						val logger = itunibo.robot.Logger("logFiltered")
-						filter.subscribe(logger)  
-						
 						solve("consult('basicRobotConfig.pl')","") //set resVar	
 						solve("robot(R,PORT)","") //set resVar	
 						if(currentSolution.isSuccess()) { println("USING ROBOT : ${getCurSol("R")},  port= ${getCurSol("PORT")} ")
-						itunibo.robot.robotSupport.create(myself ,getCurSol("R").toString(), getCurSol("PORT").toString(), filter )
+						itunibo.robot.robotSupport.create(myself ,getCurSol("R").toString(), getCurSol("PORT").toString(), null )
 						 }
 						else
 						{ println("no robot")
@@ -43,12 +37,12 @@ class Robotactuator ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitCmd") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t07",targetState="handleRobotCmd",cond=whenDispatch("robotCmd"))
+					 transition(edgeName="t01",targetState="handleRobotCmd",cond=whenDispatch("robotCmd"))
 				}	 
 				state("handleRobotCmd") { //this:State
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("robotCmd(CMD)"), Term.createTerm("robotCmd(MOVE)"), 
+						if( checkMsgContent( Term.createTerm("robotCmd(X)"), Term.createTerm("robotCmd(MOVE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})"  )
 						}

@@ -1,6 +1,8 @@
 
 System ddrsys
 
+mqttBroker "localhost" : 1883
+
 //robot state update event
 Event consoleUpdate: consoleUpdate(X) 
 
@@ -33,83 +35,98 @@ Dispatch onestep       : onestep(DURATION)
 Dispatch stepOk        : stepOk
 Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
 
+Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model change
+Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
 
-Context ctx ip [host="localhost" port=8090] //-g cyan
+Event  local_modelChanged   : modelChanged( TARGET, VALUE ) 
+
+
+Context ctx ip [host="localhost" port=8090] -mqtt//-g cyan
 
 ExternalQActor robotDataSource context ctx
 
 QActor console context ctx {  
 	
 	State s0 initial {
-		println("Console intialized")
+		println("%%%% Console intialized %%%%")
 	} 
 	
-	Goto sendMsg
+	Goto waitForStart
 	 
-	State sendMsg {
-		delay 3000
-		forward robotmind -m startCmd : startCmd
+	State waitForStart {}
+	
+	Transition s0 whenMsg userCmd -> sendStart
+	
+	State sendStart{
+		//delay 3000
+		//forward robotmind -m startCmd : startCmd
 		//forward robotmind -m startTest : startTest(0,8)
+		
+		onMsg (userCmd : userCmd(start)){
+			forward robotmind -m startCmd : startCmd
+		}
 		println("Sent start  message")
 	}
- 
-}
-
-/*QActor sourcemodel context ctx{
 	
-	State s0 initial {}
+	Goto waitForStop 
 	
-	Goto waitForEvents
-	  
-	//starting proactive behaviour
+	State waitForStop{}
 	
-	State waitForEvents {		} 
+	Transition s0 whenMsg userCmd -> sendStop
 	
-	Transition t1   whenMsg userCmd  -> handleCmd
-					whenMsg robotCmd -> handleCmd
-					whenEvent sonarRobot -> handleSonarRobot
- 	 
-	State handleCmd{  
-		printCurrentMessage
-		onMsg (userCmd   : userCmd( CMD )){
-			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
-			//forward basicrobot -m  robotCmd  : robotCmd( CMD ) 
-			
+	State sendStop{		
+		onMsg (userCmd : userCmd(stop)){
+			forward robotmind -m userCmd : userCmd(stop)
 		}
-		onMsg (robotCmd   : robotCmd( CMD )){
-			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
-			//forward basicrobot -m  robotCmd  : robotCmd( CMD )
-		}
+		println("Sent stop  message")
 	}
 	
-	Goto waitForEvents
-	
-	State handleSonarRobot{
- 		printCurrentMessage
- 		onMsg ( sonarRobot : sonarRobot(DISTANCE) ){
-			["obstacle = Integer.parseInt( payloadArg(0) ) < 10 "]
- 		} 	 
- 	}
- 	
-	Goto handeObstacle  if "obstacle" else waitForEvents 
-	
-	State handeObstacle{		
-		println("handleObstacle: going backward")  
- 		forward robotmind -m robotCmd : robotCmd( s ) 		
- 			//UPDATE the model : supported action
- 			//run itunibo.robot.resourceModelSupport.updateModel( myself, "s" )
- 		delay 300
- 		println("handeObstacle: stopping")  
-	    forward robotmind -m robotCmd : robotCmd( h )
- 			//UPDATE the model : supported action
- 			//run itunibo.robot.resourceModelSupport.updateModel( myself, "h" )
-  	}
-  	
-	Goto waitForEvents
-	
-	
 }
-*/
+
+QActor resourcemodel context ctx{
+["var dobackstep = false"]
+	State s0 initial {		
+		solve( consult("sysRules.pl")	 )       
+		solve( consult("resourceModel.pl")	 )
+		solve( showResourceModel ) 		
+		run itunibo.coap.modelResourceCoap.create( myself, "resourcemodel" ) //CoAP access
+	} 
+	Goto waitModelChange
+	 
+	State waitModelChange{ }
+	Transition t0 whenMsg modelChange -> changeModel //forward from sonaHendler (*** pipe)
+	              whenMsg modelUpdate -> updateModel //forward from robotmind
+
+	State updateModel{  
+		printCurrentMessage
+		onMsg( modelUpdate : modelUpdate(robot,V ) ) {
+			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
+		}
+		onMsg( modelUpdate : modelUpdate(sonarRobot,V ) ) {
+			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
+		}
+		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {  //JULY19
+			//println("modelUpdate roomMap")
+			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
+		}
+	} 
+    Goto  waitModelChange
+    
+	State changeModel{  
+		//printCurrentMessage 
+		//ROBOT MOVE
+		onMsg( modelChange : modelChange( robot,V ) ) { // V= w | ...
+			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
+			emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
+		} 
+		//SONAR DATA  
+//		onMsg( modelChange : modelChange( sonarRobot,V ) ) { // V= w | ...
+//			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
+//		}
+	}  
+	Goto  waitModelChange
+}
+
 
 QActor robotmind context ctx { 
 ["var Curmove     = \"\"  
@@ -134,7 +151,7 @@ var Tback       = 0
 		run itunibo.planner.plannerUtil.showMap() 
 		
 	} 
-	
+
 	Goto waitForStart
 	
 	State waitForStart {	printCurrentMessage }
