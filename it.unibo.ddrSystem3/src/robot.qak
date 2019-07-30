@@ -4,7 +4,7 @@ mqttBroker "localhost" : 1883
 
 Dispatch robotCmd : robotCmd(X)
 
-Event  userCmd        : userCmd(X)	//from GUI X = w | a | s | d | h       
+Event  userCmd    : userCmd(X)	//from GUI X = w | a | s | d | h       
 
 Context robotCtx ip [host="localhost" port=8090] -mqtt//-g cyan
 
