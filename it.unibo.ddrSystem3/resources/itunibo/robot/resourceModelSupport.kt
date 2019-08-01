@@ -15,10 +15,12 @@ lateinit var resourcecoap : modelResourceCoap
  			actor.solve(  "action(robot, move($content) )" ) //change the robot state model
 			actor.solve(  "model( A, robot, STATE, DIR, POS)" )
 			val RobotState = actor.getCurSol("STATE")
+			val RobotDir = actor.getCurSol("DIR")
+			val RobotPos = actor.getCurSol("POS")
 			//println("			resourceModelSupport updateModel RobotState=$RobotState")
 			actor.scope.launch{
  				actor.emit( "modelChanged" , "modelChanged(  robot,  $content)" )  //for the robotmind
-				actor.emit( "modelContent" , "content( robot( $RobotState ) )" ) //for the web server
+				actor.emit( "modelContent" , "content( robot( $RobotState, $RobotDir, $RobotPos) )" ) //for the web server
 				//resourcecoap.updateState( "robot( $RobotState )" )
   			}	
 	}	
