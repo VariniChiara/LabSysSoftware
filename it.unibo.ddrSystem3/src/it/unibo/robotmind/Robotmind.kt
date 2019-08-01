@@ -26,16 +26,14 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("waitCmd") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t00",targetState="handleUserCmd",cond=whenEvent("userCmd"))
+					 transition(edgeName="t00",targetState="handleModelChanged",cond=whenEvent("modelChanged"))
 				}	 
-				state("handleUserCmd") { //this:State
+				state("handleModelChanged") { //this:State
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("userCmd(X)"), Term.createTerm("userCmd(X)"), 
+						if( checkMsgContent( Term.createTerm("modelChanged(TARGET,VALUE)"), Term.createTerm("modelChanged(robot,CMD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								forward("robotCmd", "robotCmd(${payloadArg(0)})" ,"robotactuator" ) 
-								solve("action(robot,move(${payloadArg(0)}))","") //set resVar	
-								solve("showResourceModel","") //set resVar	
+								forward("robotCmd", "robotCmd(${payloadArg(1)})" ,"robotactuator" ) 
 						}
 					}
 					 transition( edgeName="goto",targetState="waitCmd", cond=doswitch() )

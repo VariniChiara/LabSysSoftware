@@ -19,7 +19,7 @@ lateinit var resourcecoap : modelResourceCoap
 			actor.scope.launch{
  				actor.emit( "modelChanged" , "modelChanged(  robot,  $content)" )  //for the robotmind
 				actor.emit( "modelContent" , "content( robot( $RobotState ) )" ) //for the web server
-				resourcecoap.updateState( "robot( $RobotState )" )
+				//resourcecoap.updateState( "robot( $RobotState )" )
   			}	
 	}	
 	fun updateSonarRobotModel( actor: ActorBasic, content: String ){
