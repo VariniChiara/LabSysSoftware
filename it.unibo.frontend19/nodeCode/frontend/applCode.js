@@ -8,19 +8,19 @@ const logger       	= require('morgan');	//see 10.1 of nodeExpressWeb.pdf;
 //const cookieParser= require('cookie-parser');
 const bodyParser   	= require('body-parser');
 const fs           	= require('fs');
-const index         = require('./appServer/routes/index');				 
+const index         = require('./appServer/routes/index');
 var io              ; 	//Upgrade for socketIo;
 
 //for delegate
-const mqttUtils     = require('./uniboSupports/mqttUtils');  
-const coap          = require('./uniboSupports/coapClientToResourceModel');  
-//require("node-coap-client").CoapClient; 
+const mqttUtils     = require('./uniboSupports/mqttUtils');
+const coap          = require('./uniboSupports/coapClientToResourceModel');
+//require("node-coap-client").CoapClient;
 
 var app              = express();
 
 
 // view engine setup;
-app.set('views', path.join(__dirname, 'appServer', 'views'));	 
+app.set('views', path.join(__dirname, 'appServer', 'views'));
 app.set('view engine', 'ejs');
 
 //create a write stream (in append mode) ;
@@ -41,7 +41,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'jsCode'))); //(***)
 
 //DEFINE THE ROUTES ;
-//app.use('/', index);		 
+//app.use('/', index);
 
 //Creates a default route for /pi;
 app.get('/info', function (req, res) {
@@ -50,45 +50,45 @@ app.get('/info', function (req, res) {
 
 app.get('/', function(req, res) {
 	res.render("index");
-});	
+});
 
 app.get('/robotmodel', function(req, res) {
 	res.send( mqttUtils.getrobotmodel() )
-});	
+});
 app.get('/sonarrobotmodel', function(req, res) {
 	res.send( mqttUtils.getsonarrobotmodel() )
-});	
+});
 
 app.get('/appl', function(req, res) {
 	res.render("indexAppl");
-});	
+});
 
 /*
  * ====================== COMMANDS ================
  */
-	app.post("/w", function(req, res,next) { handlePostMove("w","moving forward", req,res,next); });	
+	app.post("/w", function(req, res,next) { handlePostMove("w","moving forward", req,res,next); });
 	app.post("/s", function(req, res,next) { handlePostMove("s","moving backward",req,res,next); });
-	app.post("/a", function(req, res,next) { handlePostMove("a","moving left",    req,res,next); });	
-	app.post("/l", function(req, res,next) { handlePostMove("l","moving left90",  req,res,next); });	
+	app.post("/a", function(req, res,next) { handlePostMove("a","moving left",    req,res,next); });
+	app.post("/l", function(req, res,next) { handlePostMove("l","moving left90",  req,res,next); });
 	app.post("/d", function(req, res,next) { handlePostMove("d","moving right",   req,res,next); });
 	app.post("/r", function(req, res,next) { handlePostMove("r","moving right90", req,res,next); });
-	app.post("/h", function(req, res,next) { handlePostMove("h","stopped",        req,res,next); });	
- 
+	app.post("/h", function(req, res,next) { handlePostMove("h","stopped",        req,res,next); });
+
   	//APPLICATION
 	app.post("/startappl", function(req, res,next) {
   		delegateForAppl( "startAppl", req, res );
   		next();
- 	});		
+ 	});
 	app.post("/stopappl", function(req, res,next) {
   		delegateForAppl( "stopAppl",  req, res );
   		next();
- 	});		
+ 	});
 
 function handlePostMove( cmd, msg, req, res, next ){
 		result = "Web server done: " + cmd
- 		delegate( cmd, msg, req, res);	
+ 		delegate( cmd, msg, req, res);
   		next();
-} 	
+}
 //=================== UTILITIES =========================
 
 var result = "";
@@ -100,53 +100,53 @@ app.setIoSocket = function( iosock ){
 }
 
 function delegate( cmd, newState, req, res ){
- 	//publishMsgToRobotmind(cmd);                  //interaction with the robotmind 
+ 	//publishMsgToRobotmind(cmd);                  //interaction with the robotmind
 	//publishEmitUserCmd(cmd);                     //interaction with the basicrobot
 	publishMsgToResourceModel("robot",cmd);	       //for hexagonal mind
 	//changeResourceModelCoap(cmd);		            //for hexagonal mind RESTful m2m
-	
-	
+
+
 	//msg(MSGID,dispatch,producer,consumer,MSGCONTENT,MSGNUM)
 	//************
-	//var msgstr = "msg(robotCmd,dispatch,js,robotactuator,robotCmd("+cmd +"),1)"  ; 
+	//var msgstr = "msg(robotCmd,dispatch,js,robotactuator,robotCmd("+cmd +"),1)"  ;
 	//mqttUtils.publish( msgstr, "unibo/qak/robotactuator" );
-	
- } 
+
+ }
 function delegateForAppl( cmd, req, res, next ){
-     console.log("app delegateForAppl cmd=" + cmd); 
+     console.log("app delegateForAppl cmd=" + cmd);
      result = "Web server delegateForAppl: " + cmd;
- 	 publishMsgToRobotapplication( cmd );		     
-} 
+ 	 publishMsgToRobotapplication( cmd );
+}
 
 /*
  * ============ TO THE BUSINESS LOGIC =======
  */
- 
-var publishMsgToRobotmind = function( cmd ){  
-  	var msgstr = "msg(userCmd,dispatch,js,robotmind,userCmd("+cmd +"),1)"  ;  
+
+var publishMsgToRobotmind = function( cmd ){
+  	var msgstr = "msg(userCmd,dispatch,js,robotmind,userCmd("+cmd +"),1)"  ;
   	console.log("publishMsgToRobotmind forward> "+ msgstr);
    	mqttUtils.publish( msgstr, "unibo/qak/robotmind" );
 }
 
-var publishMsgToResourceModel = function( target, cmd ){  
-  	var msgstr = "msg(modelChange,dispatch,js,robotmodel,modelChange("+target+", "+cmd +"),1)"  ;  
-  	console.log("publishMsgToRobotModel forward> "+ msgstr); 	
+var publishMsgToResourceModel = function( target, cmd ){
+  	var msgstr = "msg(modelChange,dispatch,js,robotmodel,modelChange("+target+", "+cmd +"),1)"  ;
+  	console.log("publishMsgToRobotModel forward> "+ msgstr);
    	mqttUtils.publish( msgstr, "unibo/qak/robotmodel" );
 }
 
-var changeResourceModelCoap = function( cmd ){  
+var changeResourceModelCoap = function( cmd ){
     console.log("coap PUT> "+ cmd);
 	coap.coapPut(cmd);
 }
 
-var publishEmitUserCmd = function( cmd ){  
- 	var eventstr = "msg(userCmd,event,js,none,userCmd("+cmd +"),1)"  ;  
+var publishEmitUserCmd = function( cmd ){
+ 	var eventstr = "msg(userCmd,event,js,none,userCmd("+cmd +"),1)"  ;
     console.log("emits> "+ eventstr);
- 	mqttUtils.publish( eventstr, "unibo/qak/events" );	 
+ 	mqttUtils.publish( eventstr, "unibo/qak/events" );
 }
 
 var publishMsgToRobotapplication = function (cmd){
-   	var msgstr = "msg(" + cmd + ",dispatch,js,robotmindapplication,"+ cmd +"(go),1)"  ;  
+   	var msgstr = "msg(" + cmd + ",dispatch,js,robotmindapplication,"+ cmd +"(go),1)"  ;
   	console.log("publishMsgToRobotapplication forward> "+ msgstr);
    	mqttUtils.publish( msgstr, "unibo/qak/robotmindapplication" );
 }
@@ -167,7 +167,7 @@ app.use( function(req,res){
 	   */
 	   //return res.render('index' );  //NO: we loose the message sent via socket.io
 	}catch(e){console.info("SORRY ..." + e);}
-	} 
+	}
 );
 
 //app.use(converter());

@@ -36,6 +36,7 @@ class Robotmodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, 
 						if( checkMsgContent( Term.createTerm("modelUpdate(TARGET,VALUE)"), Term.createTerm("modelUpdate(robot,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								itunibo.robot.resourceModelSupport.updateRobotModel(myself ,payloadArg(1) )
+								solve("showResourceModel","") //set resVar	
 						}
 						if( checkMsgContent( Term.createTerm("modelUpdate(TARGET,VALUE)"), Term.createTerm("modelUpdate(sonarRobot,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -50,6 +51,7 @@ class Robotmodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, 
 				}	 
 				state("changeModel") { //this:State
 					action { //it:State
+						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(robot,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								itunibo.robot.resourceModelSupport.updateRobotModel(myself ,payloadArg(1) )

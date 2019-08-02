@@ -1,7 +1,7 @@
 /*
- * frontend/frontendServer.js 
+ * frontend/frontendServer.js
  */
-const coap = require('./uniboSupports/coapClientToResourceModel');  
+const coap = require('./uniboSupports/coapClientToResourceModel');
 var appl   = require('./applCode');  //previously was app;
 var http   = require('http');
 var io              ; 	//Upgrade for socketIo;
@@ -10,16 +10,16 @@ var port = 8080;
 
 var createServer = function (  port ) {
   console.log(" process.env.PORT=" + process.env.PORT + " port=" + port);
-  
-  server = http.createServer(appl);   
-  
-  io     = require('socket.io').listen(server); //Upgrade for socketio;  
-  
+
+  server = http.createServer(appl);
+
+  io     = require('socket.io').listen(server); //Upgrade for socketio;
+
   server.on('listening', onListening);
   server.on('error', onError);
-  
+
   //setInterval( tick, 5000 );
-  
+
   server.listen( port );
 
   io.sockets.on('connection', function(socket) {
@@ -29,9 +29,9 @@ var createServer = function (  port ) {
 	});
 	appl.setIoSocket( io );
   };
-  
 
-function tick(){ 
+
+function tick(){
 	var now = new Date().toString();
 	console.log("sending ... " + io);
 	io.sockets.send("HELLO FROM SERVER time=" + now);
@@ -45,7 +45,7 @@ function main() {
 	console.log("coapAddress=" + String(process.argv[2]) );
     const coapAddr = String(process.argv[2]);
     coap.setcoapAddr( coapAddr )
-    createServer( 8080 );     
+    createServer( 8080 );
 }
 
 
