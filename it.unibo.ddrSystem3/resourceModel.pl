@@ -39,22 +39,22 @@ update_pos(R, direction(ND), NP):-	model(_,_,_,direction(D),NP),  new_dir(R,D, N
 new_dir(rotateLeft, east, north).
 new_dir(rotateLeft, south, east).
 new_dir(rotateLeft, west, south).
-new_dir(rotateLeft, notrh, west).
+new_dir(rotateLeft, north, west).
 
 new_dir(rotateRight, east, south).
 new_dir(rotateRight, south, west).
-new_dir(rotateRight, west, notrh).
-new_dir(rotateRight, notrh, east).
+new_dir(rotateRight, west, north).
+new_dir(rotateRight, north, east).
 
 find_new_pos(movingForward, east, NP):- calculate_pos(1, 0, NP).
 find_new_pos(movingForward, south, NP):- calculate_pos(0, 1, NP).
 find_new_pos(movingForward, west, NP):- calculate_pos(-1, 0, NP).
-find_new_pos(movingForward, notrh, NP):- calculate_pos(0, -1, NP).
+find_new_pos(movingForward, north, NP):- calculate_pos(0, -1, NP).
 
 find_new_pos(movingBackward, east, NP):- calculate_pos(-1, 0, NP).
 find_new_pos(movingBackward, south, NP):- calculate_pos(0, -1, NP).
 find_new_pos(movingBackward, west, NP):- calculate_pos(1, 0, NP).
-find_new_pos(movingBackward, notrh, NP):- calculate_pos(0, 1, NP).
+find_new_pos(movingBackward, north, NP):- calculate_pos(0, 1, NP).
 
 calculate_pos(A, B, position(C, D)):- model(_, _, _, _, position(X,Y)), C is A+X, D is B+Y.
 

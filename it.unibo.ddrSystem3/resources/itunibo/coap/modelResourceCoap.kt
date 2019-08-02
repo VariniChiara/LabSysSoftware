@@ -48,7 +48,7 @@ class modelResourceCoap (name : String ) : CoapResource(name) {
 //		curmodelval = actor.getCurSol("STATE").toString()
 		curmodelval = modelitem
 		//println("%%%%%%%%%%%%%%%% updateState from $curState to $curmodelval" )
-		changed()	// notify all CoAp observers		
+		changed()	// notify all CoAp observers (es. webpage)	
         	/*
         	 * Notifies all CoAP clients that have established an observe relation with
         	 * this resource that the state has changed by reprocessing their original

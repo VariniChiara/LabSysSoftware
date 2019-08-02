@@ -30,7 +30,8 @@ client.on('connect', function () {
 });
 
 //The message usually arrives as buffer, so I had to convert it to string data type;
-client.on('message', function (topic, message){
+//evento "modelContent" (emesso da robotmodel) sparato sulla topic qak/events
+client.on('message', function (topic, message){ 
   //console.log("mqtt io="+ io );
   //msg(modelContent,event,resourcemodel,none,content(robot(state(5))),74)
   console.log("mqtt RECEIVES:"+ message.toString()); //if toString is not given, the message comes as buffer

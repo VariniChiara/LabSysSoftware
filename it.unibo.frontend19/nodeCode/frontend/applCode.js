@@ -100,10 +100,10 @@ app.setIoSocket = function( iosock ){
 }
 
 function delegate( cmd, newState, req, res ){
- 	publishMsgToRobotmind(cmd);                  //interaction with the robotmind 
+ 	//publishMsgToRobotmind(cmd);                  //interaction with the robotmind 
 	//publishEmitUserCmd(cmd);                     //interaction with the basicrobot
 	//publishMsgToResourceModel("robot",cmd);	    //for hexagonal mind
-	//changeResourceModelCoap(cmd);		            //for hexagonal mind RESTful m2m
+	changeResourceModelCoap(cmd);		            //for hexagonal mind RESTful m2m
 	
 	
 	//msg(MSGID,dispatch,producer,consumer,MSGCONTENT,MSGNUM)
@@ -129,9 +129,9 @@ var publishMsgToRobotmind = function( cmd ){
 }
 
 var publishMsgToResourceModel = function( target, cmd ){  
-  	var msgstr = "msg(modelChange,dispatch,js,resourcemodel,modelChange("+target+", "+cmd +"),1)"  ;  
-  	console.log("publishMsgToResourceModel forward> "+ msgstr); 	
-   	mqttUtils.publish( msgstr, "unibo/qak/resourcemodel" );
+  	var msgstr = "msg(modelChange,dispatch,js,robotmodel,modelChange("+target+", "+cmd +"),1)"  ;  
+  	console.log("publishMsgToRobotModel forward> "+ msgstr); 	
+   	mqttUtils.publish( msgstr, "unibo/qak/robotmodel" );
 }
 
 var changeResourceModelCoap = function( cmd ){  

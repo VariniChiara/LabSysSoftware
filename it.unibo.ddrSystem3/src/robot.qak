@@ -4,7 +4,14 @@ mqttBroker "localhost" : 1883
 
 Dispatch robotCmd : robotCmd(X)
 
-Event  userCmd        : userCmd(X)	//from GUI X = w | a | s | d | h       
+
+Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model change
+Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
+
+Event modelChanged: modelChanged(TARGET, VALUE)
+
+ 
+
 
 Context robotCtx ip [host="localhost" port=8090] -mqtt//-g cyan
 
@@ -17,14 +24,14 @@ QActor robotmind context robotCtx{
 	Goto waitCmd
 	 
 	State waitCmd {		} 
-	Transition t0 whenEvent userCmd -> handleUserCmd
+	Transition t0 whenEvent modelChanged -> handleModelChanged
+			
 				 
-	State handleUserCmd{   
+	State handleModelChanged{   
 		printCurrentMessage
- 		onMsg( userCmd : userCmd(X) ) {
- 			forward robotactuator -m robotCmd : robotCmd($payloadArg(0)) //do action
- 			solve( action( robot, move($payloadArg(0)) ) )	  //update the model
- 			solve (showResourceModel)
+ 		onMsg( modelChanged : modelChanged(robot, VALUE) ) {
+ 			forward robotactuator -m robotCmd : robotCmd( $payloadArg(1) )
+ 		
 		}
 	} 
 	Goto waitCmd  
@@ -59,3 +66,49 @@ QActor robotactuator context robotCtx {
  	}   
 	Goto waitCmd 
 }  
+
+QActor robotmodel context robotCtx{
+	
+	State s0 initial {		
+		solve( consult("sysRules.pl")	 )       
+		solve( consult("resourceModel.pl")	 )
+		solve( showResourceModel ) 		
+		run itunibo.coap.modelResourceCoap.create( myself, "robotmodel" ) //CoAP access
+	} 
+	Goto waitModelChange
+	 
+	State waitModelChange{ }
+	Transition t0 whenMsg modelChange -> changeModel //receive from sonar and frontend
+	              whenMsg modelUpdate -> updateModel //forward from robotmind
+
+	State updateModel{  
+		printCurrentMessage
+		onMsg( modelUpdate : modelUpdate(robot,V ) ) {
+			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
+			solve( showResourceModel ) 	
+		}
+		onMsg( modelUpdate : modelUpdate(sonarRobot,V ) ) {
+			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
+		}
+		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {  //JULY19
+			//println("modelUpdate roomMap")
+			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
+		}
+	} 
+    Goto  waitModelChange
+    
+	State changeModel{  
+		printCurrentMessage 
+		//ROBOT MOVE
+		onMsg(  modelChange  : modelChange(robot, V ) ) { // V= w | ...
+			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
+			solve( showResourceModel ) 	
+			//emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
+		} 
+		//SONAR DATA  
+//		onMsg( modelChange : modelChange( sonarRobot,V ) ) { // V= w | ...
+//			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
+//		}
+	}  
+	Goto  waitModelChange
+}
