@@ -18,37 +18,15 @@ class Console ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, sco
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("%%%% Console intialized %%%%")
+						println("Console intialized")
 					}
-					 transition( edgeName="goto",targetState="waitForStart", cond=doswitch() )
+					 transition( edgeName="goto",targetState="sendMsg", cond=doswitch() )
 				}	 
-				state("waitForStart") { //this:State
+				state("sendMsg") { //this:State
 					action { //it:State
-					}
-					 transition(edgeName="s00",targetState="sendStart",cond=whenDispatch("userCmd"))
-				}	 
-				state("sendStart") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("userCmd(CMD)"), Term.createTerm("userCmd(start)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								forward("startCmd", "startCmd" ,"robotmind" ) 
-						}
+						delay(3000) 
+						forward("startCmd", "startCmd" ,"robotmind" ) 
 						println("Sent start  message")
-					}
-					 transition( edgeName="goto",targetState="waitForStop", cond=doswitch() )
-				}	 
-				state("waitForStop") { //this:State
-					action { //it:State
-					}
-					 transition(edgeName="s01",targetState="sendStop",cond=whenDispatch("userCmd"))
-				}	 
-				state("sendStop") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("userCmd(CMD)"), Term.createTerm("userCmd(stop)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								forward("userCmd", "userCmd(stop)" ,"robotmind" ) 
-						}
-						println("Sent stop  message")
 					}
 				}	 
 			}
