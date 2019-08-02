@@ -45,6 +45,7 @@ var backHome = false
 var maxX = 0
 var maxY = 0
 var finish = false
+var Map = \"\"
 
 //VIRTUAL ROBOT
 var StepTime   = 330	 
@@ -61,7 +62,8 @@ var Tback       = 0
 
 	Goto waitForStart
 	
-	State waitForStart {}
+	State waitForStart {
+	}
 	
 	Transition t0  whenMsg startCmd  -> startExploration 
 				 
@@ -76,6 +78,8 @@ var Tback       = 0
 	
 	//raggiungo la cella
 	State doPlan {	
+		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
+		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
 		run itunibo.planner.plannerUtil.showMap() 
 		solve( retract( move(M) ) ) 	//consume a move
 		ifSolved {  ["Curmove = getCurSol(\"M\").toString()"]  }
@@ -203,6 +207,8 @@ var Tback       = 0
 		["if (maxX != 0 && maxY != 0) {itunibo.planner.plannerUtil.fixwalls(maxX, maxY)}"]
 		
 		println("FINAL MAP")   
+		["Map = itunibo.planner.plannerUtil.getMapOneLine()"]
+		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
  		run itunibo.planner.plannerUtil.showMap() 
 		println("&&&  planex0 ENDS")
  	}
@@ -346,6 +352,7 @@ QActor resourcemodel context robotResourceCtx{
 //		onMsg( modelChange : modelChange( sonarRobot,V ) ) { // V= w | ...
 //			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
 //		}
+
 	}
 	Goto  waitModelChange
 }

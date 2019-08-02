@@ -21,6 +21,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		var maxX = 0
 		var maxY = 0
 		var finish = false
+		var Map = ""
 		
 		//VIRTUAL ROBOT
 		var StepTime   = 330	 
@@ -52,6 +53,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("doPlan") { //this:State
 					action { //it:State
+						Map =  itunibo.planner.plannerUtil.getMapOneLine()
+						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 						itunibo.planner.plannerUtil.showMap(  )
 						solve("retract(move(M))","") //set resVar	
 						if(currentSolution.isSuccess()) { Curmove = getCurSol("M").toString()
@@ -179,6 +182,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						if (maxX != 0 && maxY != 0) {itunibo.planner.plannerUtil.fixwalls(maxX, maxY)}
 						println("FINAL MAP")
+						Map = itunibo.planner.plannerUtil.getMapOneLine()
+						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 						itunibo.planner.plannerUtil.showMap(  )
 						println("&&&  planex0 ENDS")
 					}
