@@ -70,7 +70,6 @@ var Tback       = 0
 		println("&&&  exploration STARTED")
 		run itunibo.planner.plannerUtil.setGoal("1","1")
 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
-		forward resourcemodel -m modelUpdate : modelUpdate ( robot, h)
 	}
 	
 	Goto doPlan
@@ -90,11 +89,11 @@ var Tback       = 0
 	Goto domove if "(Curmove != \"w\")" else attempttogoahead
 	
 	State domove {
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
 		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 		forward robotactuator -m robotCmd : robotCmd($Curmove)
 		delay 700
-		forward robotactuator -m robotCmd : robotCmd(h)	
+		forward robotactuator -m robotCmd : robotCmd(h)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
 	}
 	
 	Goto doPlan
@@ -108,7 +107,7 @@ var Tback       = 0
 					whenMsg stepFail -> stepFailed 
 	 
  	State stepDone{  
- 		//forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
  		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")	
  	}
  	
@@ -130,7 +129,7 @@ var Tback       = 0
  		forward robotactuator -m robotCmd : robotCmd(s)
 		delayVar TbackLong
 		forward robotactuator -m robotCmd : robotCmd(h)
-		//forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
 		delay 700
  //--------------------------------------------------
  		run itunibo.planner.plannerUtil.wallFound()

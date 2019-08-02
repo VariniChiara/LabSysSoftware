@@ -47,7 +47,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						println("&&&  exploration STARTED")
 						itunibo.planner.plannerUtil.setGoal( "1", "1"  )
 						itunibo.planner.moveUtils.doPlan(myself)
-						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 					}
 					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
 				}	 
@@ -72,11 +71,11 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("domove") { //this:State
 					action { //it:State
-						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
 						delay(700) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 					}
 					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
 				}	 
@@ -90,6 +89,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
+						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.doPlannedMove(myself ,"w" )
 					}
 					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
@@ -109,6 +109,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						forward("robotCmd", "robotCmd(s)" ,"robotactuator" ) 
 						delay(TbackLong)
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						delay(700) 
 						itunibo.planner.plannerUtil.wallFound(  )
 					}
