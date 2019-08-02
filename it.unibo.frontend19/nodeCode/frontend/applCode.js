@@ -146,9 +146,10 @@ var publishEmitUserCmd = function( cmd ){
 }
 
 var publishMsgToRobotapplication = function (cmd){
-   	var msgstr = "msg(" + cmd + ",dispatch,js,robotmindapplication,"+ cmd +"(go),1)"  ;
+	//Dispatch startCmd :	startCmd 
+   	var msgstr = "msg(startCmd,dispatch,js,robotmind,startCmd,1)"  ;
   	console.log("publishMsgToRobotapplication forward> "+ msgstr);
-   	mqttUtils.publish( msgstr, "unibo/qak/robotmindapplication" );
+   	mqttUtils.publish( msgstr, "unibo/qak/robotmind" );
 }
 
 /*

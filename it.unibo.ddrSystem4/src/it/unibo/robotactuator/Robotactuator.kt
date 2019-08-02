@@ -37,12 +37,12 @@ class Robotactuator ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitCmd") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t01",targetState="handleRobotCmd",cond=whenDispatch("robotCmd"))
+					 transition(edgeName="t06",targetState="handleRobotCmd",cond=whenDispatch("robotCmd"))
 				}	 
 				state("handleRobotCmd") { //this:State
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("robotCmd(X)"), Term.createTerm("robotCmd(MOVE)"), 
+						if( checkMsgContent( Term.createTerm("robotCmd(CMD)"), Term.createTerm("robotCmd(MOVE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})"  )
 						}

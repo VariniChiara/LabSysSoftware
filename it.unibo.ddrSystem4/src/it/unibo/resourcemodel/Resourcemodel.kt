@@ -28,8 +28,8 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitModelChange") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t02",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t03",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t07",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t08",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State

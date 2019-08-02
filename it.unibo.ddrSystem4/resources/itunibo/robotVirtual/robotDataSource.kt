@@ -38,7 +38,6 @@ class robotDataSource(name : String, val owner : ActorBasicFsm , val filter : Ac
                            }
                             "collision" -> { 
   								val event = MsgUtil.buildEvent(name,"sonarRobot","sonar( 5 )")
-								println("EMITTT")
 								owner.emit(event)
 								//emitLocalStreamEvent(event)
 								//owner.forward("sonarRobot", "sonarRobot( 5 )", "onestepahead")

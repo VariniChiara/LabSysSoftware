@@ -38,6 +38,12 @@ QActor robotmind context robotCtx{
 	Goto waitCmd
  }
 
+
+ /*
+  * --------------------------------------------------------
+  * Basic robot: just an actuator of move commands
+  * --------------------------------------------------------
+  */
 QActor robotactuator context robotCtx {
 	State s0 initial {
  	 	solve( consult("basicRobotConfig.pl") )
@@ -68,6 +74,12 @@ QActor robotactuator context robotCtx {
 	Goto waitCmd
 }
 
+
+ /*
+  * --------------------------------------------------------
+  * Resource model: robot state as a coap resource accessile by Restful protocol
+  * --------------------------------------------------------
+  */
 QActor resourcemodel context robotCtx{
 
 	State s0 initial {
