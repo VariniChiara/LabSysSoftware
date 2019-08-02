@@ -1,3 +1,4 @@
+//remeber to setp up the delegate into Applcode.js of frontend19
 System robot 
 
 mqttBroker "localhost" : 1883
@@ -70,7 +71,7 @@ QActor robotmodel context robotCtx{
 		solve( consult("sysRules.pl")	 )       
 		solve( consult("resourceModel.pl")	 )
 		solve( showResourceModel ) 		
-		//run itunibo.coap.modelResourceCoap.create( myself, "resourcemodel" ) //CoAP access
+		//run itunibo.coap.modelResourceCoap.create( myself, "robotmodel" ) //CoAP access
 	} 
 	Goto waitModelChange
 	 
@@ -99,7 +100,6 @@ QActor robotmodel context robotCtx{
 		onMsg( modelChange : modelChange( robot,V ) ) { // V= w | ...
 			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
 			solve( showResourceModel ) 
-			//emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
 		} 
 		
 		//SONAR DATA  
