@@ -68,13 +68,13 @@ QActor robotactuator context robotCtx {
 	Goto waitCmd
 }
 
-QActor robotmodel context robotCtx{
+QActor resourcemodel context robotCtx{
 
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )
 		solve( consult("resourceModel.pl")	 )
 		solve( showResourceModel )
-		//run itunibo.coap.modelResourceCoap.create( myself, "robotmodel" ) //CoAP access
+		run itunibo.coap.modelResourceCoap.create( myself, "resourcemodel" ) //CoAP access
 	}
 	Goto waitModelChange
 
