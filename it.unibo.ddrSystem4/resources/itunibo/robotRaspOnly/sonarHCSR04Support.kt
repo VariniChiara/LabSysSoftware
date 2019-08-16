@@ -26,7 +26,9 @@ object sonarHCSR04Support {
 				if( data != null ){
 	 				val m1 = "sonar( $data )"
 					//println("sonarHCSR04Support m1 = $m1"   )
-					actor.emit("sonarRobot",m1 )
+					if(data.toInt() <= 10) {
+						actor.emit("sonarRobot",m1 )
+					}
 				}
 				delay( 250 )
 			}

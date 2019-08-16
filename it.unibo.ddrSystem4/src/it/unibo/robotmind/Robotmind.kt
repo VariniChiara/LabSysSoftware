@@ -57,10 +57,10 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						stateTimer = TimerActor("timer_checkStop", 
 							scope, context!!, "local_tout_robotmind_checkStop", 100.toLong() )
 					}
-					 transition(edgeName="t01",targetState="doPlan1",cond=whenTimeout("local_tout_robotmind_checkStop"))   
-					transition(edgeName="t02",targetState="handleStop",cond=whenDispatch("stopCmd"))
+					 transition(edgeName="t11",targetState="doPlan",cond=whenTimeout("local_tout_robotmind_checkStop"))   
+					transition(edgeName="t12",targetState="handleStop",cond=whenDispatch("stopCmd"))
 				}	 
-				state("doPlan1") { //this:State
+				state("doPlan") { //this:State
 					action { //it:State
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
@@ -96,8 +96,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						forward("modelUpdate", "modelUpdate(robot,w)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
-					 transition(edgeName="t03",targetState="stepDone",cond=whenDispatch("stepOk"))
-					transition(edgeName="t04",targetState="stepFailed",cond=whenDispatch("stepFail"))
+					 transition(edgeName="t23",targetState="stepDone",cond=whenDispatch("stepOk"))
+					transition(edgeName="t24",targetState="stepFailed",cond=whenDispatch("stepFail"))
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
@@ -205,7 +205,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 								forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						}
 					}
-					 transition(edgeName="t05",targetState="doPlan1",cond=whenDispatch("startCmd"))
+					 transition(edgeName="t35",targetState="doPlan",cond=whenDispatch("startCmd"))
 				}	 
 			}
 		}

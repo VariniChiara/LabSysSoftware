@@ -3,8 +3,8 @@
 %====================================================================================
 mqttBroker("localhost", "1883").
 context(robotmindctx, "localhost",  "MQTT", "0" ).
-context(robotresourcectx, "localhost",  "MQTT", "0" ).
+context(robotresourcectx, "192.168.1.9",  "MQTT", "0" ).
  qactor( robotmind, robotmindctx, "it.unibo.robotmind.Robotmind").
   qactor( onestepahead, robotmindctx, "it.unibo.onestepahead.Onestepahead").
-  qactor( robotactuator, robotmindctx, "it.unibo.robotactuator.Robotactuator").
-  qactor( resourcemodel, robotmindctx, "it.unibo.resourcemodel.Resourcemodel").
+  qactor( robotactuator, robotresourcectx, "it.unibo.robotactuator.Robotactuator").
+  qactor( resourcemodel, robotresourcectx, "it.unibo.resourcemodel.Resourcemodel").

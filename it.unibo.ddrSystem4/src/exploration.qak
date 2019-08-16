@@ -34,7 +34,7 @@ Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model c
 Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.9" port=8005]   -mqtt
  
 
 QActor robotmind context robotMindCtx { 
@@ -79,7 +79,7 @@ var Tback       = 0
 	//raggiungo la cella
 	State checkStop {	}
 	
-	Transition t0 whenTime 100  -> doPlan		
+	Transition t1 whenTime 100  -> doPlan		
  		           whenMsg stopCmd -> handleStop  
  	
  	State doPlan {
@@ -114,7 +114,7 @@ var Tback       = 0
 		run itunibo.planner.moveUtils.attemptTomoveAhead(myself, StepTime)
 	}
 	
-	Transition t0   whenMsg stepOk   -> stepDone   
+	Transition t2   whenMsg stepOk   -> stepDone   
 					whenMsg stepFail -> stepFailed 
 					 
  	State stepDone{  
@@ -227,7 +227,7 @@ var Tback       = 0
 		}
 	}
 	
-	Transition t0  whenMsg startCmd  -> doPlan1 
+	Transition t3  whenMsg startCmd  -> doPlan
 	
 
 }
@@ -241,7 +241,8 @@ QActor onestepahead context  robotMindCtx {
 [" 
 var foundObstacle = false; 
 var StepTime = 0L; 
-var Duration=0 
+var Duration = 0 ;
+var Fail = false;
 "]  
 	State s0 initial {	   
 		["foundObstacle = false "]
@@ -257,16 +258,22 @@ var Duration=0
 	 		
 		}      
 	}          
-	Transition t0 whenTimeVar StepTime  -> endDoMoveForward		
- 		           whenEvent sonarRobot -> stepFail  
+	Transition t1 whenTimeVar StepTime  -> endDoMoveForward		
+ 		           whenEvent sonarRobot -> checkStepFail  
  		    
 	State endDoMoveForward{
 		forward robotactuator -m robotCmd : robotCmd(h)	
 		forward robotmind -m stepOk : stepOk
 	}
 	Goto s0
-	  
-
+	
+	State checkStepFail {
+		onMsg (sonarRobot : sonarRobot(DIS)) { 
+			["Fail = payloadArg(0).toInt() < 10"]
+		}
+	}
+	
+	Goto stepFail if "Fail" else endDoMoveForward
 	
 	State stepFail{ 
 		["Duration=getDuration()"]  //getDuration is built-in in the actor
@@ -284,7 +291,7 @@ var Duration=0
   * Basic robot: just an actuator of move commands
   * --------------------------------------------------------
   */
-QActor robotactuator context robotMindCtx {
+QActor robotactuator context robotResourceCtx {
 	State s0 initial {
  	 	solve( consult("basicRobotConfig.pl") )
  		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
@@ -323,7 +330,7 @@ QActor robotactuator context robotMindCtx {
   * Resource model: robot state as a coap resource accessile by Restful protocol
   * --------------------------------------------------------
   */
-QActor resourcemodel context robotMindCtx{
+QActor resourcemodel context robotResourceCtx{
 
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )
