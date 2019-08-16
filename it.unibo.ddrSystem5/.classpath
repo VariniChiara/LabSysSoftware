@@ -49,42 +49,42 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/uniboInterfaces.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/uniboInterfaces.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/2p301.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/2p301.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/it.unibo.qakactor-1.0.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/it.unibo.qakactor-1.0.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/unibonoawtsupports.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/unibonoawtsupports.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/it.unibo.bls19Local-1.0.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/it.unibo.bls19Local-1.0.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/radarPojo.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/radarPojo.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/labbaseRobotSam.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/labbaseRobotSam.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-3/LabSysSoftware/libs/pi4j-core.jar">
+	<classpathentry kind="lib" path="/Users/Federica/eclipse-workspace-6/LabSysSoftware/libs/pi4j-core.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
