@@ -21,7 +21,6 @@ class Robotmodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, 
 						solve("consult('sysRules.pl')","") //set resVar	
 						solve("consult('resourceModel.pl')","") //set resVar	
 						solve("showResourceModel","") //set resVar	
-						itunibo.coap.modelResourceCoap.create(myself ,"resourcemodel" )
 					}
 					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )
 				}	 

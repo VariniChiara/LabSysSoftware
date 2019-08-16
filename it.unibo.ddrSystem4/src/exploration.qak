@@ -34,11 +34,11 @@ Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model c
 Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.9" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.6" port=8005]   -mqtt
  
 
 QActor robotmind context robotMindCtx { 
-["var Curmove     = \"\"  
+["var Curmove = \"\"  
 var IterCounter = 0 
 var backHome = false
 var maxX = 0
@@ -47,10 +47,9 @@ var finish = false
 var Map = \"\"
 
 //VIRTUAL ROBOT
-var StepTime   = 330	
+var StepTime = 330	
 var StopTime = 100 
- 
-var Tback       = 0
+var Tback    = 0
 "]
 	State s0 initial {
 		solve (consult ("resourceModel.pl"))
@@ -63,8 +62,8 @@ var Tback       = 0
 	Goto waitForStart
 	
 	State waitForStart {
-	}
-	
+	} 
+	 
 	Transition t0  whenMsg startCmd  -> startExploration 
 				 
 

@@ -15,7 +15,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 	}
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
-		var Curmove     = ""  
+		var Curmove = ""  
 		var IterCounter = 0 
 		var backHome = false
 		var maxX = 0
@@ -24,10 +24,9 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		var Map = ""
 		
 		//VIRTUAL ROBOT
-		var StepTime   = 330	
+		var StepTime = 330	
 		var StopTime = 100 
-		 
-		var Tback       = 0
+		var Tback    = 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
