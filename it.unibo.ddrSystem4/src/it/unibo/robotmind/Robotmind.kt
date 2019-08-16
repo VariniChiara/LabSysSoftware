@@ -85,9 +85,10 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
+						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 						delay(700) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
-						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
+						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 					}
 					 transition( edgeName="goto",targetState="checkStop", cond=doswitch() )
 				}	 

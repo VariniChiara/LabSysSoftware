@@ -101,9 +101,10 @@ var Tback       = 0
 	State domove {
 		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 		forward robotactuator -m robotCmd : robotCmd($Curmove)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
 		delay 700
 		forward robotactuator -m robotCmd : robotCmd(h)
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
 	}
 	
 	Goto checkStop
