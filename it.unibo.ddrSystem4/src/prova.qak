@@ -1,0 +1,74 @@
+//remeber to setp up the delegate into Applcode.js of frontend19
+System prova
+
+mqttBroker "localhost" : 1883
+
+Dispatch robotCmd : robotCmd(X)
+
+
+Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model change
+Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
+
+Event modelChanged: modelChanged(TARGET, VALUE)
+
+ 
+Context actuatorCtx ip [host="192.168.1.6" port=8090] -mqtt//-g cyan
+Context mindCtx ip [host="localhost" port=8030] -mqtt//-g cyan
+
+QActor robotmind context mindCtx{
+	State s0 initial {
+		solve (consult ("resourceModel.pl"))
+		println("ROBOT MIND STARTED")
+	}
+	Goto waitCmd
+
+	State waitCmd {		}
+	//Transition t0 whenEvent modelChanged -> handleModelChanged
+	Transition t0 whenMsg robotCmd -> handleModelChanged
+
+
+	State handleModelChanged{
+		printCurrentMessage
+ 		onMsg( robotCmd : robotCmd(CMD) ) {
+ 			forward robotactuator -m robotCmd : robotCmd( $payloadArg(0) )
+		}
+	}
+	Goto waitCmd
+ }
+
+
+ /*
+  * --------------------------------------------------------
+  * Basic robot: just an actuator of move commands
+  * --------------------------------------------------------
+  */
+QActor robotactuator context actuatorCtx {
+	State s0 initial {
+ 	 	solve( consult("basicRobotConfig.pl") )
+ 		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
+  		ifSolved {
+     		println( "USING ROBOT : ${getCurSol(\"R\")},  port= ${getCurSol(\"PORT\")} " )
+  			run itunibo.robot.robotSupport.create( myself, @R, @PORT, null )
+  		}
+  		else{ println("no robot") }
+
+   		run itunibo.robot.robotSupport.move( "msg(a)" )
+   		delay 700
+   		run itunibo.robot.robotSupport.move( "msg(d)" )
+   		delay 700
+   		run itunibo.robot.robotSupport.move( "msg(h)" )
+ 	}
+	Goto waitCmd
+
+	State waitCmd{  } //robotCmd comes from a console OUTSIDE this (sub)system
+	Transition t0  whenMsg   robotCmd  -> handleRobotCmd
+
+	State handleRobotCmd{ //does not handle alarms
+		printCurrentMessage
+		onMsg( robotCmd : robotCmd( MOVE ) ) { //MOVE = w | a | s | d | h
+			run itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})" )
+		}
+ 	}
+	Goto waitCmd
+}
+

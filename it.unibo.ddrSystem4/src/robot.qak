@@ -11,8 +11,6 @@ Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=
 
 Event modelChanged: modelChanged(TARGET, VALUE)
 
- 
-
 
 Context robotCtx ip [host="localhost" port=8090] -mqtt//-g cyan
 

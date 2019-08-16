@@ -22,7 +22,8 @@ Event  sonarRobot : sonarRobot( DISTANCE )	    //from  sonar on robot
 
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message 
-Dispatch startCmd :	startCmd 
+Dispatch startCmd :	startCmd
+Dispatch stopCmd  : stopCmd 
 
 //message try to do a step
 Dispatch onestep       : onestep(DURATION)
@@ -35,8 +36,6 @@ Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
  
-//ExternalQActor resourcemodel context robotResourceCtx 
-//ExternalQActor robotactuator context robotResourceCtx 
 
 QActor robotmind context robotMindCtx { 
 ["var Curmove     = \"\"  
@@ -48,7 +47,8 @@ var finish = false
 var Map = \"\"
 
 //VIRTUAL ROBOT
-var StepTime   = 330	 
+var StepTime   = 330	
+var StopTime = 100 
  
 var Tback       = 0
 "]
@@ -74,10 +74,16 @@ var Tback       = 0
 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
 	}
 	
-	Goto doPlan
+	Goto checkStop
 	
 	//raggiungo la cella
-	State doPlan {	
+	State checkStop {	}
+	
+	Transition t0 whenTime 100  -> doPlan		
+ 		           whenMsg stopCmd -> handleStop  
+ 	
+ 	State doPlan {
+ 		
 		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
 		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
 		run itunibo.planner.plannerUtil.showMap() 
@@ -100,22 +106,23 @@ var Tback       = 0
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
 	}
 	
-	Goto doPlan
+	Goto checkStop
 	
 	//roomboundaryplanning.qak
 	State attempttogoahead {	
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, w ) 
 		run itunibo.planner.moveUtils.attemptTomoveAhead(myself, StepTime)
 	}
+	
 	Transition t0   whenMsg stepOk   -> stepDone   
 					whenMsg stepFail -> stepFailed 
-	 
+					 
  	State stepDone{  
  		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
  		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")	
  	}
  	
- 	Goto doPlan
+ 	Goto checkStop
  	
  	State stepFailed{
  		println("&&&  FOUND WALL")
@@ -164,7 +171,7 @@ var Tback       = 0
 		run itunibo.planner.moveUtils.doPlan( myself )
 	}
 	
-	Goto doPlan
+	Goto checkStop
 
 	
 	State choose {}
@@ -181,7 +188,7 @@ var Tback       = 0
   		delay 700
     }  
 	
-	Goto doPlan
+	Goto checkStop
 	 
 	State nextStep {}
 
@@ -201,7 +208,7 @@ var Tback       = 0
 		println("&&&  nextStep")
  		run itunibo.planner.moveUtils.doPlan( myself )
 	}
-	Goto doPlan
+	Goto checkStop
 	
 	State endOfJob{
 		["if (maxX != 0 && maxY != 0) {itunibo.planner.plannerUtil.fixwalls(maxX, maxY)}"]
@@ -212,9 +219,18 @@ var Tback       = 0
  		run itunibo.planner.plannerUtil.showMap() 
 		println("&&&  planex0 ENDS")
  	}
+ 	
+ 	State handleStop{
+		onMsg(stopCmd : stopCmd) {
+			forward robotactuator -m robotCmd : robotCmd(h)
+			forward resourcemodel -m modelUpdate : modelUpdate(robot, h)
+		}
+	}
+	
+	Transition t0  whenMsg startCmd  -> doPlan1 
+	
 
 }
-
 
  /*
  * ====================================================================
@@ -263,15 +279,12 @@ var Duration=0
 }    
 
 
-
-
-//*****remove
 /*
   * --------------------------------------------------------
   * Basic robot: just an actuator of move commands
   * --------------------------------------------------------
   */
-QActor robotactuator context robotResourceCtx {
+QActor robotactuator context robotMindCtx {
 	State s0 initial {
  	 	solve( consult("basicRobotConfig.pl") )
  		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
@@ -310,7 +323,7 @@ QActor robotactuator context robotResourceCtx {
   * Resource model: robot state as a coap resource accessile by Restful protocol
   * --------------------------------------------------------
   */
-QActor resourcemodel context robotResourceCtx{
+QActor resourcemodel context robotMindCtx{
 
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )

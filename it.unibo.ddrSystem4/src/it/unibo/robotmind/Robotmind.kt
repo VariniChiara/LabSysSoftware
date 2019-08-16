@@ -24,7 +24,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		var Map = ""
 		
 		//VIRTUAL ROBOT
-		var StepTime   = 330	 
+		var StepTime   = 330	
+		var StopTime = 100 
 		 
 		var Tback       = 0
 		return { //this:ActionBasciFsm
@@ -49,9 +50,17 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( "1", "1"  )
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkStop", cond=doswitch() )
 				}	 
-				state("doPlan") { //this:State
+				state("checkStop") { //this:State
+					action { //it:State
+						stateTimer = TimerActor("timer_checkStop", 
+							scope, context!!, "local_tout_robotmind_checkStop", 100.toLong() )
+					}
+					 transition(edgeName="t01",targetState="doPlan1",cond=whenTimeout("local_tout_robotmind_checkStop"))   
+					transition(edgeName="t02",targetState="handleStop",cond=whenDispatch("stopCmd"))
+				}	 
+				state("doPlan1") { //this:State
 					action { //it:State
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
@@ -80,22 +89,22 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkStop", cond=doswitch() )
 				}	 
 				state("attempttogoahead") { //this:State
 					action { //it:State
 						forward("modelUpdate", "modelUpdate(robot,w)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
-					 transition(edgeName="t01",targetState="stepDone",cond=whenDispatch("stepOk"))
-					transition(edgeName="t02",targetState="stepFailed",cond=whenDispatch("stepFail"))
+					 transition(edgeName="t03",targetState="stepDone",cond=whenDispatch("stepOk"))
+					transition(edgeName="t04",targetState="stepFailed",cond=whenDispatch("stepFail"))
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.doPlannedMove(myself ,"w" )
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkStop", cond=doswitch() )
 				}	 
 				state("stepFailed") { //this:State
 					action { //it:State
@@ -138,7 +147,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 							}
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkStop", cond=doswitch() )
 				}	 
 				state("choose") { //this:State
 					action { //it:State
@@ -154,7 +163,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.moveUtils.doPlan(myself)
 						delay(700) 
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkStop", cond=doswitch() )
 				}	 
 				state("nextStep") { //this:State
 					action { //it:State
@@ -176,7 +185,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						println("&&&  nextStep")
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkStop", cond=doswitch() )
 				}	 
 				state("endOfJob") { //this:State
 					action { //it:State
@@ -187,6 +196,16 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.showMap(  )
 						println("&&&  planex0 ENDS")
 					}
+				}	 
+				state("handleStop") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("stopCmd"), Term.createTerm("stopCmd"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+								forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
+						}
+					}
+					 transition(edgeName="t05",targetState="doPlan1",cond=whenDispatch("startCmd"))
 				}	 
 			}
 		}
