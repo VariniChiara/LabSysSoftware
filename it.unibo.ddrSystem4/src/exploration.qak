@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "localhost" : 1883
+mqttBroker "192.168.1.7" : 1883
 
 //Event consoleUpdate: consoleUpdate(X) //robot state update event
 //Event tempOk: tempOk(X) //temperature change event
@@ -33,8 +33,8 @@ Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
 Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model change
 Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
 
-Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.9" port=8005]   -mqtt
+Context robotMindCtx        ip [host="192.168.1.7" port=8035]   -mqtt
+Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
  
 
 QActor robotmind context robotMindCtx { 

@@ -22,13 +22,11 @@ object sonarHCSR04Support {
 		GlobalScope.launch{
 			while( true ){
 				var data = reader.readLine()
-				//println("sonarHCSR04Support data = $data"   )
+				println("sonarHCSR04Support data = $data"   )
 				if( data != null ){
 	 				val m1 = "sonar( $data )"
 					//println("sonarHCSR04Support m1 = $m1"   )
-					if(data.toInt() <= 10) {
-						actor.emit("sonarRobot",m1 )
-					}
+					actor.emit("sonarRobot",m1 )
 				}
 				delay( 250 )
 			}
