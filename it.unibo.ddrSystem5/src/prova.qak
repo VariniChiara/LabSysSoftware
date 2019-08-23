@@ -22,13 +22,13 @@ Dispatch isWall : isWall
 Dispatch isObstacle : isObstacle
 
 Dispatch doPlan : doPlan(x,y)
-Dispatch planOk : goalDone
-Dispatch planFail : goalFailed 
+Dispatch planOk : planOk
+Dispatch planFail : planFail(X,Y) 
 
-Context provarobotMindCtx        ip [host="localhost" port=8035]   -mqtt
+Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
-QActor planexecutor context provarobotMindCtx {
+QActor planexecutor context robotMindCtx {
 	
 	["
 		var Curmove     = \"\"  
@@ -42,7 +42,7 @@ QActor planexecutor context provarobotMindCtx {
 	State s0 initial {} 
 
 	Transition t0  whenMsg doPlan  -> saveGoal 
-				
+				 
 	State saveGoal {
 		
  		printCurrentMessage
@@ -57,8 +57,16 @@ QActor planexecutor context provarobotMindCtx {
 	
  	State doPlan {}
  	
-	Transition t1 whenTime 100  -> doPlan1 		
- 		          whenMsg stopCmd -> s0 
+	Transition t1 whenTime 50  -> doPlan1 		
+ 		          whenMsg stopCmd -> stopAppl
+ 		          
+ 	State stopAppl {
+ 		forward robotactuator -m robotCmd : robotCmd(h)
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+ 		solve(retractall( move(_)))
+ 	} 
+ 	
+ 	Goto s0
  	
  	State doPlan1{
  	
@@ -135,16 +143,18 @@ QActor planexecutor context provarobotMindCtx {
 		delayVar TbackLong
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+		
+		forward robotmind -m planFail : planFail 
 		delay 700
 	}
 	
 
-	Goto doPlan
+	Goto s0
 	
 }
  
 
-QActor robotmind context provarobotMindCtx { 
+QActor robotmind context robotMindCtx { 
 ["
 	var iter = 1
 	var X = iter
@@ -176,13 +186,11 @@ QActor robotmind context provarobotMindCtx {
 	
 	Transition t1 whenEvent stopCmd -> stopAppl
 				  whenMsg planOk -> nextGoal
-				  whenMsg planFail -> stopAppl
+				  whenMsg planFail -> checkIfObstacle
 				  
 	State stopAppl{
 		println("%% robotmind stopped %%")
-		//forward planexecutor -m stopCmd : stopCmd
-		forward robotactuator -m robotCmd : robotCmd(h)
-		//forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+		forward planexecutor -m stopCmd : stopCmd
 	}
 	
 	Goto waitForStart
@@ -206,6 +214,10 @@ QActor robotmind context provarobotMindCtx {
 	}
 	
 	Goto startExploration
+	
+	State checkIfObstacle {
+		
+	}
 }
 
  /*
@@ -213,7 +225,7 @@ QActor robotmind context provarobotMindCtx {
  * onestepahead robotmind.qak
  * ====================================================================
  */
-QActor onestepahead context  provarobotMindCtx {
+QActor onestepahead context  robotMindCtx {
 [" 
 var foundObstacle = false
 var StepTime = 0L
@@ -270,7 +282,7 @@ var fail = false
   * Basic robot: just an actuator of move commands
   * --------------------------------------------------------
   */
-QActor robotactuator context provarobotMindCtx {
+QActor robotactuator context robotMindCtx {
 	State s0 initial {
  	 	solve( consult("basicRobotConfig.pl") )
  		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
@@ -309,7 +321,7 @@ QActor robotactuator context provarobotMindCtx {
   * Resource model: robot state as a coap resource accessile by Restful protocol
   * --------------------------------------------------------
   */
-QActor resourcemodel context provarobotMindCtx{
+QActor resourcemodel context robotMindCtx{
 
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )

@@ -44,12 +44,12 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					}
 					 transition(edgeName="t16",targetState="stopAppl",cond=whenEvent("stopCmd"))
 					transition(edgeName="t17",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t18",targetState="stopAppl",cond=whenDispatch("planFail"))
+					transition(edgeName="t18",targetState="checkIfObstacle",cond=whenDispatch("planFail"))
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
 						println("%% robotmind stopped %%")
-						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+						forward("stopCmd", "stopCmd" ,"planexecutor" ) 
 					}
 					 transition( edgeName="goto",targetState="waitForStart", cond=doswitch() )
 				}	 
@@ -69,6 +69,10 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						  }
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitch() )
+				}	 
+				state("checkIfObstacle") { //this:State
+					action { //it:State
+					}
 				}	 
 			}
 		}

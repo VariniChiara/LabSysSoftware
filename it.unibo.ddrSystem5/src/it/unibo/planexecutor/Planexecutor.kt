@@ -44,10 +44,18 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("doPlan") { //this:State
 					action { //it:State
 						stateTimer = TimerActor("timer_doPlan", 
-							scope, context!!, "local_tout_planexecutor_doPlan", 100.toLong() )
+							scope, context!!, "local_tout_planexecutor_doPlan", 50.toLong() )
 					}
 					 transition(edgeName="t11",targetState="doPlan1",cond=whenTimeout("local_tout_planexecutor_doPlan"))   
-					transition(edgeName="t12",targetState="s0",cond=whenDispatch("stopCmd"))
+					transition(edgeName="t12",targetState="stopAppl",cond=whenDispatch("stopCmd"))
+				}	 
+				state("stopAppl") { //this:State
+					action { //it:State
+						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
+						solve("retractall(move(_))","") //set resVar	
+					}
+					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
 				}	 
 				state("doPlan1") { //this:State
 					action { //it:State
@@ -120,9 +128,10 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						delay(TbackLong)
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
+						forward("planFail", "planFail" ,"robotmind" ) 
 						delay(700) 
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
 				}	 
 			}
 		}
