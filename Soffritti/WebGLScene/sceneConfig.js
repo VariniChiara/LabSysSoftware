@@ -62,17 +62,17 @@ const config = {
             name: "wallRight",
             centerPosition: { x: 1, y: 0.5},
             size: { x: 0.01, y: 1}
-        },
-//        {
-//            name: "obstacle",
-//            centerPosition: {x: 0.45, y: 0.49},
-//            size: { x: 0.01, y: 0.57}
-//        }
-        // {
-        //     name: "obstacle2",
-        //     centerPosition: {x: 0.0, y: 0.44},
-        //     size: { x: 0.83, y: 0.1}
-        // }
+        }/*,
+       {
+           name: "obstacle",
+           centerPosition: {x: 0.06, y: 0.6},
+           size: { x: 0.10, y: 0.10}
+       },
+        {
+            name: "obstacle2",
+            centerPosition: {x: 0.4, y: 0.4},
+            size: { x: 0.10, y: 0.10}
+        }*/
     ]
 }
 

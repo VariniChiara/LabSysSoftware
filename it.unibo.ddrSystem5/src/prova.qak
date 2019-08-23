@@ -1,31 +1,15 @@
-System exploration
+System prova
 
 mqttBroker "localhost" : 1883
 
-//Event consoleUpdate: consoleUpdate(X) //robot state update event
-//Event tempOk: tempOk(X) //temperature change event
 Event  sonarRobot : sonarRobot( DISTANCE )	    //from  sonar on robot      
-
-/*Message from console to robot
-//Dispatch explore: explore(X)  
-//Dispatch stopExplore: stopExplore(X)
-//Dispatch backHome: backHome(X)
-//Dispatch continueExplore: continueExplore(X)
-//Dispatch backHomeSinceBomb: backHomeSinceBomb(X)
-//Dispatch continueExploreAfterPhoto: continueExploreAfterPhoto(X)
- 
-//Message from robot to console
-//Dispatch sendPhoto: sendPhoto(X) 
-   
-//Message from robot to robot
-//Dispatch reachBag: reachBag(X)*/  
 
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message 
 Dispatch startCmd :	startCmd
 Dispatch stopCmd  : stopCmd 
 
-//message try to do a step
+//message try to do a step 
 Dispatch onestep       : onestep(DURATION)
 Dispatch stepOk        : stepOk
 Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
@@ -37,68 +21,72 @@ Dispatch checkWall : checkWall //sent to start checking if an obstacle is a wall
 Dispatch isWall : isWall
 Dispatch isObstacle : isObstacle
 
-Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
+Dispatch doPlan : doPlan(x,y)
+Dispatch planOk : goalDone
+Dispatch planFail : goalFailed 
+
+Context provarobotMindCtx        ip [host="localhost" port=8035]   -mqtt
 Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
- 
 
-QActor robotmind context robotMindCtx { 
-["var Curmove     = \"\"  
-var IterCounter = 0 
-var backHome = false
-var maxX = 0
-var maxY = 0
-var finish = false
-var Map = \"\"
-
-//VIRTUAL ROBOT
-var StepTime   = 330	
-var StopTime = 100 
- 
-var Tback       = 0
-
-var checkingSouth = false
-"]
-	State s0 initial {
-		solve (consult ("resourceModel.pl"))
-		println("&&&  robotmind STARTED")
-		run itunibo.planner.plannerUtil.initAI()
-		println("INITIAL MAP") 
-		run itunibo.planner.plannerUtil.showMap() 
-	} 
-
-	Goto waitForStart
+QActor planexecutor context provarobotMindCtx {
 	
-	State waitForStart {
+	["
+		var Curmove     = \"\"  
+		var x = 0
+		var y = 0 
+		var Map = \"\"
+		var Tback = 0
+		var StepTime   = 330
+
+    "]
+	State s0 initial {} 
+
+	Transition t0  whenMsg doPlan  -> saveGoal 
+				
+	State saveGoal {
+		
+ 		printCurrentMessage
+ 		onMsg(doPlan : doPlan(x,y)){
+ 			["x = payloadArg(0).toInt()
+			  y = payloadArg(1).toInt()"]
+ 		}
+ 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
 	}
+				 	
+	Goto doPlan
 	
-	Transition t0  whenMsg startCmd  -> startExploration 
-				 
-
-	State startExploration {
-		println("&&&  exploration STARTED")
-		run itunibo.planner.plannerUtil.setGoal("1","1")
-		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
-	}
-	
-	Goto checkStop
-	
-	//raggiungo la cella
-	State checkStop {	}
-	
-	Transition t1 whenTime 100  -> doPlan		
- 		           whenMsg stopCmd -> handleStop  
+ 	State doPlan {}
  	
- 	State doPlan {
- 		
+	Transition t1 whenTime 100  -> doPlan1 		
+ 		          whenMsg stopCmd -> s0 
+ 	
+ 	State doPlan1{
+ 	
 		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
 		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
 		run itunibo.planner.plannerUtil.showMap() 
+		
 		solve( retract( move(M) ) ) 	//consume a move
 		ifSolved {  ["Curmove = getCurSol(\"M\").toString()"]  }
-		 else { ["Curmove=\"nomove\" "]  }
+		else { ["Curmove=\"nomove\" "]  }
+		println(Curmove)
+
 	}  
 	
 	Goto handlemove if "(Curmove != \"nomove\")" else choose
+	
+	State choose {
+		//if "goalDone" {
+		forward robotactuator -m robotCmd : robotCmd(h)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+		forward robotmind -m planOk : planOk 
+		//}
+		//else {
+			//forward robotmind -m goalFailed : goalFailed 
+		//}
+	}
+	
+	Goto s0
 	
 	State handlemove {}
 	
@@ -112,7 +100,7 @@ var checkingSouth = false
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
 	}
 	
-	Goto checkStop
+	Goto doPlan
 	
 	//roomboundaryplanning.qak
 	State attempttogoahead {	
@@ -121,19 +109,18 @@ var checkingSouth = false
 	}
 	
 	Transition t2   whenMsg stepOk   -> stepDone   
-					whenMsg stepFail -> stepFailed 
+					whenMsg stepFail -> stepFailed
 					 
  	State stepDone{  
  		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
  		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")	
  	}
  	
- 	Goto checkStop
+ 	Goto doPlan
  	
-
  	State stepFailed{
- 		println("&&&  FOUND WALL")
-["var TbackLong = 0L"]		 
+ 		println("&&&  OBSTACLE FOUND") 
+		["var TbackLong = 0L"]		 
  	  	
 		//printCurrentMessage		        
  		onMsg( stepFail : stepFail(Obs, Time) ) { 
@@ -149,182 +136,84 @@ var checkingSouth = false
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
 		delay 700
- //--------------------------------------------------
- 		//run itunibo.planner.plannerUtil.wallFound()
- 		/*ModelUpdate to resource model!!!*/
-
- 		run itunibo.planner.plannerUtil.showMap() 
- 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
- 		run itunibo.planner.plannerUtil.showMap() 
- 		
-//		forward wallchecker -m checkWall : checkWall
-// 		solve( retractall( move(_) ))
-// 		run itunibo.planner.plannerUtil.resetGoal(IterCounter, IterCounter)
-//		run itunibo.planner.moveUtils.doPlan( myself )
-//		["
-//		 if( ! itunibo.planner.model.RoomMap.getRoomMap().isObstacle(IterCounter,IterCounter) ) {IterCounter--}"
-//		]
- 		
-	}   
-	
-	//Transition t3 whenMsg isWall -> setGoalAfterWall
-	//			  whenMsg isObstacle -> choose
-	
-	//Goto endOfJob //**checkWallTest
-	//Goto setGoalAfterWall
-	//Goto checkStop if "itunibo.planner.plannerUtil.currentGoalApplicable" else newGoal
-	Goto checkSouthWall if "itunibo.planner.plannerUtil.getDirection() == \"downDir\"" else checkEastWall
-	//Goto choose
-
-
-	State checkSouthWall {
-	["
-		var x = itunibo.planner.plannerUtil.getPosX()+1
-		var y = itunibo.planner.plannerUtil.getPosY()+1
-
-		println(\" \"+ x +\" \"+y)
-	"]
-	   
-		println("%% check left %%")
-		solve( retractall( move(_) ))
-	 	run itunibo.planner.plannerUtil.resetGoal(x, y)
-	 	run itunibo.planner.moveUtils.doPlan( myself )
-	}
-	Goto checkStop
-	
-	State checkEastWall {}
-	
-	State newGoal {
-		["IterCounter++"]
-		solve( retractall( move(_) ))
-		run itunibo.planner.plannerUtil.resetGoal(IterCounter, IterCounter)
- 		run itunibo.planner.moveUtils.doPlan( myself )
-	}
-	Goto checkStop
-	
-	State setGoalAfterWall{
-		solve( retractall( move(_) ))
-	["
-	if( itunibo.planner.plannerUtil.getDirection() == \"downDir\" ){ 
-		maxY = itunibo.planner.plannerUtil.getPosY()
-		if(maxX == 0 ){
-			itunibo.planner.plannerUtil.setGoal(IterCounter, maxY)
-		} else {itunibo.planner.plannerUtil.setGoal(maxX, maxY)}
-	} 
-	else if( itunibo.planner.plannerUtil.getDirection() == \"rightDir\" ){ 
-		maxX = itunibo.planner.plannerUtil.getPosX()
-		if (maxY == 0 ){
-			itunibo.planner.plannerUtil.setGoal(maxX, IterCounter)
-		} else { itunibo.planner.plannerUtil.setGoal(maxX, maxY) }
-	} else {
-		itunibo.planner.plannerUtil.setGoal(0, 0)
-	}
-	"]
-		run itunibo.planner.moveUtils.doPlan( myself )
 	}
 	
-	Goto checkStop
 
+	Goto doPlan
 	
-	State choose {}
-	Goto goBackHome if "backHome" else nextStep
-	
- 	//torno a casa
-	State goBackHome{
-	["backHome = false"]
-		println("&&&  returnToHome")
- 		//solve( retractall( move(_) ))		//clean the actor kb
- 		run itunibo.planner.plannerUtil.setGoal(0,0)
-  		run itunibo.planner.moveUtils.doPlan( myself )
-	
-  		delay 700
-    }  
-	
-	Goto checkStop
-	 
-	State nextStep {}
-
-	Goto endOfJob if "finish" else calculatenextstep
-	
-	State calculatenextstep{
-["IterCounter++
-	backHome = true
-	if (maxX == 0 && maxY == 0){ itunibo.planner.plannerUtil.setGoal(IterCounter,IterCounter) }
-	else if( maxX != 0 && maxY == 0 ){ itunibo.planner.plannerUtil.setGoal(maxX,IterCounter) } 
-	else if( maxX == 0 && maxY != 0 ){ itunibo.planner.plannerUtil.setGoal(IterCounter, maxY) } 
-	else {
- 		itunibo.planner.plannerUtil.setGoal(maxX, maxY)
-		finish = true 
 }
+ 
+
+QActor robotmind context provarobotMindCtx { 
+["
+	var iter = 1
+	var X = iter
+	var Y = iter
+	var backHome = true
 "]
-		println("&&&  nextStep")
- 		run itunibo.planner.moveUtils.doPlan( myself )
-	}
-	Goto checkStop
+
+	State s0 initial {
+		solve (consult ("resourceModel.pl"))
+		println("&&&  robotmind STARTED")
+		run itunibo.planner.plannerUtil.initAI()
+		println("INITIAL MAP") 
+		run itunibo.planner.plannerUtil.showMap() 
+	} 
+
+	Goto waitForStart
 	
-	State endOfJob{
-		["if (maxX != 0 && maxY != 0) {itunibo.planner.plannerUtil.fixwalls(maxX, maxY)}"]
+	State waitForStart {
+	}
+	
+	Transition t0  whenMsg startCmd  -> startExploration 
+	
+	State startExploration {
+		println("&&&  exploration STARTED")
+
+		run itunibo.planner.plannerUtil.setGoal(X,Y)
+		forward planexecutor -m doPlan : doPlan($X,$Y)
+	}
+	
+	Transition t1 whenEvent stopCmd -> stopAppl
+				  whenMsg planOk -> nextGoal
+				  whenMsg planFail -> stopAppl
+				  
+	State stopAppl{
+		println("%% robotmind stopped %%")
+		//forward planexecutor -m stopCmd : stopCmd
+		forward robotactuator -m robotCmd : robotCmd(h)
+		//forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+	}
+	
+	Goto waitForStart
+	
+	State nextGoal {
 		
-		println("FINAL MAP")   
-		["Map = itunibo.planner.plannerUtil.getMapOneLine()"]
-		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
- 		run itunibo.planner.plannerUtil.showMap() 
-		println("&&&  planex0 ENDS")
- 	}
- 	
- 	State handleStop{
-		onMsg(stopCmd : stopCmd) {
-			forward robotactuator -m robotCmd : robotCmd(h)
-			forward resourcemodel -m modelUpdate : modelUpdate(robot, h)
+		if "backHome" {
+			["
+			backHome = false
+			X = 0
+			Y = 0
+			iter++"]
+		}
+		else {
+		["
+			backHome = true
+			X = iter
+			Y = iter
+		"]
 		}
 	}
 	
-	Transition t3  whenMsg startCmd  -> doPlan
-	
-
+	Goto startExploration
 }
-
-/*
-QActor wallchecker context robotMindCtx {
-	["
-	var right = false
-	var below = false
-"]
-
-State s0 initial {
-	println("%% wallChecker ready %%")
-}
-
-Goto waitCheck
-
-State waitCheck {}
-
-Transition t0 whenMsg checkWall -> checkLeft
-
-State checkLeft {
-	["var x = IterCounter+1"]
-	println("%% check left %%")
-	solve( retractall( move(_) ))
- 	run itunibo.planner.plannerUtil.resetGoal(x, IterCounter)
- 	run itunibo.planner.moveUtils.doPlan( myself )
-}
-
-Goto checkBelow 
-
-State checkBelow {
-	println("%% check below %%")
-	forward robotmind -m isWall : isWall
-}
-
-Goto waitCheck
-} */
 
  /*
  * ====================================================================
  * onestepahead robotmind.qak
  * ====================================================================
  */
-QActor onestepahead context  robotMindCtx {
+QActor onestepahead context  provarobotMindCtx {
 [" 
 var foundObstacle = false
 var StepTime = 0L
@@ -350,7 +239,7 @@ var fail = false
  		    
 	State endDoMoveForward{
 		forward robotactuator -m robotCmd : robotCmd(h)	
-		forward robotmind -m stepOk : stepOk
+		forward planexecutor -m stepOk : stepOk
 	}
 	Goto s0
 	
@@ -370,7 +259,7 @@ var fail = false
 		//printCurrentMessage
 		println("onestepahead stepFail Duration=$Duration ")
 		
-		forward robotmind -m stepFail : stepFail(obstacle, $Duration)
+		forward planexecutor -m stepFail : stepFail(obstacle, $Duration)
 	}
 	Goto s0  
 }    
@@ -381,7 +270,7 @@ var fail = false
   * Basic robot: just an actuator of move commands
   * --------------------------------------------------------
   */
-QActor robotactuator context robotMindCtx {
+QActor robotactuator context provarobotMindCtx {
 	State s0 initial {
  	 	solve( consult("basicRobotConfig.pl") )
  		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
@@ -420,7 +309,7 @@ QActor robotactuator context robotMindCtx {
   * Resource model: robot state as a coap resource accessile by Restful protocol
   * --------------------------------------------------------
   */
-QActor resourcemodel context robotMindCtx{
+QActor resourcemodel context provarobotMindCtx{
 
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )

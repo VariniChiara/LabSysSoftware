@@ -111,6 +111,7 @@ object plannerUtil {
     fun doPlan(): List<Action>? {
         //var actions: List<Action>?
 		
+		
 		if( ! currentGoalApplicable ){
 			println("plannerUtil doPlan cannot go into an obstacle")
 			return null

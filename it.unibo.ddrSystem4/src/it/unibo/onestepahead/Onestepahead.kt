@@ -15,9 +15,9 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 	}
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
-		 
-		var foundObstacle = false; 
-		var StepTime = 0L; 
+		
+		var foundObstacle = false;
+		var StepTime = 0L;
 		var Duration = 0 ;
 		var Fail = false;
 		return { //this:ActionBasciFsm

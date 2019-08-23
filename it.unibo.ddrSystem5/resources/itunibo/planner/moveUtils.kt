@@ -89,7 +89,7 @@ object moveUtils{
 	fun doPlan(actor : ActorBasic ){
 		val plan = plannerUtil.doPlan( )
 		existPlan = plan != null
-		if( existPlan ) storeMovesInActor(actor,plan) 
+		if( existPlan ) storeMovesInActor(actor,plan)
 	}
 	
 	fun existPlan() : Boolean{ return existPlan }
