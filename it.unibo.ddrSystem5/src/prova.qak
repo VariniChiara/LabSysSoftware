@@ -21,9 +21,9 @@ Dispatch checkWall : checkWall //sent to start checking if an obstacle is a wall
 Dispatch isWall : isWall
 Dispatch isObstacle : isObstacle
 
-Dispatch doPlan : doPlan(x,y)
+Dispatch doPlan : doPlan(X,Y)
 Dispatch planOk : planOk
-Dispatch planFail : planFail(X,Y) 
+Dispatch planFail : planFail
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
@@ -32,8 +32,6 @@ QActor planexecutor context robotMindCtx {
 	
 	["
 		var Curmove     = \"\"  
-		var x = 0
-		var y = 0 
 		var Map = \"\"
 		var Tback = 0
 		var StepTime   = 330
@@ -41,23 +39,18 @@ QActor planexecutor context robotMindCtx {
     "]
 	State s0 initial {} 
 
-	Transition t0  whenMsg doPlan  -> saveGoal 
+	Transition t0  whenMsg doPlan  -> loadPlan
 				 
-	State saveGoal {
-		
- 		printCurrentMessage
- 		onMsg(doPlan : doPlan(x,y)){
- 			["x = payloadArg(0).toInt()
-			  y = payloadArg(1).toInt()"]
- 		}
+	State loadPlan {
+		printCurrentMessage
  		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
 	}
 				 	
 	Goto doPlan
 	
- 	State doPlan {}
+ 	State doPlan {	}
  	
-	Transition t1 whenTime 50  -> doPlan1 		
+	Transition t1 whenTime 100  -> doPlan1 		
  		          whenMsg stopCmd -> stopAppl
  		          
  	State stopAppl {
@@ -77,7 +70,6 @@ QActor planexecutor context robotMindCtx {
 		solve( retract( move(M) ) ) 	//consume a move
 		ifSolved {  ["Curmove = getCurSol(\"M\").toString()"]  }
 		else { ["Curmove=\"nomove\" "]  }
-		println(Curmove)
 
 	}  
 	
@@ -144,8 +136,11 @@ QActor planexecutor context robotMindCtx {
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
 		
+		
+		
 		forward robotmind -m planFail : planFail 
 		delay 700
+		solve(retractall( move(_)))
 	}
 	
 
@@ -156,10 +151,13 @@ QActor planexecutor context robotMindCtx {
 
 QActor robotmind context robotMindCtx { 
 ["
-	var iter = 1
-	var X = iter
-	var Y = iter
+//import aima.core.agent.Action
+	var iterCounter = 1
+	var X = iterCounter
+	var Y = iterCounter
 	var backHome = true
+
+	var plan : List<Action>? = null
 "]
 
 	State s0 initial {
@@ -179,7 +177,6 @@ QActor robotmind context robotMindCtx {
 	
 	State startExploration {
 		println("&&&  exploration STARTED")
-
 		run itunibo.planner.plannerUtil.setGoal(X,Y)
 		forward planexecutor -m doPlan : doPlan($X,$Y)
 	}
@@ -202,13 +199,13 @@ QActor robotmind context robotMindCtx {
 			backHome = false
 			X = 0
 			Y = 0
-			iter++"]
+			iterCounter++"]
 		}
 		else {
 		["
 			backHome = true
-			X = iter
-			Y = iter
+			X = iterCounter
+			Y = iterCounter
 		"]
 		}
 	}
@@ -216,8 +213,30 @@ QActor robotmind context robotMindCtx {
 	Goto startExploration
 	
 	State checkIfObstacle {
+		println("---CheckIfObstacle---")
+		
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+		run itunibo.planner.plannerUtil.resetGoal(X,Y)
+
+		["plan = itunibo.planner.plannerUtil.doPlan()"]	
 		
 	}
+	
+	Goto startExploration if "(plan != null)" else checkNull
+	 
+	State checkNull {
+		println("---CheckNull---") 
+	}
+	
+	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else finishChecking
+	
+	State finishChecking{
+		println("---finishChecking---")
+		run itunibo.planner.plannerUtil.setGoal(0,0)
+		forward planexecutor -m doPlan : doPlan(0,0)
+	}
+
+	
 }
 
  /*
@@ -261,7 +280,6 @@ var fail = false
 			["fail = payloadArg(0).toInt() < 10"]
 		}
 		["fail = true"]
-		println(fail)
 	}
 	
 	Goto stepFail if "fail" else endDoMoveForward

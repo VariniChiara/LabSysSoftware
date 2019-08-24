@@ -111,7 +111,6 @@ object plannerUtil {
     fun doPlan(): List<Action>? {
         //var actions: List<Action>?
 		
-		
 		if( ! currentGoalApplicable ){
 			println("plannerUtil doPlan cannot go into an obstacle")
 			return null
@@ -130,7 +129,7 @@ object plannerUtil {
 		
         if (actions == null || actions!!.isEmpty()) {
             println("plannerUtil doPlan NO MOVES !!!!!!!!!!!! $actions!!"   )
-            if (!RoomMap.getRoomMap().isClean) RoomMap.getRoomMap().setObstacles()
+           // if (!RoomMap.getRoomMap().isClean) RoomMap.getRoomMap().setObstacles()
             //actions = ArrayList()
             return null
         } else if (actions!![0].isNoOp) {
@@ -168,7 +167,7 @@ object plannerUtil {
         val dimMapy = RoomMap.getRoomMap().dimY
         val x = initialState!!.x 
         val y = initialState!!.y
-       // println("plannerUtil: doMove move=$move  dir=$dir x=$x y=$y dimMapX=$dimMapx dimMapY=$dimMapy")
+        println("plannerUtil: doMove move=$move  dir=$dir x=$x y=$y dimMapX=$dimMapx dimMapY=$dimMapy")
        try {
             when (move) {
                 "w" -> {
@@ -287,6 +286,7 @@ object plannerUtil {
 
 	//Box(boolean isObstacle, boolean isDirty, boolean isRobot)
     fun setGoal( x: Int, y: Int) {
+		currentGoalApplicable = true
         try {
             println("setGoal $x,$y while robot in cell: ${getPosX()}, ${getPosY()} direction=${getDirection()}")	
             RoomMap.getRoomMap().put(x, y, Box(false, true, false))

@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import aima.core.agent.Action
 	
 class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope){
  	
@@ -16,10 +17,13 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-			var iter = 1
-			var X = iter
-			var Y = iter
+		//import aima.core.agent.Action
+			var iterCounter = 1
+			var X = iterCounter
+			var Y = iterCounter
 			var backHome = true
+		
+			var plan : List<Action>? = null
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -59,19 +63,39 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 									backHome = false
 									X = 0
 									Y = 0
-									iter++
+									iterCounter++
 						 }
 						else
 						 { 
 						 			backHome = true
-						 			X = iter
-						 			Y = iter
+						 			X = iterCounter
+						 			Y = iterCounter
 						  }
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitch() )
 				}	 
 				state("checkIfObstacle") { //this:State
 					action { //it:State
+						println("---CheckIfObstacle---")
+						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+						itunibo.planner.plannerUtil.resetGoal( X, Y  )
+						plan = itunibo.planner.plannerUtil.doPlan()
+					}
+					 transition( edgeName="goto",targetState="startExploration", cond=doswitchGuarded({(plan != null)}) )
+					transition( edgeName="goto",targetState="checkNull", cond=doswitchGuarded({! (plan != null)}) )
+				}	 
+				state("checkNull") { //this:State
+					action { //it:State
+						println("---CheckNull---")
+					}
+					 transition( edgeName="goto",targetState="nextGoal", cond=doswitchGuarded({(!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
+					transition( edgeName="goto",targetState="finishChecking", cond=doswitchGuarded({! (!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
+				}	 
+				state("finishChecking") { //this:State
+					action { //it:State
+						println("---finishChecking---")
+						itunibo.planner.plannerUtil.setGoal( 0, 0  )
+						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
 					}
 				}	 
 			}

@@ -56,7 +56,6 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 								fail = payloadArg(0).toInt() < 10
 						}
 						fail = true
-						println(fail)
 					}
 					 transition( edgeName="goto",targetState="stepFail", cond=doswitchGuarded({fail}) )
 					transition( edgeName="goto",targetState="endDoMoveForward", cond=doswitchGuarded({! fail}) )

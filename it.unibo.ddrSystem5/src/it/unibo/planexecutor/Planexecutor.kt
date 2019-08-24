@@ -17,8 +17,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
 				var Curmove     = ""  
-				var x = 0
-				var y = 0 
 				var Map = ""
 				var Tback = 0
 				var StepTime   = 330
@@ -27,16 +25,11 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("s0") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t00",targetState="saveGoal",cond=whenDispatch("doPlan"))
+					 transition(edgeName="t00",targetState="loadPlan",cond=whenDispatch("doPlan"))
 				}	 
-				state("saveGoal") { //this:State
+				state("loadPlan") { //this:State
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("doPlan(x,y)"), Term.createTerm("doPlan(x,y)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								x = payloadArg(0).toInt()
-											  y = payloadArg(1).toInt()
-						}
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
 					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
@@ -44,7 +37,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("doPlan") { //this:State
 					action { //it:State
 						stateTimer = TimerActor("timer_doPlan", 
-							scope, context!!, "local_tout_planexecutor_doPlan", 50.toLong() )
+							scope, context!!, "local_tout_planexecutor_doPlan", 100.toLong() )
 					}
 					 transition(edgeName="t11",targetState="doPlan1",cond=whenTimeout("local_tout_planexecutor_doPlan"))   
 					transition(edgeName="t12",targetState="stopAppl",cond=whenDispatch("stopCmd"))
@@ -68,7 +61,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						else
 						{ Curmove="nomove" 
 						 }
-						println(Curmove)
 					}
 					 transition( edgeName="goto",targetState="handlemove", cond=doswitchGuarded({(Curmove != "nomove")}) )
 					transition( edgeName="goto",targetState="choose", cond=doswitchGuarded({! (Curmove != "nomove")}) )
@@ -130,6 +122,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						forward("planFail", "planFail" ,"robotmind" ) 
 						delay(700) 
+						solve("retractall(move(_))","") //set resVar	
 					}
 					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
 				}	 
