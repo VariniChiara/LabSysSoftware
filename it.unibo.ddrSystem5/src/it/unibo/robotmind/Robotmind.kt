@@ -7,7 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import aima.core.agent.Action
 	
 class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, scope){
  	
@@ -17,13 +16,13 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-		//import aima.core.agent.Action
 			var iterCounter = 1
 			var X = iterCounter
 			var Y = iterCounter
 			var backHome = true
 		
-			var plan : List<Action>? = null
+			var plan : List<aima.core.agent.Action>? = null
+			var dirtyCell : Pair<Int,Int>? = null
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -93,7 +92,42 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("finishChecking") { //this:State
 					action { //it:State
+						dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
 						println("---finishChecking---")
+					}
+					 transition( edgeName="goto",targetState="exploreDirtyCell", cond=doswitchGuarded({(dirtyCell != null)}) )
+					transition( edgeName="goto",targetState="endExploration", cond=doswitchGuarded({! (dirtyCell != null)}) )
+				}	 
+				state("exploreDirtyCell") { //this:State
+					action { //it:State
+						println("---exploreDirtyCell---")
+						
+									 X = dirtyCell!!.first
+									 Y = dirtyCell!!.second
+						itunibo.planner.plannerUtil.setGoal( X, Y  )
+						plan = itunibo.planner.plannerUtil.doPlan()
+					}
+					 transition( edgeName="goto",targetState="doExploration", cond=doswitchGuarded({(plan != null)}) )
+					transition( edgeName="goto",targetState="endExploration", cond=doswitchGuarded({! (plan != null)}) )
+				}	 
+				state("doExploration") { //this:State
+					action { //it:State
+						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
+					}
+					 transition(edgeName="t29",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t210",targetState="finishChecking",cond=whenDispatch("planOk"))
+					transition(edgeName="t211",targetState="setObstacle",cond=whenDispatch("planFail"))
+				}	 
+				state("setObstacle") { //this:State
+					action { //it:State
+						println("---setObstacle---")
+						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+					}
+					 transition( edgeName="goto",targetState="finishChecking", cond=doswitch() )
+				}	 
+				state("endExploration") { //this:State
+					action { //it:State
+						println("---endExploration---")
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
 					}

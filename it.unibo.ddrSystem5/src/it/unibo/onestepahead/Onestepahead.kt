@@ -25,7 +25,7 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					action { //it:State
 						foundObstacle = false 
 					}
-					 transition(edgeName="t09",targetState="doMoveForward",cond=whenDispatch("onestep"))
+					 transition(edgeName="t012",targetState="doMoveForward",cond=whenDispatch("onestep"))
 				}	 
 				state("doMoveForward") { //this:State
 					action { //it:State
@@ -38,8 +38,8 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						stateTimer = TimerActor("timer_doMoveForward", 
 							scope, context!!, "local_tout_onestepahead_doMoveForward", StepTime )
 					}
-					 transition(edgeName="t110",targetState="endDoMoveForward",cond=whenTimeout("local_tout_onestepahead_doMoveForward"))   
-					transition(edgeName="t111",targetState="checkStepFail",cond=whenEvent("sonarRobot"))
+					 transition(edgeName="t113",targetState="endDoMoveForward",cond=whenTimeout("local_tout_onestepahead_doMoveForward"))   
+					transition(edgeName="t114",targetState="stepFail",cond=whenEvent("sonarRobot"))
 				}	 
 				state("endDoMoveForward") { //this:State
 					action { //it:State
@@ -48,21 +48,10 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					}
 					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
 				}	 
-				state("checkStepFail") { //this:State
-					action { //it:State
-						println("$name in ${currentState.stateName} | $currentMsg")
-						if( checkMsgContent( Term.createTerm("sonarRobot(DISTANCE)"), Term.createTerm("sonarRobot(X)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								fail = payloadArg(0).toInt() < 10
-						}
-						fail = true
-					}
-					 transition( edgeName="goto",targetState="stepFail", cond=doswitchGuarded({fail}) )
-					transition( edgeName="goto",targetState="endDoMoveForward", cond=doswitchGuarded({! fail}) )
-				}	 
 				state("stepFail") { //this:State
 					action { //it:State
 						Duration=getDuration()
+						println("$name in ${currentState.stateName} | $currentMsg")
 						println("onestepahead stepFail Duration=$Duration ")
 						forward("stepFail", "stepFail(obstacle,$Duration)" ,"planexecutor" ) 
 					}

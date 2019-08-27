@@ -37,7 +37,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("doPlan") { //this:State
 					action { //it:State
 						stateTimer = TimerActor("timer_doPlan", 
-							scope, context!!, "local_tout_planexecutor_doPlan", 100.toLong() )
+							scope, context!!, "local_tout_planexecutor_doPlan", 50.toLong() )
 					}
 					 transition(edgeName="t11",targetState="doPlan1",cond=whenTimeout("local_tout_planexecutor_doPlan"))   
 					transition(edgeName="t12",targetState="stopAppl",cond=whenDispatch("stopCmd"))
@@ -63,9 +63,9 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						 }
 					}
 					 transition( edgeName="goto",targetState="handlemove", cond=doswitchGuarded({(Curmove != "nomove")}) )
-					transition( edgeName="goto",targetState="choose", cond=doswitchGuarded({! (Curmove != "nomove")}) )
+					transition( edgeName="goto",targetState="planOk", cond=doswitchGuarded({! (Curmove != "nomove")}) )
 				}	 
-				state("choose") { //this:State
+				state("planOk") { //this:State
 					action { //it:State
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
@@ -83,7 +83,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					action { //it:State
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
-						delay(700) 
+						delay(330) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 					}
@@ -110,9 +110,8 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						var TbackLong = 0L
 						if( checkMsgContent( Term.createTerm("stepFail(R,T)"), Term.createTerm("stepFail(Obs,Time)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								Tback=payloadArg(1).toLong().toString().toInt() / 2
+								Tback= (payloadArg(1).toLong().toString().toInt() * 0.85).toInt()
 											TbackLong = Tback.toLong()
-								println("stepFailed ${payloadArg(1).toString()}")
 						}
 						println(" backToCompensate stepTime=$Tback")
 						forward("modelUpdate", "modelUpdate(robot,s)" ,"resourcemodel" ) 
@@ -121,7 +120,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						forward("planFail", "planFail" ,"robotmind" ) 
-						delay(700) 
 						solve("retractall(move(_))","") //set resVar	
 					}
 					 transition( edgeName="goto",targetState="s0", cond=doswitch() )

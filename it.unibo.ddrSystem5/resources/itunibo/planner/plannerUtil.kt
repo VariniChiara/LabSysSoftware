@@ -381,10 +381,4 @@ object plannerUtil {
 		
 	}
 	
-	fun fixwalls(x: Int, y: Int){
-		val dimMapx = RoomMap.getRoomMap().getDimX()
-		val dimMapy = RoomMap.getRoomMap().getDimY()
-		setWallDown(dimMapx,dimMapy, x, y)
-		setWallRight(dimMapx,dimMapy, x, y)
-	}
 }

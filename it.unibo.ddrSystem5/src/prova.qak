@@ -50,7 +50,7 @@ QActor planexecutor context robotMindCtx {
 	
  	State doPlan {	}
  	
-	Transition t1 whenTime 100  -> doPlan1 		
+	Transition t1 whenTime 50  -> doPlan1 		
  		          whenMsg stopCmd -> stopAppl
  		          
  	State stopAppl {
@@ -73,17 +73,12 @@ QActor planexecutor context robotMindCtx {
 
 	}  
 	
-	Goto handlemove if "(Curmove != \"nomove\")" else choose
+	Goto handlemove if "(Curmove != \"nomove\")" else planOk
 	
-	State choose {
-		//if "goalDone" {
+	State planOk {
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
 		forward robotmind -m planOk : planOk 
-		//}
-		//else {
-			//forward robotmind -m goalFailed : goalFailed 
-		//}
 	}
 	
 	Goto s0
@@ -95,7 +90,7 @@ QActor planexecutor context robotMindCtx {
 	State domove {
 		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 		forward robotactuator -m robotCmd : robotCmd($Curmove)
-		delay 700
+		delay 330
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
 	}
@@ -124,23 +119,22 @@ QActor planexecutor context robotMindCtx {
  	  	
 		//printCurrentMessage		        
  		onMsg( stepFail : stepFail(Obs, Time) ) { 
- 			["Tback=payloadArg(1).toLong().toString().toInt() / 2
+ 			["Tback= (payloadArg(1).toLong().toString().toInt() * 0.85).toInt()
 			TbackLong = Tback.toLong()"]
- 			println("stepFailed ${payloadArg(1).toString()}")
  		}
   		
  		println(" backToCompensate stepTime=$Tback")
  		forward resourcemodel -m modelUpdate  : modelUpdate( robot, s ) 
  		forward robotactuator -m robotCmd : robotCmd(s)
+		
 		delayVar TbackLong
+		
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
 		
-		
-		
 		forward robotmind -m planFail : planFail 
-		delay 700
 		solve(retractall( move(_)))
+		
 	}
 	
 
@@ -151,13 +145,13 @@ QActor planexecutor context robotMindCtx {
 
 QActor robotmind context robotMindCtx { 
 ["
-//import aima.core.agent.Action
 	var iterCounter = 1
 	var X = iterCounter
 	var Y = iterCounter
 	var backHome = true
 
-	var plan : List<Action>? = null
+	var plan : List<aima.core.agent.Action>? = null
+	var dirtyCell : Pair<Int,Int>? = null
 "]
 
 	State s0 initial {
@@ -214,7 +208,6 @@ QActor robotmind context robotMindCtx {
 	
 	State checkIfObstacle {
 		println("---CheckIfObstacle---")
-		
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		run itunibo.planner.plannerUtil.resetGoal(X,Y)
 
@@ -231,7 +224,44 @@ QActor robotmind context robotMindCtx {
 	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else finishChecking
 	
 	State finishChecking{
+		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
 		println("---finishChecking---")
+	}
+	
+	Goto exploreDirtyCell if "(dirtyCell != null)" else endExploration
+	
+	State exploreDirtyCell {
+		println("---exploreDirtyCell---")
+		["
+			 X = dirtyCell!!.first
+			 Y = dirtyCell!!.second
+		"] 
+		
+		run itunibo.planner.plannerUtil.setGoal(X, Y)
+		["plan = itunibo.planner.plannerUtil.doPlan()"]	
+		
+	}
+	
+	Goto doExploration if "(plan != null)" else endExploration
+	
+	State doExploration {
+		forward planexecutor -m doPlan : doPlan($X,$Y)	
+	}
+	
+	Transition t2 whenEvent stopCmd -> stopAppl
+				  whenMsg planOk -> finishChecking
+				  whenMsg planFail -> setObstacle
+				  
+	State setObstacle {
+		println("---setObstacle---")
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+	}
+	
+	Goto finishChecking
+	
+	
+	State endExploration {
+		println("---endExploration---")
 		run itunibo.planner.plannerUtil.setGoal(0,0)
 		forward planexecutor -m doPlan : doPlan(0,0)
 	}
@@ -266,27 +296,18 @@ var fail = false
 		}      
 	}          
 	Transition t1 whenTimeVar StepTime  -> endDoMoveForward		
- 		           whenEvent sonarRobot -> checkStepFail  
+ 		           whenEvent sonarRobot -> stepFail  
  		    
 	State endDoMoveForward{
 		forward robotactuator -m robotCmd : robotCmd(h)	
 		forward planexecutor -m stepOk : stepOk
 	}
+	
 	Goto s0
-	
-	State checkStepFail {
-		printCurrentMessage
-		onMsg (sonarRobot : sonarRobot(X)) { 
-			["fail = payloadArg(0).toInt() < 10"]
-		}
-		["fail = true"]
-	}
-	
-	Goto stepFail if "fail" else endDoMoveForward
 	
 	State stepFail{ 
 		["Duration=getDuration()"]  //getDuration is built-in in the actor
-		//printCurrentMessage
+		printCurrentMessage
 		println("onestepahead stepFail Duration=$Duration ")
 		
 		forward planexecutor -m stepFail : stepFail(obstacle, $Duration)
@@ -362,8 +383,7 @@ QActor resourcemodel context robotMindCtx{
 		onMsg( modelUpdate : modelUpdate(sonarRobot,V ) ) {
 			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
 		}
-		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {  //JULY19
-			//println("modelUpdate roomMap")
+		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {  
 			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
 		}
 	}

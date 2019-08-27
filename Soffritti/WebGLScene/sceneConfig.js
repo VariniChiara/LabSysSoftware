@@ -1,14 +1,23 @@
 const config = {
-    floor: {
+  floor: {
+      size: { x: 30, y: 24                   }
+  },
+  player: {
+      //position: { x: 0.5, y: 0.5 },		//CENTER
+      position: { x: 0.1, y: 0.16 },		//INIT
+      //position: { x: 0.8, y: 0.85 },		//END
+      speed: 0.2
+  },
+    /*floor: {
         size: { x: 50, y: 35 }
     },
     player: {
         //position: { x: 0.5, y: 0.5 },		//CENTER
-        position: { x: 0.075, y: 0.075 },		//INIT
+        position: { x: 0.15, y: 0.15 },		//INIT
     	// position: { x: 0.2, y: 0.2 },
         //position: { x: 0.8, y: 0.85 },		//END
         speed: 0.2
-    },
+    },*/
     sonars: [
 //        {
 //            name: "sonar1",
