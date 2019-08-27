@@ -187,7 +187,6 @@ QActor robotmind context robotMindCtx {
 	Goto waitForStart
 	
 	State nextGoal {
-		
 		if "backHome" {
 			["
 			backHome = false
@@ -210,7 +209,7 @@ QActor robotmind context robotMindCtx {
 		println("---CheckIfObstacle---")
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		run itunibo.planner.plannerUtil.resetGoal(X,Y)
-
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		["plan = itunibo.planner.plannerUtil.doPlan()"]	
 		
 	}

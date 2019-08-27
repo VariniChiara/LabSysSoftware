@@ -1,11 +1,13 @@
 const config = {
   floor: {
-      size: { x: 30, y: 24                   }
+      //size: { x: 30, y: 24 }
+      //size: { x: 20, y:20 }
+      size: { x: 24, y: 34 }
   },
   player: {
-      //position: { x: 0.5, y: 0.5 },		//CENTER
-      position: { x: 0.1, y: 0.16 },		//INIT
-      //position: { x: 0.8, y: 0.85 },		//END
+      //position: { x: 0.1, y: 0.16 },
+      //position: { x: 0.16, y: 0.2 },
+      position: { x: 0.13, y: 0.16 },
       speed: 0.2
   },
     /*floor: {
@@ -74,13 +76,17 @@ const config = {
         },
        {
            name: "obstacle",
-           centerPosition: {x: 0.06, y: 0.6},
-           size: { x: 0.10, y: 0.10}
+           //centerPosition: {x: 0.06, y: 0.6},
+           //centerPosition: {x: 0.1, y: 0.5},
+           centerPosition: {x: 0.1, y: 0.6},
+           size: { x: 0.15, y: 0.1}
        },
         {
             name: "obstacle2",
-            centerPosition: {x: 0.4, y: 0.4},
-            size: { x: 0.10, y: 0.10}
+            //centerPosition: {x: 0.4, y: 0.4},
+            //centerPosition: {x: 0.45, y: 0.3},
+            centerPosition: {x: 0.8, y: 0.2},
+            size: { x:  0.15, y: 0.1}
         }
     ]
 }
