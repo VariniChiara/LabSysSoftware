@@ -42,8 +42,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("startExploration") { //this:State
 					action { //it:State
 						println("&&&  exploration STARTED")
-						itunibo.planner.plannerUtil.setGoal( X, Y  )
-						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
+						forward("robotCmd", "robotCmd(w)" ,"robotactuator" ) 
 					}
 					 transition(edgeName="t16",targetState="stopAppl",cond=whenEvent("stopCmd"))
 					transition(edgeName="t17",targetState="nextGoal",cond=whenDispatch("planOk"))

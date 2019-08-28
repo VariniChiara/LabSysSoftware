@@ -19,7 +19,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				var Curmove     = ""  
 				var Map = ""
 				var Tback = 0
-				var StepTime   = 330
+				var StepTime   = 900  //330
 		
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -83,7 +83,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					action { //it:State
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
-						delay(330) 
+						delay(400) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 					}
