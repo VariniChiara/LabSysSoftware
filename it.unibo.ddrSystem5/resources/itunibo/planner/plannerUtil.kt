@@ -111,7 +111,7 @@ object plannerUtil {
     fun doPlan(): List<Action>? {
         //var actions: List<Action>?
 		
-		if( ! currentGoalApplicable ){
+		if( ! currentGoalApplicable ){ //il nuovo goal che ho settato è nella posizione di un ostacolo
 			println("plannerUtil doPlan cannot go into an obstacle")
 			return null
 		} 
@@ -127,12 +127,12 @@ object plannerUtil {
 		
 		println("plannerUtil doPlan actions=$actions")
 		
-        if (actions == null || actions!!.isEmpty()) {
+        if (actions == null || actions!!.isEmpty()) { //non ci posso arrivare sono accerchiato, ho ostacoli intorno
             println("plannerUtil doPlan NO MOVES !!!!!!!!!!!! $actions!!"   )
-            if (!RoomMap.getRoomMap().isClean) RoomMap.getRoomMap().setObstacles()
+            //if (!RoomMap.getRoomMap().isClean) RoomMap.getRoomMap().setObstacles()
             //actions = ArrayList()
             return null
-        } else if (actions!![0].isNoOp) {
+        } else if (actions!![0].isNoOp) { // sono già nel mio goal, es sono in (1.1), goal(1.1)
             println("plannerUtil doPlan NoOp")
             return null
         }
@@ -286,6 +286,7 @@ object plannerUtil {
 
 	//Box(boolean isObstacle, boolean isDirty, boolean isRobot)
     fun setGoal( x: Int, y: Int) {
+		currentGoalApplicable = true
         try {
             println("setGoal $x,$y while robot in cell: ${getPosX()}, ${getPosY()} direction=${getDirection()}")	
             RoomMap.getRoomMap().put(x, y, Box(false, true, false))
@@ -386,4 +387,6 @@ object plannerUtil {
 		setWallDown(dimMapx,dimMapy, x, y)
 		setWallRight(dimMapx,dimMapy, x, y)
 	}
+	
+	
 }

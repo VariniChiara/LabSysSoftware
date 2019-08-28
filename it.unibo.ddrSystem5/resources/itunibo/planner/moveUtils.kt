@@ -4,6 +4,7 @@ import aima.core.agent.Action
 import it.unibo.kactor.ActorBasic
 import kotlinx.coroutines.delay
 import itunibo.planner.model.RobotState.Direction
+import itunibo.planner.model.RoomMap
 
 object moveUtils{
     private val actions : List<Action>? = null
@@ -152,5 +153,22 @@ object moveUtils{
 		actor.forward("modelChange", "modelChange(robot,h)", "resourcemodel")
 		delay( pauseTime.toLong() )
    	}
+	
+	//retrieve the first dirty cell 0 found in matrix 
+	fun getDirtyCell(): Pair<Int,Int>?{
+		
+		var maxX = RoomMap.getRoomMap().dimX
+		var maxY = RoomMap.getRoomMap().dimY
+		
+		
+		for(i in 0 until maxX){
+			for(j in 0 until maxY){
+				if(RoomMap.getRoomMap().isDirty(i,j)){}
+					return Pair(i,j)
+			}
+		}
+		return null
+		
+	}
 	
 }
