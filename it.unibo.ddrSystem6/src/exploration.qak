@@ -1,0 +1,439 @@
+System exploration
+
+mqttBroker "localhost" : 1883
+
+Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
+Dispatch sonar : sonar      
+  
+Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
+Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message 
+Dispatch startCmd :	startCmd
+Dispatch stopCmd  : stopCmd 
+
+//message try to do a step 
+Dispatch onestep       : onestep(DURATION)
+Dispatch stepOk        : stepOk
+Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
+
+Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model change
+Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
+
+Dispatch checkWall : checkWall //sent to start checking if an obstacle is a wall
+Dispatch isWall : isWall
+Dispatch isObstacle : isObstacle
+
+Dispatch doPlan : doPlan(X,Y)
+Dispatch planOk : planOk
+Dispatch planFail : planFail
+
+Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
+//Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+
+QActor planexecutor context robotMindCtx {
+	["
+		var Curmove     = \"\"  
+		var Map = \"\"
+		var Tback = 0
+		//var StepTime   = 330
+		var StepTime   = 700 
+
+    "]
+	State s0 initial {} 
+
+	Transition t0  whenMsg doPlan  -> loadPlan
+				 
+	State loadPlan {
+		printCurrentMessage
+ 		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
+	}
+				 	
+	Goto doPlan
+	
+ 	State doPlan {	}
+ 	
+	Transition t1 whenTime 50  -> doPlan1 		
+ 		          whenMsg stopCmd -> stopAppl
+ 		          
+ 	State stopAppl {
+ 		forward robotactuator -m robotCmd : robotCmd(h)
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+ 		solve(retractall( move(_)))
+ 	} 
+ 	
+ 	Goto s0
+ 	
+ 	State doPlan1{
+ 	
+		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
+		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
+		run itunibo.planner.plannerUtil.showMap() 
+		
+		solve( retract( move(M) ) ) 	//consume a move
+		ifSolved {  ["Curmove = getCurSol(\"M\").toString()"]  }
+		else { ["Curmove=\"nomove\" "]  }
+
+	}  
+	
+	Goto handlemove if "(Curmove != \"nomove\")" else planOk
+	
+	State planOk {
+		forward robotactuator -m robotCmd : robotCmd(h)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+		forward robotmind -m planOk : planOk 
+	}
+	
+	Goto s0
+	
+	State handlemove {}
+	
+	Goto domove if "(Curmove != \"w\")" else attempttogoahead
+	
+	State domove {
+		["var M = \"d\"
+			if (Curmove == \"d\") {M = \"a\"}
+		"]
+		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
+		forward robotactuator -m robotCmd : robotCmd($Curmove)
+		delay 700 
+		/*only for physic robot in order to make streight the wheels */
+		forward robotactuator -m robotCmd : robotCmd($M)
+		delay 200    
+		forward robotactuator -m robotCmd : robotCmd(h)
+	
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
+	}
+	
+	Goto doPlan
+	
+	//roomboundaryplanning.qak
+	State attempttogoahead {	
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, w ) 
+		run itunibo.planner.moveUtils.attemptTomoveAhead(myself, StepTime)
+	}
+	
+	Transition t2   whenMsg stepOk   -> stepDone   
+					whenMsg stepFail -> stepFailed
+					 
+ 	State stepDone{  
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+ 		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")	
+ 		
+ 	}
+ 	
+ 	Goto doPlan
+ 	
+ 	State stepFailed{
+ 		println("&&&  OBSTACLE FOUND") 
+		["var TbackLong = 0L"]		 
+ 	  	
+		//printCurrentMessage		        
+ 		onMsg( stepFail : stepFail(Obs, Time) ) { 
+ 			["Tback= (payloadArg(1).toLong().toString().toInt() * 0.85).toInt()
+			TbackLong = Tback.toLong()"]
+ 		}
+  		
+ 		println(" backToCompensate stepTime=$Tback")
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, s ) 
+ 		forward robotactuator -m robotCmd : robotCmd(s)
+		
+		delayVar TbackLong
+		
+		forward robotactuator -m robotCmd : robotCmd(h)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+		
+		forward robotmind -m planFail : planFail 
+		solve(retractall( move(_)))	
+	}
+	Goto s0	
+}
+ 
+
+QActor robotmind context robotMindCtx { 
+["
+	var iterCounter = 1
+	var X = iterCounter
+	var Y = iterCounter
+	var backHome = true
+
+	var plan : List<aima.core.agent.Action>? = null
+	var dirtyCell : Pair<Int,Int>? = null
+"]
+
+	State s0 initial {
+		solve (consult ("resourceModel.pl"))
+		println("&&&  robotmind STARTED")
+		run itunibo.planner.plannerUtil.initAI()
+		println("INITIAL MAP") 
+		run itunibo.planner.plannerUtil.showMap() 
+	} 
+
+	Goto waitForStart
+	
+	State waitForStart {
+	}
+	
+	Transition t0  whenMsg startCmd  -> startExploration 
+	
+	State startExploration {
+		println("&&&  exploration STARTED")
+		run itunibo.planner.plannerUtil.setGoal(X,Y)
+		forward planexecutor -m doPlan : doPlan($X,$Y)
+	}
+	
+	Transition t1 whenEvent stopCmd -> stopAppl
+				  whenMsg planOk -> nextGoal
+				  whenMsg planFail -> checkIfObstacle
+				  
+	State stopAppl{
+		println("%% robotmind stopped %%")
+		forward planexecutor -m stopCmd : stopCmd
+	}
+	
+	Goto waitForStart
+	
+	State nextGoal {
+		if "backHome" {
+			["
+			backHome = false
+			X = 0
+			Y = 0
+			iterCounter++"]
+		}
+		else {
+		["
+			backHome = true
+			X = iterCounter
+			Y = iterCounter
+		"]
+		}
+	}
+	
+	Goto startExploration
+	
+	State checkIfObstacle {
+		println("---CheckIfObstacle---")
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+		run itunibo.planner.plannerUtil.resetGoal(X,Y)
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+		["plan = itunibo.planner.plannerUtil.doPlan()"]	
+		
+	}
+	
+	Goto startExploration if "(plan != null)" else checkNull
+	 
+	State checkNull {
+		println("---CheckNull---") 
+	}
+	
+	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else finishChecking
+	
+	State finishChecking{
+		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
+		println("---finishChecking---")
+	}
+	
+	Goto exploreDirtyCell if "(dirtyCell != null)" else endExploration
+	
+	State exploreDirtyCell {
+		println("---exploreDirtyCell---")
+		["
+			 X = dirtyCell!!.first
+			 Y = dirtyCell!!.second
+		"] 
+		
+		run itunibo.planner.plannerUtil.setGoal(X, Y)
+		["plan = itunibo.planner.plannerUtil.doPlan()"]	
+		
+	}
+	
+	Goto doExploration if "(plan != null)" else endExploration
+	
+	State doExploration {
+		forward planexecutor -m doPlan : doPlan($X,$Y)	
+	}
+	
+	Transition t2 whenEvent stopCmd -> stopAppl
+				  whenMsg planOk -> finishChecking
+				  whenMsg planFail -> setObstacle
+				  
+	State setObstacle {
+		println("---setObstacle---")
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+	}
+	
+	Goto finishChecking
+	
+	
+	State endExploration {
+		println("---endExploration---")
+		run itunibo.planner.plannerUtil.setGoal(0,0)
+		forward planexecutor -m doPlan : doPlan(0,0)
+	}
+}
+
+ /*
+ * ====================================================================
+ * onestepahead robotmind.qak: actor that manages the forward step
+ * ====================================================================
+ */
+QActor onestepahead context  robotMindCtx {
+[" 
+var foundObstacle = false
+var StepTime = 0L
+var Duration = 0 
+var fail = false
+"]  
+	State s0 initial {	   
+		["foundObstacle = false "]
+	} 
+	Transition t0 whenMsg onestep -> doMoveForward
+ 
+	State doMoveForward{	
+	 
+		onMsg( onestep : onestep( TIME ) ) {
+			["StepTime = payloadArg(0).toLong()"]    		
+			forward robotactuator -m robotCmd : robotCmd(w)
+	 		["startTimer()"] //startTimer is built-in in the actor
+	 		
+		}      
+	}          
+	Transition t1 whenTimeVar StepTime  -> endDoMoveForward		
+ 		           whenEvent sonar -> stepFail  
+ 		    
+	State endDoMoveForward{
+		forward robotactuator -m robotCmd : robotCmd(h)	
+		forward planexecutor -m stepOk : stepOk
+	}
+	
+	Goto s0
+	
+	State stepFail{
+		["Duration=getDuration()"]  //getDuration is built-in in the actor
+		printCurrentMessage
+		println("onestepahead stepFail Duration=$Duration ")
+		
+		forward planexecutor -m stepFail : stepFail(obstacle, $Duration)
+	}
+	Goto s0  
+}    
+
+
+/*
+  * --------------------------------------------------------
+  * robotactuator: just an actuator of move commands
+  * --------------------------------------------------------
+  */
+QActor robotactuator context robotResourceCtx {
+	State s0 initial {
+ 	 	solve( consult("basicRobotConfig.pl") )
+ 		solve( robot(R, PORT) )  //R = virtual | realmbot | realnano
+  		ifSolved {
+     		println( "USING ROBOT : ${getCurSol(\"R\")},  port= ${getCurSol(\"PORT\")} " )
+  			run itunibo.robot.robotSupport.create( myself, @R, @PORT, null )
+  		}
+  		else{ println("no robot") }
+
+   		run itunibo.robot.robotSupport.move( "msg(a)" )
+   		
+   		delay 700
+   		run itunibo.robot.robotSupport.move( "msg(d)" )
+   		
+   		delay 700
+   		run itunibo.robot.robotSupport.move( "msg(h)" )
+ 
+ 	}
+	Goto waitCmd
+
+	State waitCmd{  } //robotCmd comes from a console OUTSIDE this (sub)system
+	Transition t0  whenMsg   robotCmd  -> handleRobotCmd
+
+	State handleRobotCmd{ //does not handle alarms
+		printCurrentMessage
+		onMsg( robotCmd : robotCmd( MOVE ) ) { //MOVE = w | a | s | d | h
+			run itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})" )
+		}
+ 	}
+	Goto waitCmd
+}
+
+/*
+  * --------------------------------------------------------
+  * sonahandler: actor that manages the sonarRobot events
+  * --------------------------------------------------------
+  */
+QActor sonarhandler context robotMindCtx{    
+  	State init initial{
+		println("sonarhandler STARTS ... ")
+	}         
+	Goto waitForEvents 
+	
+ 	State waitForEvents{  }      
+   	Transition t0 //whenEvent sonarData  -> handleSonar
+   				  whenEvent sonarRobot -> handleSonar //to test modeReact(model). See mbotSupport
+ 
+ 	State handleSonar{
+ 		printCurrentMessage
+ 		
+ 		onMsg ( sonarRobot : sonar( DISTANCE ) ){
+ 			if "(payloadArg(0).toInt() <= 5)" { 
+ 				forward robotactuator -m robotCmd : robotCmd(h)
+ 				forward onestepahead -m sonar : sonar
+ 			}
+ 		}
+ 	}
+ 	Goto waitForEvents
+ }
+
+
+ /*
+  * --------------------------------------------------------
+  * Resource model: robot state as a coap resource accessile by Restful protocol
+  * --------------------------------------------------------
+  */
+QActor resourcemodel context robotMindCtx{
+
+	State s0 initial {
+		solve( consult("sysRules.pl")	 )
+		solve( consult("resourceModel.pl")	 )
+		solve( showResourceModel )
+		run itunibo.coap.modelResourceCoap.create( myself, "resourcemodel" ) //CoAP access
+	}
+	Goto waitModelChange
+
+	State waitModelChange{ }
+	Transition t0 whenMsg modelChange -> changeModel //receive from sonar and frontend
+	              whenMsg modelUpdate -> updateModel //forward from robotmind
+
+	State updateModel{
+		printCurrentMessage
+		onMsg( modelUpdate : modelUpdate(robot,V ) ) {
+			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
+			solve( showResourceModel )
+		}
+		onMsg( modelUpdate : modelUpdate(sonarRobot,V ) ) {
+			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
+		}
+		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {  
+			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
+		}
+	}
+    Goto  waitModelChange
+
+	State changeModel{
+		printCurrentMessage
+		//ROBOT MOVE
+		onMsg(  modelChange  : modelChange(robot, V ) ) { // V= w | ...
+			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
+			solve( showResourceModel )
+			//emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
+		}
+		//SONAR DATA
+//		onMsg( modelChange : modelChange( sonarRobot,V ) ) { // V= w | ...
+//			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
+//		}
+
+	}
+	Goto  waitModelChange
+}
+
