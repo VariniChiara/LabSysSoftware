@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "192.168.1.6" : 1883
+mqttBroker "192.168.1.215" : 1883
 
 //Event consoleUpdate: consoleUpdate(X) //robot state update event
 //Event tempOk: tempOk(X) //temperature change event
@@ -37,8 +37,10 @@ Dispatch doPlan  : doPlan
 Dispatch planOk  : planOk 
 Dispatch planFail  : planFail
 
+Dispatch obstaclephoto:obstaclephoto
+
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.16" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
 
  
 
@@ -92,6 +94,13 @@ var dirtycell: Pair<Int,Int>? = null
 		println("&&&  exploration STARTED")
 		run itunibo.planner.plannerUtil.setGoal(X,Y)
 		forward planexecutor -m doPlan:doPlan($X,$Y)
+		
+		//forward robotactuator -m robotCmd:robotCmd(a)
+		//delay 500
+		//forward robotactuator -m robotCmd:robotCmd(d)
+		//delay 500
+		//forward robotactuator -m robotCmd:robotCmd(h)
+		
 	}
 	Transition t1 whenMsg planOk -> nextGoal
 				  whenMsg planFail -> checkIfObstacle
@@ -130,12 +139,13 @@ var dirtycell: Pair<Int,Int>? = null
 		println("========== checkIfObstacle ============")
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		
+		forward resourcemodel -m modelUpdate:modelUpdate(photo)
+		
+		
 		run itunibo.planner.plannerUtil.resetGoal(X,Y)	
 		//run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		
 		println("======= RESEAT GOAL ========")
-		println(X)
-		println(Y)
 		
 		["plan = itunibo.planner.plannerUtil.doPlan()"]
 		
@@ -206,7 +216,7 @@ QActor planexecutor context robotMindCtx {
 		var Curmove     = \"\"  
 		var Map = \"\"
 		var Tback = 0
-		var StepTime   = 330
+		var StepTime   = 850
 
     "]
 	State s0 initial {} 
@@ -265,13 +275,14 @@ QActor planexecutor context robotMindCtx {
 	
 	Goto domove if "(Curmove != \"w\")" else attempttogoahead
 	
-	State domove {
+	State domove {			
 		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
-		forward robotactuator -m robotCmd : robotCmd($Curmove)
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
-		delay 700
+		forward robotactuator -m robotCmd : robotCmd(Curmove)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, Curmove ) 
+		delay 500
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+		
 	}
 	
 	Goto doPlan
@@ -453,6 +464,10 @@ QActor resourcemodel context robotMindCtx{
 		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {  //JULY19
 			//println("modelUpdate roomMap")
 			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
+		}
+		onMsg( modelUpdate : modelUpdate(photo) ) {  
+	
+			run itunibo.robot.resourceModelSupport.updateObstaclePhotoModel( myself )
 		}
 	}
     Goto  waitModelChange

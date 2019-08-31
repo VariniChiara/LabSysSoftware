@@ -42,5 +42,18 @@ lateinit var resourcecoap : modelResourceCoap
 			resourcecoap.updateState( "roomMap( '$content' )" )
 		}
 	}
+	
+	
+	fun updateObstaclePhotoModel( actor: ActorBasic ){
+
+			actor.scope.launch{				
+				actor.emit( "modelContent" , "content( ostaclephoto )" ) //for the web server
+				//resourcecoap.updateState( "ostaclephoto" )
+  			}
+	}
+	
+	
+
+	
 
 }

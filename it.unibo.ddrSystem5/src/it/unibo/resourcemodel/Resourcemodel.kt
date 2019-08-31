@@ -47,6 +47,10 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								itunibo.robot.resourceModelSupport.updateRoomMapModel(myself ,payloadArg(1) )
 						}
+						if( checkMsgContent( Term.createTerm("modelUpdate(TARGET,VALUE)"), Term.createTerm("modelUpdate(photo)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								itunibo.robot.resourceModelSupport.updateObstaclePhotoModel(myself)
+						}
 					}
 					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )
 				}	 

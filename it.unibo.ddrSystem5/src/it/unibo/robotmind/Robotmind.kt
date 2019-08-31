@@ -97,10 +97,9 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						println("========== checkIfObstacle ============")
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+						forward("modelUpdate", "modelUpdate(photo)" ,"resourcemodel" ) 
 						itunibo.planner.plannerUtil.resetGoal( X, Y  )
 						println("======= RESEAT GOAL ========")
-						println(X)
-						println(Y)
 						plan = itunibo.planner.plannerUtil.doPlan()
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitchGuarded({(plan != null)}) )
