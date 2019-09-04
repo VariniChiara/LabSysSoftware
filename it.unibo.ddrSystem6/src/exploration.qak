@@ -37,7 +37,7 @@ Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 QActor planexecutor context robotMindCtx {
 	["
 		var Curmove     = \"\"  
-		var Map = \"\"
+		var Map = \"\" 
 		var Tback = 0
 		var StepTime   = 330 
 		//var StepTime   = 700 //fisico 

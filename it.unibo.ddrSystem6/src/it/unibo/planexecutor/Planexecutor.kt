@@ -17,7 +17,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
 				var Curmove     = ""  
-				var Map = ""
+				var Map = "" 
 				var Tback = 0
 				var StepTime   = 330 
 				//var StepTime   = 700 //fisico 
