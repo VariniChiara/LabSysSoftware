@@ -7,7 +7,7 @@ const mqtt   = require ('mqtt');  //npm install --save mqtt
 const topic  = "unibo/qak/events";
 
 var mqttAddr = 'mqtt://localhost'
-//var mqttAddr = 'mqtt://192.168.43.229'
+//var mqttAddr = 'mqtt://192.168.1.215'
 //var mqttAddr = 'mqtt://iot.eclipse.org'
 
 var client   = mqtt.connect(mqttAddr);
@@ -15,6 +15,7 @@ var io  ; 	//Upgrade for socketIo;
 var robotModel    = "none";
 var sonarModel    = "none";
 var roomMapModel  = "none";
+var luggageModel  = "none";
 
 console.log("mqtt client= " + client );
 
@@ -41,6 +42,7 @@ client.on('message', function (topic, message){
   var spRobot         = msgStr.indexOf("robot");
   var spSonarRobot    = msgStr.indexOf("sonarRobot");
   var spRoomMap       = msgStr.indexOf("roomMap");
+  var spLuggage 	  = msgStr.indexOf("luggage");
   var sp1             = msgStr.indexOf("state");
   var msgStr          = msgStr.substr(sp1);
   var sp2             = msgStr.indexOf("))");
@@ -49,9 +51,10 @@ client.on('message', function (topic, message){
 	  if( spRobot > 0      ) { msg = msg + "robotState:"; robotModel   = msg+content ;   };
 	  if( spSonarRobot > 0 ) { msg = msg + "sonarRobot:"; sonarModel   = msg+content ; };
 	  if( spRoomMap > 0 )    { msg = msg + "roomMap:";    roomMapModel = msg+content ; };
+	  if( spLuggage > 0 )    { msg = msg + "luggage:";    luggageModel = msg+content ; };
 	  msg = msg + content  ;		 
 	  console.log("mqtt send on io.sockets| "+ msg  + " content=" + content);  
-	  io.sockets.send( msg );   
+	  io.sockets.send( msg );   //msg mandato alla web page
 });
  
 exports.publish = function( msg, topic ){

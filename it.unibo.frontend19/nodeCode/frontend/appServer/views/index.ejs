@@ -23,6 +23,12 @@ function escapeRegExp(str) {
           		console.log("v2= " + v2);
         		document.getElementById('mapDisplay').innerHTML=v2; 
         	}
+        	if( v.indexOf("luggage:") >= 0 ){
+	        	    document.getElementById('luggageDisplay').innerHTML=v;
+	        		document.getElementById('dangerButton').disabled = false
+	        		document.getElementById('safeButton').disabled = false
+	        	
+       		}
        	});
 </script>
  
@@ -91,9 +97,31 @@ function escapeRegExp(str) {
 							  	<input type="submit" style="font-size:30px; color:red;"  value="STOP"  >							  	 
 							</form>
 						</td>
+					</tr>
 				</table>
 </center> 
-</div>
+
+<h2>Bomb checking tool</h2>   
+<center>
+
+	<table >	
+			<tr>
+				<td align="center">
+					<form action="/safe" method="post">
+						<!--disabled=true;-->
+						<input type="submit" style="font-size:30px;" value="SAFE" id="safeButton" disabled=true;  >						  		
+					</form>
+				</td>
+				<td align="center">
+					<form action="/danger" method="post">
+						<!--disabled=true;-->
+						<input type="submit" style="font-size:30px; color:red;" value="DANGER" id="dangerButton" disabled=true;  >						  		
+					</form>
+				</td>			
+			</tr>
+	</table>
+</center> 
+
 <div style="background-color: #FAF19C">
 	<div>
  		<b>ROBOT STATE</b>: <span id="robotDisplay"></span>
@@ -102,10 +130,15 @@ function escapeRegExp(str) {
   		<b>SONAR STATE</b>: <span id="sonarRobotDisplay"></span>
 	</div>-->
 	<div>
+  		<b>LUGGAGE STATE</b>: <span id="luggageDisplay"></span>
+	</div>
+	<div>
   		<b>ROOM MAP</b>: <span id="mapDisplay"></span>
 	</div>
+	
 
 </div>
+
 <center></center>
 </body>
 </html>

@@ -42,8 +42,10 @@ main();
 
 function main() {
 	//readHostAddrFromArguments
-	console.log("coapAddress=" + String(process.argv[2]) );
-    const coapAddr = String(process.argv[2]);
+	
+    //const coapAddr = String(process.argv[2]);
+	var coapAddr = "localhost"
+	console.log("coapAddress=" + coapAddr );
     coap.setcoapAddr( coapAddr )
     createServer( 8080 );
 }
