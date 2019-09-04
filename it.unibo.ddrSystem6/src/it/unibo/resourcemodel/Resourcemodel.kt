@@ -28,8 +28,8 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitModelChange") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t017",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t018",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t022",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t023",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State
@@ -47,6 +47,11 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								itunibo.robot.resourceModelSupport.updateRoomMapModel(myself ,payloadArg(1) )
 						}
+						if( checkMsgContent( Term.createTerm("modelUpdate(TARGET,VALUE)"), Term.createTerm("modelUpdate(luggage,V)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("C!!!!!!!")
+								itunibo.robot.resourceModelSupport.updateLuggageModel(myself ,payloadArg(1) )
+						}
 					}
 					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )
 				}	 
@@ -55,8 +60,13 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(robot,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								itunibo.robot.resourceModelSupport.updateRobotModel(myself ,payloadArg(1) )
-								solve("showResourceModel","") //set resVar	
+						}
+						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(luggage,V)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("!!!!!!!!!!!!!modelChange")
+								println(payloadArg(1))
+								solve("retractall(move(_))","") //set resVar	
+								forward("dangerCmd", "dangerCmd" ,"robotmind" ) 
 						}
 					}
 					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )

@@ -25,15 +25,15 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("waitForEvents") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t016",targetState="handleSonar",cond=whenEvent("sonarRobot"))
+					 transition(edgeName="t021",targetState="handleSonar",cond=whenEvent("sonarRobot"))
 				}	 
 				state("handleSonar") { //this:State
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("sonar(DISTANCE)"), Term.createTerm("sonar(DISTANCE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if((payloadArg(0).toInt() <= 5)){ forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
-								forward("sonar", "sonar" ,"onestepahead" ) 
+								if((payloadArg(0).toInt() <= 5)){ forward("sonar", "sonar" ,"onestepahead" ) 
+								forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 								 }
 						}
 					}

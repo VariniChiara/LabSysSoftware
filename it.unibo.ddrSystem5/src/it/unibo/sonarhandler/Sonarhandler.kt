@@ -32,8 +32,8 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("sonar(DISTANCE)"), Term.createTerm("sonar(DISTANCE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if((payloadArg(0).toInt() <= 5)){ forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
-								forward("sonar", "sonar" ,"onestepahead" ) 
+								if((payloadArg(0).toInt() <= 5)){ forward("sonar", "sonar" ,"onestepahead" ) 
+								forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 								 }
 						}
 					}

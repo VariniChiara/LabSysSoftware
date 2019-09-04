@@ -69,13 +69,19 @@ class modelResourceCoap (name : String ) : CoapResource(name) {
 		handlePUT( exchange )		
 	}
 	override fun handlePUT(exchange: CoapExchange?) {
+		
 		try {
 			val value = exchange!!.getRequestText()//new String(payload, "UTF-8");
-			//println("%%%%%%%%%%%%%%%% handlePUT value= $value"  )
+			println("%%%%%%%%%%%%%%%% handlePUT value= $value"  )
 			//itunibo.robot.resourceModelSupport.updateRobotModel( actor, value )//HAREMFUL SHERTCUT					
 			val curState = curmodelval		
 			GlobalScope.launch{
-				MsgUtil.sendMsg( "modelChange", "modelChange( robot,$value )", actor )
+				
+				if(value == "danger"){
+					MsgUtil.sendMsg( "modelChange", "modelChange(luggage,$value )", actor )					
+				}else{				
+					MsgUtil.sendMsg( "modelChange", "modelChange(robot,$value )", actor )
+				}
 				delay(100)  //give the time to change the model
 				//updateState()
  				exchange.respond(CHANGED, "handlePUT FROM $curState to $curmodelval")

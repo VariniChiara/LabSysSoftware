@@ -23,6 +23,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		
 			var plan : List<aima.core.agent.Action>? = null
 			var dirtyCell : Pair<Int,Int>? = null
+			var Luggage_num = 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -47,7 +48,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					}
 					 transition(edgeName="t16",targetState="stopAppl",cond=whenEvent("stopCmd"))
 					transition(edgeName="t17",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t18",targetState="checkIfObstacle",cond=whenDispatch("planFail"))
+					transition(edgeName="t18",targetState="newLuggageFound",cond=whenDispatch("planFail"))
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
@@ -73,13 +74,30 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitch() )
 				}	 
-				state("checkIfObstacle") { //this:State
+				state("newLuggageFound") { //this:State
+					action { //it:State
+						Luggage_num++
+						forward("modelUpdate", "modelUpdate(luggage,$Luggage_num)" ,"resourcemodel" ) 
+					}
+					 transition(edgeName="t29",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t210",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+				}	 
+				state("handleObstacle") { //this:State
 					action { //it:State
 						println("---CheckIfObstacle---")
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 						itunibo.planner.plannerUtil.resetGoal( X, Y  )
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 						plan = itunibo.planner.plannerUtil.doPlan()
+					}
+				}	 
+				state("waitForOperator") { //this:State
+					action { //it:State
+					}
+					 transition(edgeName="t111",targetState="endExploration",cond=whenEvent("dangerCmd"))
+				}	 
+				state("checkPlan") { //this:State
+					action { //it:State
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitchGuarded({(plan != null)}) )
 					transition( edgeName="goto",targetState="checkNull", cond=doswitchGuarded({! (plan != null)}) )
@@ -115,16 +133,19 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t29",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t210",targetState="finishChecking",cond=whenDispatch("planOk"))
-					transition(edgeName="t211",targetState="setObstacle",cond=whenDispatch("planFail"))
+					 transition(edgeName="t212",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t213",targetState="finishChecking",cond=whenDispatch("planOk"))
+					transition(edgeName="t214",targetState="setObstacle",cond=whenDispatch("planFail"))
 				}	 
 				state("setObstacle") { //this:State
 					action { //it:State
 						println("---setObstacle---")
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+						stateTimer = TimerActor("timer_setObstacle", 
+							scope, context!!, "local_tout_robotmind_setObstacle", 3000.toLong() )
 					}
-					 transition( edgeName="goto",targetState="finishChecking", cond=doswitch() )
+					 transition(edgeName="t115",targetState="finishChecking",cond=whenTimeout("local_tout_robotmind_setObstacle"))   
+					transition(edgeName="t116",targetState="endExploration",cond=whenEvent("dangerCmd"))
 				}	 
 				state("endExploration") { //this:State
 					action { //it:State

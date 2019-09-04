@@ -28,15 +28,15 @@ Dispatch planFail : planFail
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 //Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 QActor planexecutor context robotMindCtx {
 	["
 		var Curmove     = \"\"  
 		var Map = \"\"
 		var Tback = 0
-		//var StepTime   = 330
-		var StepTime   = 700 
+		var StepTime   = 330 
+		//var StepTime   = 700 //fisico 
 
     "]
 	State s0 initial {} 
@@ -90,15 +90,10 @@ QActor planexecutor context robotMindCtx {
 	Goto domove if "(Curmove != \"w\")" else attempttogoahead
 	
 	State domove {
-		["var M = \"d\"
-			if (Curmove == \"d\") {M = \"a\"}
-		"]
+		
 		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 		forward robotactuator -m robotCmd : robotCmd($Curmove)
-		delay 700 
-		/*only for physic robot in order to make streight the wheels */
-		forward robotactuator -m robotCmd : robotCmd($M)
-		delay 200    
+		delay 500 //fisico  
 		forward robotactuator -m robotCmd : robotCmd(h)
 	
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
@@ -129,7 +124,7 @@ QActor planexecutor context robotMindCtx {
  	  	
 		//printCurrentMessage		        
  		onMsg( stepFail : stepFail(Obs, Time) ) { 
- 			["Tback= (payloadArg(1).toLong().toString().toInt() * 0.85).toInt()
+ 			["Tback= (payloadArg(1).toLong().toString().toInt()*0.85 ).toInt()
 			TbackLong = Tback.toLong()"]
  		}
   		
@@ -177,6 +172,7 @@ QActor robotmind context robotMindCtx {
 	
 	State startExploration {
 		println("&&&  exploration STARTED")
+	
 		run itunibo.planner.plannerUtil.setGoal(X,Y)
 		forward planexecutor -m doPlan : doPlan($X,$Y)
 	}
@@ -290,7 +286,7 @@ var fail = false
 	Transition t0 whenMsg onestep -> doMoveForward
  
 	State doMoveForward{	
-	 
+	 	println("======doMoveForward=========")
 		onMsg( onestep : onestep( TIME ) ) {
 			["StepTime = payloadArg(0).toLong()"]    		
 			forward robotactuator -m robotCmd : robotCmd(w)
@@ -312,7 +308,7 @@ var fail = false
 		["Duration=getDuration()"]  //getDuration is built-in in the actor
 		printCurrentMessage
 		println("onestepahead stepFail Duration=$Duration ")
-		
+		forward robotactuator -m robotCmd : robotCmd(h)
 		forward planexecutor -m stepFail : stepFail(obstacle, $Duration)
 	}
 	Goto s0  
@@ -374,15 +370,15 @@ QActor sonarhandler context robotMindCtx{
  
  	State handleSonar{
  		printCurrentMessage
- 		
  		onMsg ( sonarRobot : sonar( DISTANCE ) ){
  			if "(payloadArg(0).toInt() <= 5)" { 
- 				forward robotactuator -m robotCmd : robotCmd(h)
  				forward onestepahead -m sonar : sonar
+ 				forward robotactuator -m robotCmd : robotCmd(h)
+ 		
  			}
  		}
  	}
- 	Goto waitForEvents
+ 	Goto waitForEvents 
  }
 
 
@@ -428,10 +424,6 @@ QActor resourcemodel context robotMindCtx{
 			solve( showResourceModel )
 			//emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
 		}
-		//SONAR DATA
-//		onMsg( modelChange : modelChange( sonarRobot,V ) ) { // V= w | ...
-//			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
-//		}
 
 	}
 	Goto  waitModelChange

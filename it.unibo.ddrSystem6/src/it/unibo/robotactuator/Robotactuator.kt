@@ -37,7 +37,7 @@ class Robotactuator ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitCmd") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t015",targetState="handleRobotCmd",cond=whenDispatch("robotCmd"))
+					 transition(edgeName="t020",targetState="handleRobotCmd",cond=whenDispatch("robotCmd"))
 				}	 
 				state("handleRobotCmd") { //this:State
 					action { //it:State

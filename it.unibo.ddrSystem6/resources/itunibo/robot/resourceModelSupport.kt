@@ -42,5 +42,16 @@ lateinit var resourcecoap : modelResourceCoap
 			resourcecoap.updateState( "roomMap( '$content' )" )
 		}
 	}
+	
+	fun updateLuggageModel( actor: ActorBasic, content: String ){
+	println("			resourceModelSupport updateLuggageMapModel")
+		var photo = "photo " + content
+		var pos = "position: "+ Pair(itunibo.planner.plannerUtil.getPosX(), itunibo.planner.plannerUtil.getPosY() )
+		var date_time =  "date: " + java.time.LocalDateTime.now()
+		actor.scope.launch{
+			actor.emit( "modelContent" , "content( luggage( state( '$photo, $pos, $date_time' ) ) )" )
+			resourcecoap.updateState( "luggage( state( '$photo, $pos, $date_time' ) )" )
+		}
+	}
 
 }
