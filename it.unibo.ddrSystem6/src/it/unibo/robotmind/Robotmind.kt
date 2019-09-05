@@ -39,7 +39,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("waitForStart") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t06",targetState="startExploration",cond=whenEvent("startCmd"))
+					 transition(edgeName="t05",targetState="startExploration",cond=whenEvent("startCmd"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
@@ -47,9 +47,9 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t17",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t18",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t19",targetState="newLuggageFound",cond=whenDispatch("planFail"))
+					 transition(edgeName="t16",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t17",targetState="nextGoal",cond=whenDispatch("planOk"))
+					transition(edgeName="t18",targetState="newLuggageFound",cond=whenDispatch("planFail"))
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
@@ -60,17 +60,24 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("nextGoal") { //this:State
 					action { //it:State
-						if(backHome){ 
-									backHome = false
-									X = 0
-									Y = 0
-									iterCounter++
+						dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
+						if((dirtyCell != null)){ X = dirtyCell!!.first
+									Y = dirtyCell!!.second
+						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						 }
 						else
-						 { 
-						 			backHome = true
-						 			X = iterCounter
-						 			Y = iterCounter
+						 { if(backHome){ 
+						 				backHome = false
+						 				X = 0
+						 				Y = 0
+						 				iterCounter++
+						  }
+						 else
+						  { 
+						  				backHome = true
+						  				X = iterCounter
+						  				Y = iterCounter
+						   }
 						  }
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitch() )
@@ -83,8 +90,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t210",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
-					transition(edgeName="t211",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					 transition(edgeName="t29",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t210",targetState="endExploration",cond=whenDispatch("luggageDanger"))
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
@@ -133,9 +140,9 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t212",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t213",targetState="finishChecking",cond=whenDispatch("planOk"))
-					transition(edgeName="t214",targetState="setObstacle",cond=whenDispatch("planFail"))
+					 transition(edgeName="t211",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t212",targetState="finishChecking",cond=whenDispatch("planOk"))
+					transition(edgeName="t213",targetState="setObstacle",cond=whenDispatch("planFail"))
 				}	 
 				state("setObstacle") { //this:State
 					action { //it:State
@@ -146,8 +153,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t115",targetState="endExploration",cond=whenDispatch("luggageDanger"))
-					transition(edgeName="t116",targetState="finishChecking",cond=whenDispatch("luggageSafe"))
+					 transition(edgeName="t114",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					transition(edgeName="t115",targetState="finishChecking",cond=whenDispatch("luggageSafe"))
 				}	 
 				state("endExploration") { //this:State
 					action { //it:State

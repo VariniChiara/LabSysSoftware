@@ -31,22 +31,22 @@ Dispatch luggageSafe: luggageSafe
 Dispatch luggageDanger: luggageDanger
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-//Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
+//Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
 
 QActor planexecutor context robotMindCtx {
 	["
 		var Curmove     = \"\"
 		var Map = \"\"
 		var Tback = 0
-		//var StepTime   = 330
-		var StepTime   = 900 //fisico
+		var StepTime   = 330
+		//var StepTime   = 900 //fisico
 
     "]
 	State s0 initial {}
 
 	Transition t0  whenMsg doPlan  -> loadPlan
-
+ 
 	State loadPlan {
 		printCurrentMessage
  		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
@@ -103,8 +103,8 @@ QActor planexecutor context robotMindCtx {
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove )
 	}
 
-	Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
-	//Goto doPlan
+	//Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
+	Goto doPlan
 
 	//roomboundaryplanning.qak
 	State attempttogoahead {
@@ -197,20 +197,30 @@ QActor robotmind context robotMindCtx {
 	Goto waitForStart
 
 	State nextGoal {
-		if "backHome" {
+		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
+			
+		if "(dirtyCell != null)" {	
+			["X = dirtyCell!!.first
+			Y = dirtyCell!!.second"]
+		run itunibo.planner.plannerUtil.setGoal(X, Y)
+			
+		} else {
+			if "backHome" {
+				["
+				backHome = false
+				X = 0
+				Y = 0
+				iterCounter++"]
+			}
+			else {
 			["
-			backHome = false
-			X = 0
-			Y = 0
-			iterCounter++"]
+				backHome = true
+				X = iterCounter
+				Y = iterCounter
+			"]
+			}
 		}
-		else {
-		["
-			backHome = true
-			X = iterCounter
-			Y = iterCounter
-		"]
-		}
+		
 	}
 	Goto startExploration
 
