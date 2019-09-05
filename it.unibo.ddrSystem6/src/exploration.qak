@@ -3,15 +3,15 @@ System exploration
 mqttBroker "192.168.1.215" : 1883
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
-Dispatch sonar : sonar      
+Dispatch sonar : sonar
 
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
-Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message 
+Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Event startCmd :	startCmd
-Dispatch stopCmd  : stopCmd 
-Event dangerCmd  : dangerCmd 
+Dispatch stopCmd  : stopCmd
+Event dangerCmd  : dangerCmd
 
-//message try to do a step 
+//message try to do a step
 Dispatch onestep       : onestep(DURATION)
 Dispatch stepOk        : stepOk
 Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
@@ -36,120 +36,120 @@ Context robotResourceCtx        ip [host="192.168.1.215" port=8005]   -mqtt
 
 QActor planexecutor context robotMindCtx {
 	["
-		var Curmove     = \"\"  
-		var Map = \"\" 
+		var Curmove     = \"\"
+		var Map = \"\"
 		var Tback = 0
-		//var StepTime   = 330 
-		var StepTime   = 900 //fisico 
+		//var StepTime   = 330
+		var StepTime   = 900 //fisico
 
     "]
-	State s0 initial {} 
+	State s0 initial {}
 
 	Transition t0  whenMsg doPlan  -> loadPlan
-				 
+
 	State loadPlan {
 		printCurrentMessage
  		run itunibo.planner.moveUtils.doPlan( myself ) //moves stored in actor kb
 	}
-				 	
+
 	Goto doPlan
-	
+
  	State doPlan {	}
- 	
-	Transition t1 whenTime 50  -> doPlan1 		
+
+	Transition t1 whenTime 50  -> doPlan1
  		          whenMsg stopCmd -> stopAppl
- 		          
+
  	State stopAppl {
  		forward robotactuator -m robotCmd : robotCmd(h)
- 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h )
  		solve(retractall( move(_)))
- 	} 
- 	
+ 	}
+
  	Goto s0
- 	
+
  	State doPlan1{
- 	
+
 		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
 		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
-		run itunibo.planner.plannerUtil.showMap() 
-		
+		run itunibo.planner.plannerUtil.showMap()
+
 		solve( retract( move(M) ) ) 	//consume a move
 		ifSolved {  ["Curmove = getCurSol(\"M\").toString()"]  }
 		else { ["Curmove=\"nomove\" "]  }
 
-	}  
-	
+	}
+
 	Goto handlemove if "(Curmove != \"nomove\")" else planOk
-	
+
 	State planOk {
 		forward robotactuator -m robotCmd : robotCmd(h)
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
-		forward robotmind -m planOk : planOk 
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h )
+		forward robotmind -m planOk : planOk
 	}
-	
+
 	Goto s0
-	
+
 	State handlemove {}
-	
+
 	Goto domove if "(Curmove != \"w\")" else attempttogoahead
-	
+
 	State domove {
-		
+
 		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 		forward robotactuator -m robotCmd : robotCmd($Curmove)
-		delay 500 //fisico  
+		delay 500 //fisico
 		forward robotactuator -m robotCmd : robotCmd(h)
-	
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
+
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove )
 	}
-	
+
 	Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
 	//Goto doPlan
-	
+
 	//roomboundaryplanning.qak
-	State attempttogoahead {	
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, w ) 
+	State attempttogoahead {
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, w )
 		run itunibo.planner.moveUtils.attemptTomoveAhead(myself, StepTime)
 	}
-	
-	Transition t3   whenMsg stepOk   -> stepDone   
+
+	Transition t3   whenMsg stepOk   -> stepDone
 					whenMsg stepFail -> stepFailed
-					 
- 	State stepDone{  
- 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
- 		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")	
- 		
+
+ 	State stepDone{
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h )
+ 		run itunibo.planner.moveUtils.doPlannedMove(myself, "w")
+
  	}
- 	
+
  	Goto doPlan
- 	
+
  	State stepFailed{
- 		println("&&&  OBSTACLE FOUND") 
-		["var TbackLong = 0L"]		 
- 	  	
-		//printCurrentMessage		        
- 		onMsg( stepFail : stepFail(Obs, Time) ) { 
+ 		println("&&&  OBSTACLE FOUND")
+		["var TbackLong = 0L"]
+
+		//printCurrentMessage
+ 		onMsg( stepFail : stepFail(Obs, Time) ) {
  			["Tback= (payloadArg(1).toLong().toString().toInt()*0.85 ).toInt()
 			TbackLong = Tback.toLong()"]
  		}
-  		
- 		println(" backToCompensate stepTime=$Tback")
- 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, s ) 
- 		forward robotactuator -m robotCmd : robotCmd(s)
-		
-		delayVar TbackLong
-		
-		forward robotactuator -m robotCmd : robotCmd(h)
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h ) 
-		
-		forward robotmind -m planFail : planFail 
-		solve(retractall( move(_)))	
-	}
-	Goto s0	
-}
- 
 
-QActor robotmind context robotMindCtx { 
+ 		println(" backToCompensate stepTime=$Tback")
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, s )
+ 		forward robotactuator -m robotCmd : robotCmd(s)
+
+		delayVar TbackLong
+
+		forward robotactuator -m robotCmd : robotCmd(h)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h )
+
+		forward robotmind -m planFail : planFail
+		solve(retractall( move(_)))
+	}
+	Goto s0
+}
+
+
+QActor robotmind context robotMindCtx {
 ["
 	var iterCounter = 1
 	var X = iterCounter
@@ -159,42 +159,43 @@ QActor robotmind context robotMindCtx {
 	var plan : List<aima.core.agent.Action>? = null
 	var dirtyCell : Pair<Int,Int>? = null
 	var Luggage_num = 0
+	var Map = \"\"
 "]
 
 	State s0 initial {
 		solve (consult ("resourceModel.pl"))
 		println("&&&  robotmind STARTED")
 		run itunibo.planner.plannerUtil.initAI()
-		println("INITIAL MAP") 
-		run itunibo.planner.plannerUtil.showMap() 
-	} 
+		println("INITIAL MAP")
+		run itunibo.planner.plannerUtil.showMap()
+	}
 
 	Goto waitForStart
-	
+
 	State waitForStart {
 	}
-	
-	Transition t0  whenEvent startCmd  -> startExploration 
-	
+
+	Transition t0  whenEvent startCmd  -> startExploration
+
 	State startExploration {
 		println("&&&  exploration STARTED")
-	
+
 		run itunibo.planner.plannerUtil.setGoal(X,Y)
 		forward planexecutor -m doPlan : doPlan($X,$Y)
 	}
-	
+
 	Transition t1 whenEvent stopCmd -> stopAppl
 				  whenMsg planOk -> nextGoal
 				  whenMsg planFail -> newLuggageFound
-			
-				  
+
+
 	State stopAppl{
 		println("%% robotmind stopped %%")
 		forward planexecutor -m stopCmd : stopCmd
 	}
-	
+
 	Goto waitForStart
-	
+
 	State nextGoal {
 		if "backHome" {
 			["
@@ -211,90 +212,87 @@ QActor robotmind context robotMindCtx {
 		"]
 		}
 	}
-	
 	Goto startExploration
-	
-	
+
+
 	State newLuggageFound {
-		
 		["Luggage_num++"]
 		forward resourcemodel -m modelUpdate: modelUpdate(luggage, $Luggage_num)
-		
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
+		forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
 	}
 	Transition t2 whenMsg luggageSafe -> handleObstacle
 				  whenMsg luggageDanger -> endExploration
-	
-	
-	
+
+
 	State handleObstacle {
 		println("---CheckIfObstacle---")
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		run itunibo.planner.plannerUtil.resetGoal(X,Y)
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		["plan = itunibo.planner.plannerUtil.doPlan()"]
-		
+
 		//per attivasre disattivare bottone danger sulla WP, false non lo uso ATTUALMENTE
-		
+
 	}
-	
-	//Goto waitForOperator
-	
-	State waitForOperator {}
-	Transition t1 whenEvent dangerCmd -> endExploration
-				   	
-	State checkPlan { 
-		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage)
-	}
+	Goto checkPlan
+
+	State checkPlan { }
 	Goto startExploration if "(plan != null)" else checkNull
-	 
+
 	State checkNull {
-		println("---CheckNull---") 
+		println("---CheckNull---")
 	}
-	
+
 	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else finishChecking
-	
+
 	State finishChecking{
 		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
 		println("---finishChecking---")
 	}
-	
+
 	Goto exploreDirtyCell if "(dirtyCell != null)" else endExploration
-	
+
 	State exploreDirtyCell {
 		println("---exploreDirtyCell---")
 		["
 			 X = dirtyCell!!.first
 			 Y = dirtyCell!!.second
-		"] 
-		
+		"]
+
 		run itunibo.planner.plannerUtil.setGoal(X, Y)
-		["plan = itunibo.planner.plannerUtil.doPlan()"]	
-		
+		["plan = itunibo.planner.plannerUtil.doPlan()"]
+
 	}
-	
+
 	Goto doExploration if "(plan != null)" else endExploration
-	
+
 	State doExploration {
-		forward planexecutor -m doPlan : doPlan($X,$Y)	
+		forward planexecutor -m doPlan : doPlan($X,$Y)
 	}
-	
+
 	Transition t2 whenEvent stopCmd -> stopAppl
 				  whenMsg planOk -> finishChecking
 				  whenMsg planFail -> setObstacle
-	
-				  
+
+
 	State setObstacle {
 		println("---setObstacle---")
+		["Luggage_num++"]
+		forward resourcemodel -m modelUpdate: modelUpdate(luggage, $Luggage_num)
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
-		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage) //per attivare disattivare bottone danger sulla WP
+		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
+		forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
+
 	}
-	Transition t1  whenTime 3000 -> finishChecking
-				   whenEvent dangerCmd -> endExploration
-	
-	
+	Transition t1    whenMsg luggageDanger -> endExploration
+	 				 whenMsg luggageSafe -> finishChecking
+
+
 	State endExploration {
 		println("---endExploration---")
-		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage, ) 
+		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage, )
 		run itunibo.planner.plannerUtil.setGoal(0,0)
 		forward planexecutor -m doPlan : doPlan(0,0)
 	}
@@ -306,36 +304,36 @@ QActor robotmind context robotMindCtx {
  * ====================================================================
  */
 QActor onestepahead context  robotMindCtx {
-[" 
+["
 var foundObstacle = false
 var StepTime = 0L
-var Duration = 0 
+var Duration = 0
 var fail = false
-"]  
-	State s0 initial {	   
+"]
+	State s0 initial {
 		["foundObstacle = false "]
-	} 
+	}
 	Transition t0 whenMsg onestep -> doMoveForward
- 
-	State doMoveForward{	
+
+	State doMoveForward{
 	 	println("======doMoveForward=========")
 		onMsg( onestep : onestep( TIME ) ) {
-			["StepTime = payloadArg(0).toLong()"]    		
+			["StepTime = payloadArg(0).toLong()"]
 			forward robotactuator -m robotCmd : robotCmd(w)
 	 		["startTimer()"] //startTimer is built-in in the actor
-	 		
-		}      
-	}          
-	Transition t1 whenTimeVar StepTime  -> endDoMoveForward		
- 		           whenEvent sonar -> stepFail  
- 		    
+
+		}
+	}
+	Transition t1 whenTimeVar StepTime  -> endDoMoveForward
+ 		           whenEvent sonar -> stepFail
+
 	State endDoMoveForward{
-		forward robotactuator -m robotCmd : robotCmd(h)	
+		forward robotactuator -m robotCmd : robotCmd(h)
 		forward planexecutor -m stepOk : stepOk
 	}
-	
+
 	Goto s0
-	
+
 	State stepFail{
 		["Duration=getDuration()"]  //getDuration is built-in in the actor
 		printCurrentMessage
@@ -343,8 +341,8 @@ var fail = false
 		forward robotactuator -m robotCmd : robotCmd(h)
 		forward planexecutor -m stepFail : stepFail(obstacle, $Duration)
 	}
-	Goto s0  
-}    
+	Goto s0
+}
 
 
 /*
@@ -363,13 +361,13 @@ QActor robotactuator context robotResourceCtx {
   		else{ println("no robot") }
 
    		run itunibo.robot.robotSupport.move( "msg(a)" )
-   		
+
    		delay 500
    		run itunibo.robot.robotSupport.move( "msg(d)" )
-   		
+
    		delay 500
    		run itunibo.robot.robotSupport.move( "msg(h)" )
- 
+
  	}
 	Goto waitCmd
 
@@ -379,17 +377,17 @@ QActor robotactuator context robotResourceCtx {
 	State handleRobotCmd{ //does not handle alarms
 		printCurrentMessage
 		onMsg( robotCmd : robotCmd( MOVE ) ) { //MOVE = w | a | s | d | h
-		
-			if "(payloadArg(0) == \"z\")" {    
+
+			if "(payloadArg(0) == \"z\")" {
 				run itunibo.robot.robotSupport.move("msg(a)")
-				delay 100    
+				delay 100
 				run itunibo.robot.robotSupport.move("msg(h)")
-			
-			} 	else { if "(payloadArg(0) == \"x\")" { 
+
+			} 	else { if "(payloadArg(0) == \"x\")" {
 				run itunibo.robot.robotSupport.move("msg(d)")
-				delay 100    
+				delay 100
 				run itunibo.robot.robotSupport.move("msg(h)")
-			
+
 			} else {
 				run itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})" )
 			}
@@ -404,27 +402,27 @@ QActor robotactuator context robotResourceCtx {
   * sonahandler: actor that manages the sonarRobot events
   * --------------------------------------------------------
   */
-QActor sonarhandler context robotMindCtx{    
+QActor sonarhandler context robotMindCtx{
   	State init initial{
 		println("sonarhandler STARTS ... ")
-	}         
-	Goto waitForEvents 
-	
- 	State waitForEvents{  }      
+	}
+	Goto waitForEvents
+
+ 	State waitForEvents{  }
    	Transition t0 //whenEvent sonarData  -> handleSonar
    				  whenEvent sonarRobot -> handleSonar //to test modeReact(model). See mbotSupport
- 
+
  	State handleSonar{
  	//	printCurrentMessage
  		onMsg ( sonarRobot : sonar( DISTANCE ) ){
- 			if "(payloadArg(0).toInt() <= 5)" { 
+ 			if "(payloadArg(0).toInt() <= 5)" {
  				forward onestepahead -m sonar : sonar
  				forward robotactuator -m robotCmd : robotCmd(h)
- 		
+
  			}
  		}
  	}
- 	Goto waitForEvents 
+ 	Goto waitForEvents
  }
 
 
@@ -434,6 +432,8 @@ QActor sonarhandler context robotMindCtx{
   * --------------------------------------------------------
   */
 QActor resourcemodel context robotMindCtx{
+
+	["var isLuggageDanger = false"]
 
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )
@@ -457,36 +457,47 @@ QActor resourcemodel context robotMindCtx{
 		onMsg( modelUpdate : modelUpdate(sonarRobot,V ) ) {
 			run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
 		}
-		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {  
+		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {
 			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
 		}
-		onMsg( modelUpdate : modelUpdate(luggage, V) ) {  
+		onMsg( modelUpdate : modelUpdate(luggage, V) ) {
 			run itunibo.robot.resourceModelSupport.updateLuggageModel( myself, payloadArg(1)  )
 		}
 	}
     Goto  waitModelChange
 
 	State changeModel{
+
+
+
+
 		printCurrentMessage
 		//ROBOT MOVE
 		onMsg(  modelChange  : modelChange(robot, V ) ) { // V= w | ...
 			forward robotactuator -m robotCmd : robotCmd($payloadArg(1))
- 		
+
 		}
-		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= w | ...
-			
-			/*["
-			if (payloadArg(1) == \"z\"){
-				itunibo.planner.moveUtils.doPlannedMove(myself, \"h\")
-			}"]*/
-			println("!!!!!!!!!!!!!modelChange")
-			println(payloadArg(1))
-	 		solve(retractall( move(_)))
-			forward robotmind -m dangerCmd : dangerCmd
-			
+		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= safe | danger
+
+			["if(payloadArg(1) == \"danger\"){
+				isLuggageDanger = true
+			}"]
 		}
 
 	}
-	Goto  waitModelChange
-}
 
+	Goto handleDangerLuggage if "isLuggageDanger" else handleSafeLuggage
+
+	State handleDangerLuggage{
+		["isLuggageDanger = false"]
+		forward robotmind -m luggageDanger:luggageDanger
+	}
+	Goto  waitModelChange
+
+
+	State handleSafeLuggage{
+		forward robotmind -m luggageSafe:luggageSafe
+	}
+	Goto  waitModelChange
+
+}

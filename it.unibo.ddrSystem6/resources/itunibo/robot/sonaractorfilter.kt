@@ -18,7 +18,7 @@ class sonaractorfilter (name : String, val owner : ActorBasicFsm ,
 	    maxDistance = Integer.parseInt( getCurSol("D").toString() )
     	solve("maxDelta(D)")
 	    maxDelta = Integer.parseInt( getCurSol("D").toString() )
-    	solve("amplif(D)")
+    	solve("amplifs(D)")
 	    amplif = Integer.parseInt(  getCurSol("D").toString() )
 	    println("LimitDistance = $LimitDistance , maxDelta=$maxDelta, amplif =$amplif")	
 	}
