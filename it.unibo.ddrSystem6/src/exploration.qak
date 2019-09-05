@@ -415,7 +415,7 @@ QActor sonarhandler context robotMindCtx{
    				  whenEvent sonarRobot -> handleSonar //to test modeReact(model). See mbotSupport
  
  	State handleSonar{
- 		printCurrentMessage
+ 	//	printCurrentMessage
  		onMsg ( sonarRobot : sonar( DISTANCE ) ){
  			if "(payloadArg(0).toInt() <= 5)" { 
  				forward onestepahead -m sonar : sonar
