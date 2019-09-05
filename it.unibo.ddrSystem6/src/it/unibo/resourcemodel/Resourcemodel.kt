@@ -16,6 +16,7 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		var isLuggageDanger = false
+			var isTemperatureTooHigh = false
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -29,8 +30,8 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitModelChange") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t022",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t023",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t024",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t025",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State
@@ -65,23 +66,20 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(luggage,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								if(payloadArg(1) == "danger"){
-												isLuggageDanger = true
-											}
+								forward("luggageDanger", "luggageDanger" ,"robotmind" ) 
+								}else{
+								forward("luggageSafe", "luggageSafe" ,"robotmind" ) 
+								}
 						}
-					}
-					 transition( edgeName="goto",targetState="handleDangerLuggage", cond=doswitchGuarded({isLuggageDanger}) )
-					transition( edgeName="goto",targetState="handleSafeLuggage", cond=doswitchGuarded({! isLuggageDanger}) )
-				}	 
-				state("handleDangerLuggage") { //this:State
-					action { //it:State
-						isLuggageDanger = false
-						forward("luggageDanger", "luggageDanger" ,"robotmind" ) 
-					}
-					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )
-				}	 
-				state("handleSafeLuggage") { //this:State
-					action { //it:State
-						forward("luggageSafe", "luggageSafe" ,"robotmind" ) 
+						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(temperature,V)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("TEMPERATUREEEEEEEE")
+								if(payloadArg(1) == "temperatureTooHigh"){
+								forward("temperatureTooHigh", "temperatureTooHigh" ,"robotmind" ) 
+								}else{
+								forward("temperatureOk", "temperatureOk" ,"robotmind" ) 
+								}
+						}
 					}
 					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )
 				}	 

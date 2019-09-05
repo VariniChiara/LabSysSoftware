@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "192.168.1.215" : 1883
+mqttBroker "localhost" : 1883
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
 Dispatch sonar : sonar
@@ -30,17 +30,20 @@ Dispatch planFail : planFail
 Dispatch luggageSafe: luggageSafe
 Dispatch luggageDanger: luggageDanger
 
+Dispatch temperatureTooHigh: temperatureTooHigh
+Dispatch temperatureOk: temperatureOk
+
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 //Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 QActor planexecutor context robotMindCtx {
 	["
 		var Curmove     = \"\"
 		var Map = \"\"
 		var Tback = 0
-		//var StepTime   = 330
-		var StepTime   = 900 //fisico
+		var StepTime   = 330
+		//var StepTime   = 900 //fisico
 
     "]
 	State s0 initial {}
@@ -103,8 +106,8 @@ QActor planexecutor context robotMindCtx {
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove )
 	}
 
-	Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
-	//Goto doPlan
+	//Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
+	Goto doPlan
 
 	//roomboundaryplanning.qak
 	State attempttogoahead {
@@ -176,6 +179,7 @@ QActor robotmind context robotMindCtx {
 	}
 
 	Transition t0  whenEvent startCmd  -> startExploration
+				   whenEvent temperatureOk  -> startExploration
 
 	State startExploration {
 		println("&&&  exploration STARTED")
@@ -187,6 +191,7 @@ QActor robotmind context robotMindCtx {
 	Transition t1 whenEvent stopCmd -> stopAppl
 				  whenMsg planOk -> nextGoal
 				  whenMsg planFail -> newLuggageFound
+				  whenEvent temperatureTooHigh -> stopAppl
 
 
 	State stopAppl{
@@ -275,6 +280,7 @@ QActor robotmind context robotMindCtx {
 	Transition t2 whenEvent stopCmd -> stopAppl
 				  whenMsg planOk -> finishChecking
 				  whenMsg planFail -> setObstacle
+				  whenEvent temperatureTooHigh -> stopAppl
 
 
 	State setObstacle {
@@ -433,7 +439,8 @@ QActor sonarhandler context robotMindCtx{
   */
 QActor resourcemodel context robotMindCtx{
 
-	["var isLuggageDanger = false"]
+	["var isLuggageDanger = false
+	var isTemperatureTooHigh = false"]
 
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )
@@ -467,10 +474,6 @@ QActor resourcemodel context robotMindCtx{
     Goto  waitModelChange
 
 	State changeModel{
-
-
-
-
 		printCurrentMessage
 		//ROBOT MOVE
 		onMsg(  modelChange  : modelChange(robot, V ) ) { // V= w | ...
@@ -479,25 +482,25 @@ QActor resourcemodel context robotMindCtx{
 		}
 		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= safe | danger
 
-			["if(payloadArg(1) == \"danger\"){
-				isLuggageDanger = true
-			}"]
+			["if(payloadArg(1) == \"danger\"){"]
+				forward robotmind -m luggageDanger:luggageDanger
+			["}else{"]
+				forward robotmind -m luggageSafe:luggageSafe			
+			["}"]
+		}
+		onMsg(  modelChange  : modelChange(temperature, V ) ) { // V= temperatureOk | temperatureTooHigh
+
+			println("TEMPERATUREEEEEEEE")
+
+			["if(payloadArg(1) == \"temperatureTooHigh\"){"]
+				forward robotmind -m temperatureTooHigh:temperatureTooHigh
+			["}else{"]
+				forward robotmind -m temperatureOk:temperatureOk
+			["}"]
 		}
 
 	}
-
-	Goto handleDangerLuggage if "isLuggageDanger" else handleSafeLuggage
-
-	State handleDangerLuggage{
-		["isLuggageDanger = false"]
-		forward robotmind -m luggageDanger:luggageDanger
-	}
-	Goto  waitModelChange
-
-
-	State handleSafeLuggage{
-		forward robotmind -m luggageSafe:luggageSafe
-	}
-	Goto  waitModelChange
+	Goto  waitModelChange	
+	
 
 }

@@ -39,7 +39,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("waitForStart") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t06",targetState="startExploration",cond=whenEvent("startCmd"))
+					 transition(edgeName="t05",targetState="startExploration",cond=whenEvent("startCmd"))
+					transition(edgeName="t06",targetState="startExploration",cond=whenEvent("temperatureOk"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
@@ -50,6 +51,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					 transition(edgeName="t17",targetState="stopAppl",cond=whenEvent("stopCmd"))
 					transition(edgeName="t18",targetState="nextGoal",cond=whenDispatch("planOk"))
 					transition(edgeName="t19",targetState="newLuggageFound",cond=whenDispatch("planFail"))
+					transition(edgeName="t110",targetState="stopAppl",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
@@ -83,8 +85,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t210",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
-					transition(edgeName="t211",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					 transition(edgeName="t211",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t212",targetState="endExploration",cond=whenDispatch("luggageDanger"))
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
@@ -133,9 +135,10 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t212",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t213",targetState="finishChecking",cond=whenDispatch("planOk"))
-					transition(edgeName="t214",targetState="setObstacle",cond=whenDispatch("planFail"))
+					 transition(edgeName="t213",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t214",targetState="finishChecking",cond=whenDispatch("planOk"))
+					transition(edgeName="t215",targetState="setObstacle",cond=whenDispatch("planFail"))
+					transition(edgeName="t216",targetState="stopAppl",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("setObstacle") { //this:State
 					action { //it:State
@@ -146,8 +149,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t115",targetState="endExploration",cond=whenDispatch("luggageDanger"))
-					transition(edgeName="t116",targetState="finishChecking",cond=whenDispatch("luggageSafe"))
+					 transition(edgeName="t117",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					transition(edgeName="t118",targetState="finishChecking",cond=whenDispatch("luggageSafe"))
 				}	 
 				state("endExploration") { //this:State
 					action { //it:State

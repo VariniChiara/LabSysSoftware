@@ -78,6 +78,8 @@ app.post("/x", function(req, res,next) { handlePostMove("x","moving rightstep", 
 
 app.post("/danger", function(req, res,next) { handlePostMove("danger","going to initial position", req,res,next); });
 app.post("/safe", function(req, res,next) { handlePostMove("safe","continuing the exploration", req,res,next); });
+app.post("/temperatureOk", function(req, res,next) { handlePostMove("temperatureOk","temperatureOk", req,res,next); });
+app.post("/temperatureTooHigh", function(req, res,next) { handlePostMove("temperatureTooHigh","temperatureTooHigh", req,res,next); });
 
 //APPLICATION
 app.post("/startappl", function(req, res,next) {

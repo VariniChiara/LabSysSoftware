@@ -77,11 +77,11 @@ class modelResourceCoap (name : String ) : CoapResource(name) {
 			val curState = curmodelval		
 			GlobalScope.launch{
 				
-				if(value == "danger"){
+				if(value == "danger" || value == "safe"){
 					MsgUtil.sendMsg( "modelChange", "modelChange(luggage,$value )", actor )					
-				}else if(value == "safe"){
-					MsgUtil.sendMsg( "modelChange", "modelChange(luggage,$value )", actor )					
-				}else{				
+				}else if(value == "temperatureOk" || value == "temperatureTooHigh"){
+					MsgUtil.sendMsg( "modelChange", "modelChange(temperature,$value )", actor )		
+				}else{		
 					MsgUtil.sendMsg( "modelChange", "modelChange(robot,$value )", actor )
 				}
 				delay(100)  //give the time to change the model

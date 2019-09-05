@@ -19,8 +19,8 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				var Curmove     = ""
 				var Map = ""
 				var Tback = 0
-				//var StepTime   = 330
-				var StepTime   = 900 //fisico
+				var StepTime   = 330
+				//var StepTime   = 900 //fisico
 		
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -88,15 +88,15 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t23",targetState="doPlan",cond=whenEvent("startCmd"))
+					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
 				}	 
 				state("attempttogoahead") { //this:State
 					action { //it:State
 						forward("modelUpdate", "modelUpdate(robot,w)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
-					 transition(edgeName="t34",targetState="stepDone",cond=whenDispatch("stepOk"))
-					transition(edgeName="t35",targetState="stepFailed",cond=whenDispatch("stepFail"))
+					 transition(edgeName="t33",targetState="stepDone",cond=whenDispatch("stepOk"))
+					transition(edgeName="t34",targetState="stepFailed",cond=whenDispatch("stepFail"))
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
