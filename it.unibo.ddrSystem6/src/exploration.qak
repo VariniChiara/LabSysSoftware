@@ -31,8 +31,8 @@ Dispatch luggageSafe: luggageSafe
 Dispatch luggageDanger: luggageDanger
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.215" port=8005]   -mqtt
-//Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+//Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
 
 QActor planexecutor context robotMindCtx {
 	["
@@ -234,7 +234,7 @@ QActor robotmind context robotMindCtx {
 		["plan = itunibo.planner.plannerUtil.doPlan()"]
 
 		//per attivasre disattivare bottone danger sulla WP, false non lo uso ATTUALMENTE
-
+ 
 	}
 	Goto checkPlan
 
