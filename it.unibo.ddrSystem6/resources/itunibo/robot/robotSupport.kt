@@ -11,7 +11,7 @@ object robotSupport{
 		when( robotKind ){
 			"virtual"    ->  { itunibo.robotVirtual.clientWenvObjTcp.initClientConn( actor, filter, "localhost") }
 			"realmbot"   ->  { itunibo.robotMbot.mbotSupport.create( actor, port, filter ) }  //port="/dev/ttyUSB0"   "COM6"
-			"realnano" ->    { it.unibo.robotRaspOnly.nanoSupport.create(actor, false ) }
+			"realnano" ->    { it.unibo.robotRaspOnly.nanoSupport.create(actor, true ) }
 			else -> println( "robot unknown" )
 		}
 	}

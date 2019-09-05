@@ -27,9 +27,9 @@ class Robotactuator ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						{ println("no robot")
 						 }
 						itunibo.robot.robotSupport.move( "msg(a)"  )
-						delay(700) 
+						delay(500) 
 						itunibo.robot.robotSupport.move( "msg(d)"  )
-						delay(700) 
+						delay(500) 
 						itunibo.robot.robotSupport.move( "msg(h)"  )
 					}
 					 transition( edgeName="goto",targetState="waitCmd", cond=doswitch() )
@@ -44,7 +44,19 @@ class Robotactuator ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("robotCmd(CMD)"), Term.createTerm("robotCmd(MOVE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})"  )
+								if((payloadArg(0) == "z")){ itunibo.robot.robotSupport.move( "msg(a)"  )
+								delay(100) 
+								itunibo.robot.robotSupport.move( "msg(h)"  )
+								 }
+								else
+								 { if((payloadArg(0) == "x")){ itunibo.robot.robotSupport.move( "msg(d)"  )
+								 delay(100) 
+								 itunibo.robot.robotSupport.move( "msg(h)"  )
+								  }
+								 else
+								  { itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})"  )
+								   }
+								  }
 						}
 					}
 					 transition( edgeName="goto",targetState="waitCmd", cond=doswitch() )

@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "localhost" : 1883
+mqttBroker "192.168.1.215" : 1883
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
 Dispatch sonar : sonar      
@@ -18,7 +18,6 @@ Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
 
 Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model change
 Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
-Event  local_modelChanged   : modelChanged( TARGET, VALUE )
 
 Dispatch checkWall : checkWall //sent to start checking if an obstacle is a wall
 Dispatch isWall : isWall
@@ -32,16 +31,16 @@ Dispatch luggageSafe: luggageSafe
 Dispatch luggageDanger: luggageDanger
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-//Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
-Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.215" port=8005]   -mqtt
+//Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
 
 QActor planexecutor context robotMindCtx {
 	["
 		var Curmove     = \"\"  
 		var Map = \"\" 
 		var Tback = 0
-		var StepTime   = 330 
-		//var StepTime   = 700 //fisico 
+		//var StepTime   = 330 
+		var StepTime   = 900 //fisico 
 
     "]
 	State s0 initial {} 
@@ -365,10 +364,10 @@ QActor robotactuator context robotResourceCtx {
 
    		run itunibo.robot.robotSupport.move( "msg(a)" )
    		
-   		delay 700
+   		delay 500
    		run itunibo.robot.robotSupport.move( "msg(d)" )
    		
-   		delay 700
+   		delay 500
    		run itunibo.robot.robotSupport.move( "msg(h)" )
  
  	}
@@ -380,7 +379,21 @@ QActor robotactuator context robotResourceCtx {
 	State handleRobotCmd{ //does not handle alarms
 		printCurrentMessage
 		onMsg( robotCmd : robotCmd( MOVE ) ) { //MOVE = w | a | s | d | h
-			run itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})" )
+		
+			if "(payloadArg(0) == \"z\")" {    
+				run itunibo.robot.robotSupport.move("msg(a)")
+				delay 100    
+				run itunibo.robot.robotSupport.move("msg(h)")
+			
+			} 	else { if "(payloadArg(0) == \"x\")" { 
+				run itunibo.robot.robotSupport.move("msg(d)")
+				delay 100    
+				run itunibo.robot.robotSupport.move("msg(h)")
+			
+			} else {
+				run itunibo.robot.robotSupport.move( "msg(${payloadArg(0)})" )
+			}
+			}
 		}
  	}
 	Goto waitCmd
@@ -427,7 +440,7 @@ QActor resourcemodel context robotMindCtx{
 		solve( consult("resourceModel.pl")	 )
 		solve( showResourceModel )
 		run itunibo.coap.modelResourceCoap.create( myself, "resourcemodel" ) //CoAP access
-		run itunibo.coap.observer.resourceObserverCoapClient.create("coap://localhost/resourcemodel")	 //insert rigth ip
+		//run itunibo.coap.observer.resourceObserverCoapClient.create("coap://localhost/resourcemodel")	 //insert rigth ip
 	}
 	Goto waitModelChange
 
@@ -448,8 +461,6 @@ QActor resourcemodel context robotMindCtx{
 			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
 		}
 		onMsg( modelUpdate : modelUpdate(luggage, V) ) {  
-			
-			println("C!!!!!!!")
 			run itunibo.robot.resourceModelSupport.updateLuggageModel( myself, payloadArg(1)  )
 		}
 	}
@@ -459,10 +470,8 @@ QActor resourcemodel context robotMindCtx{
 		printCurrentMessage
 		//ROBOT MOVE
 		onMsg(  modelChange  : modelChange(robot, V ) ) { // V= w | ...
-								
-			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, "h" )			
-			solve( showResourceModel )
-			emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
+			forward robotactuator -m robotCmd : robotCmd($payloadArg(1))
+ 		
 		}
 		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= w | ...
 			

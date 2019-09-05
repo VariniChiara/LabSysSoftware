@@ -104,7 +104,7 @@ app.setIoSocket = function( iosock ){
 function delegate( cmd, newState, req, res ){
 	//publishMsgToRobotmind(cmd);                  //interaction with the robotmind
 	//publishEmitUserCmd(cmd);                     //interaction with the basicrobot
-	publishMsgToResourceModel("robot",cmd);	       //for hexagonal mind
+	//publishMsgToResourceModel("robot",cmd);	       //for hexagonal mind
 	changeResourceModelCoap(cmd);		            //for hexagonal mind RESTful m2m
 
 

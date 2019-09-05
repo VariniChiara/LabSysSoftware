@@ -19,8 +19,8 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				var Curmove     = ""  
 				var Map = "" 
 				var Tback = 0
-				var StepTime   = 330 
-				//var StepTime   = 700 //fisico 
+				//var StepTime   = 330 
+				var StepTime   = 900 //fisico 
 		
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
