@@ -38,7 +38,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("waitForStart") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t05",targetState="startExploration",cond=whenDispatch("startCmd"))
+					 transition(edgeName="t06",targetState="startExploration",cond=whenEvent("startCmd"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
@@ -46,9 +46,9 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t16",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t17",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t18",targetState="newLuggageFound",cond=whenDispatch("planFail"))
+					 transition(edgeName="t17",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t18",targetState="nextGoal",cond=whenDispatch("planOk"))
+					transition(edgeName="t19",targetState="newLuggageFound",cond=whenDispatch("planFail"))
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
@@ -79,8 +79,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Luggage_num++
 						forward("modelUpdate", "modelUpdate(luggage,$Luggage_num)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t29",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
-					transition(edgeName="t210",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					 transition(edgeName="t210",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t211",targetState="endExploration",cond=whenDispatch("luggageDanger"))
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
@@ -94,7 +94,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("waitForOperator") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t111",targetState="endExploration",cond=whenEvent("dangerCmd"))
+					 transition(edgeName="t112",targetState="endExploration",cond=whenEvent("dangerCmd"))
 				}	 
 				state("checkPlan") { //this:State
 					action { //it:State
@@ -133,9 +133,9 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t212",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t213",targetState="finishChecking",cond=whenDispatch("planOk"))
-					transition(edgeName="t214",targetState="setObstacle",cond=whenDispatch("planFail"))
+					 transition(edgeName="t213",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t214",targetState="finishChecking",cond=whenDispatch("planOk"))
+					transition(edgeName="t215",targetState="setObstacle",cond=whenDispatch("planFail"))
 				}	 
 				state("setObstacle") { //this:State
 					action { //it:State
@@ -144,8 +144,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						stateTimer = TimerActor("timer_setObstacle", 
 							scope, context!!, "local_tout_robotmind_setObstacle", 3000.toLong() )
 					}
-					 transition(edgeName="t115",targetState="finishChecking",cond=whenTimeout("local_tout_robotmind_setObstacle"))   
-					transition(edgeName="t116",targetState="endExploration",cond=whenEvent("dangerCmd"))
+					 transition(edgeName="t116",targetState="finishChecking",cond=whenTimeout("local_tout_robotmind_setObstacle"))   
+					transition(edgeName="t117",targetState="endExploration",cond=whenEvent("dangerCmd"))
 				}	 
 				state("endExploration") { //this:State
 					action { //it:State

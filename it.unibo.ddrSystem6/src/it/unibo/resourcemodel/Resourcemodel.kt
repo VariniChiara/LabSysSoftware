@@ -22,14 +22,15 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						solve("consult('resourceModel.pl')","") //set resVar	
 						solve("showResourceModel","") //set resVar	
 						itunibo.coap.modelResourceCoap.create(myself ,"resourcemodel" )
+						itunibo.coap.observer.resourceObserverCoapClient.create( "coap://localhost/resourcemodel"  )
 					}
 					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )
 				}	 
 				state("waitModelChange") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t022",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t023",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t023",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t024",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State
@@ -60,6 +61,9 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(robot,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
+								itunibo.robot.resourceModelSupport.updateRobotModel(myself ,"h" )
+								solve("showResourceModel","") //set resVar	
+								emit("local_modelChanged", "modelChanged(robot,${payloadArg(1)})" ) 
 						}
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(luggage,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList

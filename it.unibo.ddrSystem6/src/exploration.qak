@@ -7,7 +7,7 @@ Dispatch sonar : sonar
 
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message 
-Dispatch startCmd :	startCmd
+Event startCmd :	startCmd
 Dispatch stopCmd  : stopCmd 
 Event dangerCmd  : dangerCmd 
 
@@ -18,6 +18,7 @@ Dispatch stepFail      : stepFail(R,T) //R=ok | obstacle, T = time
 
 Dispatch modelChange  : modelChange( TARGET, VALUE )  //force a resource-model change
 Dispatch modelUpdate  : modelUpdate( TARGET, VALUE )  //sent by the mind TARGET=robot|sonar|roomMap
+Event  local_modelChanged   : modelChanged( TARGET, VALUE )
 
 Dispatch checkWall : checkWall //sent to start checking if an obstacle is a wall
 Dispatch isWall : isWall
@@ -103,7 +104,8 @@ QActor planexecutor context robotMindCtx {
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove ) 
 	}
 	
-	Goto doPlan
+	Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
+	//Goto doPlan
 	
 	//roomboundaryplanning.qak
 	State attempttogoahead {	
@@ -111,7 +113,7 @@ QActor planexecutor context robotMindCtx {
 		run itunibo.planner.moveUtils.attemptTomoveAhead(myself, StepTime)
 	}
 	
-	Transition t2   whenMsg stepOk   -> stepDone   
+	Transition t3   whenMsg stepOk   -> stepDone   
 					whenMsg stepFail -> stepFailed
 					 
  	State stepDone{  
@@ -173,7 +175,7 @@ QActor robotmind context robotMindCtx {
 	State waitForStart {
 	}
 	
-	Transition t0  whenMsg startCmd  -> startExploration 
+	Transition t0  whenEvent startCmd  -> startExploration 
 	
 	State startExploration {
 		println("&&&  exploration STARTED")
@@ -425,6 +427,7 @@ QActor resourcemodel context robotMindCtx{
 		solve( consult("resourceModel.pl")	 )
 		solve( showResourceModel )
 		run itunibo.coap.modelResourceCoap.create( myself, "resourcemodel" ) //CoAP access
+		run itunibo.coap.observer.resourceObserverCoapClient.create("coap://localhost/resourcemodel")	 //insert rigth ip
 	}
 	Goto waitModelChange
 
@@ -457,9 +460,9 @@ QActor resourcemodel context robotMindCtx{
 		//ROBOT MOVE
 		onMsg(  modelChange  : modelChange(robot, V ) ) { // V= w | ...
 								
-			//run itunibo.robot.resourceModelSupport.updateRobotModel( myself, "h" )			
-			//solve( showResourceModel )
-			//emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
+			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, "h" )			
+			solve( showResourceModel )
+			emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
 		}
 		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= w | ...
 			

@@ -73,14 +73,16 @@ app.post("/l", function(req, res,next) { handlePostMove("l","moving left90",  re
 app.post("/d", function(req, res,next) { handlePostMove("d","moving right",   req,res,next); });
 app.post("/r", function(req, res,next) { handlePostMove("r","moving right90", req,res,next); });
 app.post("/h", function(req, res,next) { handlePostMove("h","stopped",        req,res,next); });
+app.post("/z", function(req, res,next) { handlePostMove("z","moving leftstep",  req,res,next); });  //move small
+app.post("/x", function(req, res,next) { handlePostMove("x","moving rightstep", req,res,next); });  //move small
 
 //APPLICATION
 app.post("/startappl", function(req, res,next) {
-	delegateForAppl( "startAppl", req, res );
+	delegateForAppl( "startCmd", req, res );
 	next();
 });
 app.post("/stopappl", function(req, res,next) {
-	delegateForAppl( "stopAppl",  req, res );
+	delegateForAppl( "stopCmd",  req, res );
 	next();
 });
 
@@ -102,7 +104,7 @@ app.setIoSocket = function( iosock ){
 function delegate( cmd, newState, req, res ){
 	//publishMsgToRobotmind(cmd);                  //interaction with the robotmind
 	//publishEmitUserCmd(cmd);                     //interaction with the basicrobot
-	//publishMsgToResourceModel("robot",cmd);	       //for hexagonal mind
+	publishMsgToResourceModel("robot",cmd);	       //for hexagonal mind
 	changeResourceModelCoap(cmd);		            //for hexagonal mind RESTful m2m
 
 
@@ -115,7 +117,8 @@ function delegate( cmd, newState, req, res ){
 function delegateForAppl( cmd, req, res, next ){
 	console.log("app delegateForAppl cmd=" + cmd);
 	result = "Web server delegateForAppl: " + cmd;
-	publishMsgToRobotapplication( cmd );
+	publishEmitUserCmd(cmd)
+	//publishMsgToRobotapplication( cmd );
 }
 
 /*
@@ -140,7 +143,8 @@ var changeResourceModelCoap = function( cmd ){
 }
 
 var publishEmitUserCmd = function( cmd ){
-	var eventstr = "msg(userCmd,event,js,none,userCmd("+cmd +"),1)"  ;
+	//var eventstr = "msg(userCmd,event,js,none,userCmd("+cmd +"),1)"  ;
+	var eventstr = "msg("+cmd +",event,js,none,"+cmd +",1)"  ;
 	console.log("emits> "+ eventstr);
 	mqttUtils.publish( eventstr, "unibo/qak/events" );
 }

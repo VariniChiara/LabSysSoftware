@@ -88,15 +88,15 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition(edgeName="t23",targetState="doPlan",cond=whenEvent("startCmd"))
 				}	 
 				state("attempttogoahead") { //this:State
 					action { //it:State
 						forward("modelUpdate", "modelUpdate(robot,w)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
-					 transition(edgeName="t23",targetState="stepDone",cond=whenDispatch("stepOk"))
-					transition(edgeName="t24",targetState="stepFailed",cond=whenDispatch("stepFail"))
+					 transition(edgeName="t34",targetState="stepDone",cond=whenDispatch("stepOk"))
+					transition(edgeName="t35",targetState="stepFailed",cond=whenDispatch("stepFail"))
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
