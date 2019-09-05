@@ -74,6 +74,9 @@ app.post("/d", function(req, res,next) { handlePostMove("d","moving right",   re
 app.post("/r", function(req, res,next) { handlePostMove("r","moving right90", req,res,next); });
 app.post("/h", function(req, res,next) { handlePostMove("h","stopped",        req,res,next); });
 
+app.post("/danger", function(req, res,next) { handlePostMove("danger","going to initial position", req,res,next); });
+app.post("/safe", function(req, res,next) { handlePostMove("safe","continuing the exploration", req,res,next); });
+
 //APPLICATION
 app.post("/startappl", function(req, res,next) {
 	delegateForAppl( "startAppl", req, res );

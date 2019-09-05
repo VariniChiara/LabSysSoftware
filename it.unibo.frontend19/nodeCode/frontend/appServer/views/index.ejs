@@ -24,13 +24,14 @@ function escapeRegExp(str) {
         		document.getElementById('mapDisplay').innerHTML=v2; 
         	}
         	if( v.indexOf("luggage:") >= 0 ){
-	        	    document.getElementById('luggageDisplay').innerHTML=v;
-	        		document.getElementById('dangerButton').disabled = false
-	        		document.getElementById('safeButton').disabled = false
+	        	    document.getElementById('luggageDisplay').innerHTML=v;	        	
+	        		document.getElementById('bombDiv').style.display = 'inline';
 	        	
        		}
-       	});
+       	});   
+	
 </script>
+
  
 </head>
 
@@ -103,23 +104,24 @@ function escapeRegExp(str) {
 
 <h2>Bomb checking tool</h2>   
 <center>
-
-	<table >	
+	<div id="bombDiv" style="display: none;">
+	<table>	
 			<tr>
 				<td align="center">
-					<form action="/safe" method="post">
-						<!--disabled=true;-->
-						<input type="submit" style="font-size:30px;" value="SAFE" id="safeButton" disabled=true;  >						  		
+					<form action="/safe" method="post" >
+				
+						<input type="submit" style="font-size:30px;" value="SAFE" id="safeButton" onclick="hideDiv()">						  		
 					</form>
 				</td>
 				<td align="center">
-					<form action="/danger" method="post">
+					<form action="/danger" method="post" onsubmit="hideDiv()">
 						<!--disabled=true;-->
-						<input type="submit" style="font-size:30px; color:red;" value="DANGER" id="dangerButton" disabled=true;  >						  		
+						<input type="submit" style="font-size:30px; color:red;" value="DANGER" id="dangerButton" onclick="hideDiv()" >						  		
 					</form>
 				</td>			
 			</tr>
 	</table>
+	</div>
 </center> 
 
 <div style="background-color: #FAF19C">
@@ -140,5 +142,11 @@ function escapeRegExp(str) {
 </div>
 
 <center></center>
+<script>
+function hideDiv() {
+	console.log("INSIDE div")
+	document.getElementById('bombDiv').style.display = "none";
+}	
+</script>
 </body>
 </html>

@@ -158,6 +158,7 @@ QActor robotmind context robotMindCtx {
 	var plan : List<aima.core.agent.Action>? = null
 	var dirtyCell : Pair<Int,Int>? = null
 	var Luggage_num = 0
+	var Map = \"\"
 "]
 
 	State s0 initial {
@@ -209,22 +210,21 @@ QActor robotmind context robotMindCtx {
 			Y = iterCounter
 		"]
 		}
-	}
-	
+	}	
 	Goto startExploration
 	
 	
 	State newLuggageFound {
-		
 		["Luggage_num++"]
 		forward resourcemodel -m modelUpdate: modelUpdate(luggage, $Luggage_num)
-		
+		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]	
+		forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
 	}
 	Transition t2 whenMsg luggageSafe -> handleObstacle
 				  whenMsg luggageDanger -> endExploration
 	
-	
-	
+
 	State handleObstacle {
 		println("---CheckIfObstacle---")
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
@@ -234,16 +234,10 @@ QActor robotmind context robotMindCtx {
 		
 		//per attivasre disattivare bottone danger sulla WP, false non lo uso ATTUALMENTE
 		
-	}
-	
-	//Goto waitForOperator
-	
-	State waitForOperator {}
-	Transition t1 whenEvent dangerCmd -> endExploration
-				   	
-	State checkPlan { 
-		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage)
-	}
+	}	
+	Goto checkPlan	 
+	  	
+	State checkPlan { }
 	Goto startExploration if "(plan != null)" else checkNull
 	 
 	State checkNull {
@@ -283,12 +277,16 @@ QActor robotmind context robotMindCtx {
 	
 				  
 	State setObstacle {
-		println("---setObstacle---")
+		println("---setObstacle---")	
+		["Luggage_num++"]
+		forward resourcemodel -m modelUpdate: modelUpdate(luggage, $Luggage_num)
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
-		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage) //per attivare disattivare bottone danger sulla WP
+		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]		
+		forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
+
 	}
-	Transition t1  whenTime 3000 -> finishChecking
-				   whenEvent dangerCmd -> endExploration
+	Transition t1    whenMsg luggageDanger -> endExploration
+	 				 whenMsg luggageSafe -> finishChecking
 	
 	
 	State endExploration {
@@ -420,6 +418,8 @@ QActor sonarhandler context robotMindCtx{
   */
 QActor resourcemodel context robotMindCtx{
 
+	["var isLuggageDanger = false"]
+
 	State s0 initial {
 		solve( consult("sysRules.pl")	 )
 		solve( consult("resourceModel.pl")	 )
@@ -446,6 +446,8 @@ QActor resourcemodel context robotMindCtx{
 		}
 		onMsg( modelUpdate : modelUpdate(luggage, V) ) {  
 			
+			
+			
 			println("C!!!!!!!")
 			run itunibo.robot.resourceModelSupport.updateLuggageModel( myself, payloadArg(1)  )
 		}
@@ -453,6 +455,10 @@ QActor resourcemodel context robotMindCtx{
     Goto  waitModelChange
 
 	State changeModel{
+		
+		
+
+		
 		printCurrentMessage
 		//ROBOT MOVE
 		onMsg(  modelChange  : modelChange(robot, V ) ) { // V= w | ...
@@ -461,20 +467,28 @@ QActor resourcemodel context robotMindCtx{
 			//solve( showResourceModel )
 			//emit local_modelChanged : modelChanged(  robot,  $payloadArg(1))  //for the robotmind
 		}
-		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= w | ...
+		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= safe | danger
 			
-			/*["
-			if (payloadArg(1) == \"z\"){
-				itunibo.planner.moveUtils.doPlannedMove(myself, \"h\")
-			}"]*/
-			println("!!!!!!!!!!!!!modelChange")
-			println(payloadArg(1))
-	 		solve(retractall( move(_)))
-			forward robotmind -m dangerCmd : dangerCmd
-			
+			["if(payloadArg(1) == \"danger\"){	
+				isLuggageDanger = true
+			}"]
 		}
 
 	}
+	
+	Goto handleDangerLuggage if "isLuggageDanger" else handleSafeLuggage
+	
+	State handleDangerLuggage{
+		["isLuggageDanger = false"]
+		forward robotmind -m luggageDanger:luggageDanger
+	}	
 	Goto  waitModelChange
+	
+	
+	State handleSafeLuggage{
+		forward robotmind -m luggageSafe:luggageSafe
+	}
+	Goto  waitModelChange
+	
 }
 
