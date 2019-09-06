@@ -10,7 +10,6 @@ Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Event startCmd :	startCmd
 Event stopCmd  : stopCmd
 Dispatch stopPlan : stopPlan
-Event dangerCmd  : dangerCmd
 
 //message try to do a step
 Dispatch onestep       : onestep(DURATION)
@@ -116,6 +115,7 @@ QActor planexecutor context robotMindCtx {
 	}
 	Transition t1 whenTime 50  -> doPlan
  		          whenEvent stopPlan -> stopAppl
+ 		          whenEvent doPlan -> doPlan
 
 	//Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
 
@@ -207,7 +207,6 @@ QActor robotmind context robotMindCtx {
 	
 	State startExploration {
 		println("========== robotmind: startExploration ==========")
-		println("&&&  exploration STARTED")
 
 		run itunibo.planner.plannerUtil.setGoal(X,Y)
 		forward planexecutor -m doPlan : doPlan($X,$Y)
@@ -263,6 +262,9 @@ QActor robotmind context robotMindCtx {
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
 		forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
+		
+		
+		
 	}
 	Transition t2 whenMsg luggageSafe -> handleObstacle
 				  whenMsg luggageDanger -> endExploration
@@ -287,11 +289,43 @@ QActor robotmind context robotMindCtx {
 	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else endExploration
 
 	State endExploration {
+		
 		println("========== robotmind: endExploration ==========")
 		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage, )
+		run itunibo.planner.plannerUtil.setBomb()
 		run itunibo.planner.plannerUtil.setGoal(0,0)
 		forward planexecutor -m doPlan : doPlan(0,0)   
 	}
+	
+	Transition  t5 whenMsg planOk -> pickBomb 
+	
+	State pickBomb{
+		println("========== robotmind: pickBomb ==========")
+		["X =  itunibo.planner.plannerUtil.getBomb().first
+		Y =  itunibo.planner.plannerUtil.getBomb().second
+		
+		"] 
+		println(X)
+		println(Y)      
+		run itunibo.planner.plannerUtil.setGoal(X,Y)		
+		forward planexecutor -m doPlan : doPlan($X,$Y)     
+	}       
+	Transition  t5 whenMsg planOk -> takeBagAtHome 
+	
+	State takeBagAtHome{
+		println("========== robotmind: takeBagAtHome ==========")
+		forward robotactuator -m robotCmd:robotCmd(a)
+		delay 500
+		forward robotactuator -m robotCmd:robotCmd(a)
+		delay 500
+		forward robotactuator -m robotCmd:robotCmd(a)
+		delay 500
+		forward robotactuator -m robotCmd:robotCmd(a)
+		delay 500
+		run itunibo.planner.plannerUtil.setGoal(0,0)		
+		forward planexecutor -m doPlan : doPlan(0,0)   
+	}
+	
 }
 
  /*
@@ -371,7 +405,7 @@ QActor robotactuator context robotResourceCtx {
 
  	}
 	Goto waitCmd
-
+       
 	State waitCmd{ 
 			println("========== robotactuator: waitCmd ==========")
 	} //robotCmd comes from a console OUTSIDE this (sub)system

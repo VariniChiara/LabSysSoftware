@@ -381,4 +381,11 @@ object plannerUtil {
 		
 	}
 	
+	fun setBomb(){
+		RoomMap.getRoomMap().setBomb(getPosX(), getPosY())
+	}
+	
+	fun getBomb(): Pair<Int, Int>{
+		return Pair(RoomMap.getRoomMap().getBombX(), RoomMap.getRoomMap().getBombY())
+	}
 }

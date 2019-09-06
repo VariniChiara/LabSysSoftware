@@ -61,7 +61,9 @@ object moveUtils{
 		println("===================================================")
 	}
  	fun setObstacleOnCurrentDirection( actor : ActorBasic ){
+
 		doPlannedMove(actor, direction )
+		
 	}
 	
 	fun setDuration( actor : ActorBasic ){

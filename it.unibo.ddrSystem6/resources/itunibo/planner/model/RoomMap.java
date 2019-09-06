@@ -14,11 +14,28 @@ public class RoomMap implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	private static RoomMap singletonRoomMap;
+	private int bombX = 0;
+	private int bombY = 0;
+	
 	public static RoomMap getRoomMap() {
 		if (singletonRoomMap == null)
 			singletonRoomMap = new RoomMap();
 		return singletonRoomMap;
 	}
+	
+	public void setBomb(int x, int y) {
+		this.bombX = x;
+		this.bombY = y;
+	}
+	
+	public int getBombX() {
+		return this.bombX;
+	}
+	
+	public int getBombY() {
+		return this.bombY;
+	}
+	
 	public static void setRoomMap( RoomMap map ) { 
 		singletonRoomMap = map;
 		System.out.println("setRoomMap = $map  $singletonRoomMap");

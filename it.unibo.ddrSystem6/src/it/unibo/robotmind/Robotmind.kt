@@ -42,27 +42,26 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						println("========== robotmind: waitForStart ==========")
 						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t06",targetState="startExploration",cond=whenEvent("startCmd"))
-					transition(edgeName="t07",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+					 transition(edgeName="t07",targetState="startExploration",cond=whenEvent("startCmd"))
+					transition(edgeName="t08",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("waitForTemperatureOk") { //this:State
 					action { //it:State
 						println("========== robotmind: waitForTemperatureOk ==========")
 						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t18",targetState="waitForStart",cond=whenEvent("temperatureOk"))
+					 transition(edgeName="t19",targetState="waitForStart",cond=whenEvent("temperatureOk"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
 						println("========== robotmind: startExploration ==========")
-						println("&&&  exploration STARTED")
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t19",targetState="waitForStart",cond=whenEvent("stopCmd"))
-					transition(edgeName="t110",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t111",targetState="newLuggageFound",cond=whenDispatch("planFail"))
-					transition(edgeName="t112",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+					 transition(edgeName="t110",targetState="waitForStart",cond=whenEvent("stopCmd"))
+					transition(edgeName="t111",targetState="nextGoal",cond=whenDispatch("planOk"))
+					transition(edgeName="t112",targetState="newLuggageFound",cond=whenDispatch("planFail"))
+					transition(edgeName="t113",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("nextGoal") { //this:State
 					action { //it:State
@@ -104,8 +103,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t213",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
-					transition(edgeName="t214",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					 transition(edgeName="t214",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t215",targetState="endExploration",cond=whenDispatch("luggageDanger"))
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
@@ -128,6 +127,36 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("endExploration") { //this:State
 					action { //it:State
 						println("========== robotmind: endExploration ==========")
+						itunibo.planner.plannerUtil.setBomb(  )
+						itunibo.planner.plannerUtil.setGoal( 0, 0  )
+						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
+					}
+					 transition(edgeName="t516",targetState="pickBomb",cond=whenDispatch("planOk"))
+				}	 
+				state("pickBomb") { //this:State
+					action { //it:State
+						println("========== robotmind: pickBomb ==========")
+						X =  itunibo.planner.plannerUtil.getBomb().first
+								Y =  itunibo.planner.plannerUtil.getBomb().second
+								
+						println(X)
+						println(Y)
+						itunibo.planner.plannerUtil.setGoal( X, Y  )
+						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
+					}
+					 transition(edgeName="t517",targetState="takeBagAtHome",cond=whenDispatch("planOk"))
+				}	 
+				state("takeBagAtHome") { //this:State
+					action { //it:State
+						println("========== robotmind: takeBagAtHome ==========")
+						forward("robotCmd", "robotCmd(a)" ,"robotactuator" ) 
+						delay(500) 
+						forward("robotCmd", "robotCmd(a)" ,"robotactuator" ) 
+						delay(500) 
+						forward("robotCmd", "robotCmd(a)" ,"robotactuator" ) 
+						delay(500) 
+						forward("robotCmd", "robotCmd(a)" ,"robotactuator" ) 
+						delay(500) 
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
 					}
