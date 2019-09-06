@@ -275,50 +275,6 @@ QActor robotmind context robotMindCtx {
 
 	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else endExploration
 
-    //State finishChecking{
-	//	["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
-	//	println("---finishChecking---")
-	//}
-
-	//Goto exploreDirtyCell if "(dirtyCell != null)" else endExploration
-
-	/*State exploreDirtyCell {
-		println("---exploreDirtyCell---")
-		["
-			 X = dirtyCell!!.first
-			 Y = dirtyCell!!.second
-		"]
-
-		run itunibo.planner.plannerUtil.setGoal(X, Y)
-		["plan = itunibo.planner.plannerUtil.doPlan()"]
-
-	}*/
-
-	//Goto doExploration if "(plan != null)" else endExploration
-
-	/*State doExploration {
-		forward planexecutor -m doPlan : doPlan($X,$Y)
-	}
-
-	Transition t2 whenEvent stopCmd -> stopAppl
-				  whenMsg planOk -> finishChecking
-				  whenMsg planFail -> setObstacle
-				  whenEvent temperatureTooHigh -> stopAppl*/
-
-
-	/*State setObstacle {
-		println("---setObstacle---")
-		["Luggage_num++"]
-		forward resourcemodel -m modelUpdate: modelUpdate(luggage, $Luggage_num)
-		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
-		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
-		forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
-
-	}
-	Transition t1    whenMsg luggageDanger -> endExploration
-	 				 whenMsg luggageSafe -> finishChecking
-*/
-
 	State endExploration {
 		println("---endExploration---")
 		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage, )
