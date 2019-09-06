@@ -26,7 +26,7 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						println("========== onestepahead: s0 ==========")
 						foundObstacle = false 
 					}
-					 transition(edgeName="t014",targetState="doMoveForward",cond=whenDispatch("onestep"))
+					 transition(edgeName="t015",targetState="doMoveForward",cond=whenDispatch("onestep"))
 				}	 
 				state("doMoveForward") { //this:State
 					action { //it:State
@@ -40,8 +40,8 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						stateTimer = TimerActor("timer_doMoveForward", 
 							scope, context!!, "local_tout_onestepahead_doMoveForward", StepTime )
 					}
-					 transition(edgeName="t115",targetState="endDoMoveForward",cond=whenTimeout("local_tout_onestepahead_doMoveForward"))   
-					transition(edgeName="t116",targetState="stepFail",cond=whenEvent("sonar"))
+					 transition(edgeName="t116",targetState="endDoMoveForward",cond=whenTimeout("local_tout_onestepahead_doMoveForward"))   
+					transition(edgeName="t117",targetState="stepFail",cond=whenEvent("sonar"))
 				}	 
 				state("endDoMoveForward") { //this:State
 					action { //it:State

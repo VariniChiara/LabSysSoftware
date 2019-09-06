@@ -32,8 +32,8 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 					action { //it:State
 						println("========== resourcemodel: waitModelChange ==========")
 					}
-					 transition(edgeName="t019",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t020",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t020",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t021",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State
@@ -69,19 +69,19 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						}
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(luggage,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if(payloadArg(1) == "danger"){
-								forward("luggageDanger", "luggageDanger" ,"robotmind" ) 
-								}else{
-								forward("luggageSafe", "luggageSafe" ,"robotmind" ) 
-								}
+								if((payloadArg(1) == "danger")){ forward("luggageDanger", "luggageDanger" ,"robotmind" ) 
+								 }
+								else
+								 { forward("luggageSafe", "luggageSafe" ,"robotmind" ) 
+								  }
 						}
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(temperature,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if(payloadArg(1) == "temperatureTooHigh"){
-								forward("temperatureTooHigh", "temperatureTooHigh" ,"robotmind" ) 
-								}else{
-								forward("temperatureOk", "temperatureOk" ,"robotmind" ) 
-								}
+								if((payloadArg(1) == "temperatureTooHigh")){ forward("temperatureTooHigh", "temperatureTooHigh" ,"robotmind" ) 
+								 }
+								else
+								 { forward("temperatureOk", "temperatureOk" ,"robotmind" ) 
+								  }
 						}
 					}
 					 transition( edgeName="goto",targetState="waitModelChange", cond=doswitch() )

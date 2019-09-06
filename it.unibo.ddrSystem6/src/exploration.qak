@@ -9,6 +9,7 @@ Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Event startCmd :	startCmd
 Event stopCmd  : stopCmd
+Dispatch stopPlan : stopPlan
 Event dangerCmd  : dangerCmd
 
 //message try to do a step
@@ -52,8 +53,11 @@ QActor planexecutor context robotMindCtx {
 		
 		println("========== planexecutor: s0 ==========")
 	}
-
+	Goto waitForDoPlan
+	
+	State waitForDoPlan {}
 	Transition t0  whenMsg doPlan  -> loadPlan
+				   whenMsg stopPlan -> waitForDoPlan
  
 	State loadPlan {
 		println("========== planexecutor: loadPlan ==========")
@@ -62,25 +66,9 @@ QActor planexecutor context robotMindCtx {
 	}
 
 	Goto doPlan
-
- 	State doPlan {
- 		println("========== planexecutor: doPlan ==========")
- 	}
-
-	Transition t1 whenTime 50  -> doPlan1
- 		          whenEvent stopCmd -> stopAppl
-
- 	State stopAppl {
- 		println("========== planexecutor: stopAppl ==========")
- 		forward robotactuator -m robotCmd : robotCmd(h)
- 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h )
- 		solve(retractall( move(_)))
- 	}
-
- 	Goto s0
-
- 	State doPlan1{
-		println("========== planexecutor: doPlan1 ==========")
+	
+	State doPlan{
+		println("========== planexecutor: doPlan ==========")
 		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
 		forward resourcemodel -m modelUpdate  : modelUpdate( roomMap, $Map )
 		run itunibo.planner.plannerUtil.showMap()
@@ -93,6 +81,15 @@ QActor planexecutor context robotMindCtx {
 
 	Goto handlemove if "(Curmove != \"nomove\")" else planOk
 
+ 	State stopAppl {
+ 		println("========== planexecutor: stopAppl ==========")
+ 		forward robotactuator -m robotCmd : robotCmd(h)
+ 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h )
+ 		solve(retractall( move(_)))
+ 	}
+
+ 	Goto waitForDoPlan
+
 	State planOk {
 		println("========== planexecutor: planOk ==========")
 		forward robotactuator -m robotCmd : robotCmd(h)
@@ -100,7 +97,7 @@ QActor planexecutor context robotMindCtx {
 		forward robotmind -m planOk : planOk
 	}
 
-	Goto s0
+	Goto waitForDoPlan
 
 	State handlemove {
 			println("========== planexecutor: handlemove ==========")
@@ -117,9 +114,11 @@ QActor planexecutor context robotMindCtx {
 
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove )
 	}
+	Transition t1 whenTime 50  -> doPlan
+ 		          whenEvent stopPlan -> stopAppl
 
 	//Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
-	Goto doPlan
+
 
 	//roomboundaryplanning.qak
 	State attempttogoahead {
@@ -163,7 +162,7 @@ QActor planexecutor context robotMindCtx {
 		forward robotmind -m planFail : planFail
 		solve(retractall( move(_)))
 	}
-	Goto s0
+	Goto waitForDoPlan
 }
 
 
@@ -193,6 +192,7 @@ QActor robotmind context robotMindCtx {
 
 	State waitForStart {
 		println("========== robotmind: waitForStart ==========")
+		forward planexecutor -m stopPlan: stopPlan
 	}
 
 	Transition t0  whenEvent startCmd  -> startExploration
@@ -201,6 +201,7 @@ QActor robotmind context robotMindCtx {
 
 	State waitForTemperatureOk {
 		println("========== robotmind: waitForTemperatureOk ==========")
+		forward planexecutor -m stopPlan: stopPlan
 	}
 	Transition t1 whenEvent temperatureOk -> waitForStart
 	
@@ -276,11 +277,6 @@ QActor robotmind context robotMindCtx {
 
 		//per attivasre disattivare bottone danger sulla WP, false non lo uso ATTUALMENTE
  
-	}
-	Goto checkPlan
-
-	State checkPlan {
-		println("========== robotmind: checkPlan ==========")
 	}
 	Goto startExploration if "(plan != null)" else checkNull
 
@@ -491,19 +487,19 @@ QActor resourcemodel context robotMindCtx{
 		}
 		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= safe | danger
 
-			["if(payloadArg(1) == \"danger\"){"]
+			if"(payloadArg(1) == \"danger\")"{
 				forward robotmind -m luggageDanger:luggageDanger
-			["}else{"]
+			}else{
 				forward robotmind -m luggageSafe:luggageSafe			
-			["}"]
+			}
 		}
 		onMsg(  modelChange  : modelChange(temperature, V ) ) { // V= temperatureOk | temperatureTooHigh
 
-			["if(payloadArg(1) == \"temperatureTooHigh\"){"]
+			if"(payloadArg(1) == \"temperatureTooHigh\")"{
 				forward robotmind -m temperatureTooHigh:temperatureTooHigh
-			["}else{"]
+			}else{
 				forward robotmind -m temperatureOk:temperatureOk
-			["}"]
+			}
 		}
 
 	}

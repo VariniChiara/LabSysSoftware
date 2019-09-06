@@ -27,7 +27,13 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					action { //it:State
 						println("========== planexecutor: s0 ==========")
 					}
+					 transition( edgeName="goto",targetState="waitForDoPlan", cond=doswitch() )
+				}	 
+				state("waitForDoPlan") { //this:State
+					action { //it:State
+					}
 					 transition(edgeName="t00",targetState="loadPlan",cond=whenDispatch("doPlan"))
+					transition(edgeName="t01",targetState="waitForDoPlan",cond=whenDispatch("stopPlan"))
 				}	 
 				state("loadPlan") { //this:State
 					action { //it:State
@@ -40,24 +46,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("doPlan") { //this:State
 					action { //it:State
 						println("========== planexecutor: doPlan ==========")
-						stateTimer = TimerActor("timer_doPlan", 
-							scope, context!!, "local_tout_planexecutor_doPlan", 50.toLong() )
-					}
-					 transition(edgeName="t11",targetState="doPlan1",cond=whenTimeout("local_tout_planexecutor_doPlan"))   
-					transition(edgeName="t12",targetState="stopAppl",cond=whenEvent("stopCmd"))
-				}	 
-				state("stopAppl") { //this:State
-					action { //it:State
-						println("========== planexecutor: stopAppl ==========")
-						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
-						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
-						solve("retractall(move(_))","") //set resVar	
-					}
-					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
-				}	 
-				state("doPlan1") { //this:State
-					action { //it:State
-						println("========== planexecutor: doPlan1 ==========")
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 						itunibo.planner.plannerUtil.showMap(  )
@@ -71,6 +59,15 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					 transition( edgeName="goto",targetState="handlemove", cond=doswitchGuarded({(Curmove != "nomove")}) )
 					transition( edgeName="goto",targetState="planOk", cond=doswitchGuarded({! (Curmove != "nomove")}) )
 				}	 
+				state("stopAppl") { //this:State
+					action { //it:State
+						println("========== planexecutor: stopAppl ==========")
+						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
+						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
+						solve("retractall(move(_))","") //set resVar	
+					}
+					 transition( edgeName="goto",targetState="waitForDoPlan", cond=doswitch() )
+				}	 
 				state("planOk") { //this:State
 					action { //it:State
 						println("========== planexecutor: planOk ==========")
@@ -78,7 +75,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						forward("planOk", "planOk" ,"robotmind" ) 
 					}
-					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
+					 transition( edgeName="goto",targetState="waitForDoPlan", cond=doswitch() )
 				}	 
 				state("handlemove") { //this:State
 					action { //it:State
@@ -95,8 +92,11 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						delay(500) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
+						stateTimer = TimerActor("timer_domove", 
+							scope, context!!, "local_tout_planexecutor_domove", 50.toLong() )
 					}
-					 transition( edgeName="goto",targetState="doPlan", cond=doswitch() )
+					 transition(edgeName="t12",targetState="doPlan",cond=whenTimeout("local_tout_planexecutor_domove"))   
+					transition(edgeName="t13",targetState="stopAppl",cond=whenEvent("stopPlan"))
 				}	 
 				state("attempttogoahead") { //this:State
 					action { //it:State
@@ -104,8 +104,8 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						forward("modelUpdate", "modelUpdate(robot,w)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
-					 transition(edgeName="t33",targetState="stepDone",cond=whenDispatch("stepOk"))
-					transition(edgeName="t34",targetState="stepFailed",cond=whenDispatch("stepFail"))
+					 transition(edgeName="t34",targetState="stepDone",cond=whenDispatch("stepOk"))
+					transition(edgeName="t35",targetState="stepFailed",cond=whenDispatch("stepFail"))
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
@@ -134,7 +134,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						forward("planFail", "planFail" ,"robotmind" ) 
 						solve("retractall(move(_))","") //set resVar	
 					}
-					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
+					 transition( edgeName="goto",targetState="waitForDoPlan", cond=doswitch() )
 				}	 
 			}
 		}

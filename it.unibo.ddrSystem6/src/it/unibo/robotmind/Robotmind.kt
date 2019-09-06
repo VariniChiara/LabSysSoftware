@@ -40,15 +40,17 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("waitForStart") { //this:State
 					action { //it:State
 						println("========== robotmind: waitForStart ==========")
+						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t05",targetState="startExploration",cond=whenEvent("startCmd"))
-					transition(edgeName="t06",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+					 transition(edgeName="t06",targetState="startExploration",cond=whenEvent("startCmd"))
+					transition(edgeName="t07",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("waitForTemperatureOk") { //this:State
 					action { //it:State
 						println("========== robotmind: waitForTemperatureOk ==========")
+						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t17",targetState="waitForStart",cond=whenEvent("temperatureOk"))
+					 transition(edgeName="t18",targetState="waitForStart",cond=whenEvent("temperatureOk"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
@@ -57,10 +59,10 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t18",targetState="waitForStart",cond=whenEvent("stopCmd"))
-					transition(edgeName="t19",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t110",targetState="newLuggageFound",cond=whenDispatch("planFail"))
-					transition(edgeName="t111",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+					 transition(edgeName="t19",targetState="waitForStart",cond=whenEvent("stopCmd"))
+					transition(edgeName="t110",targetState="nextGoal",cond=whenDispatch("planOk"))
+					transition(edgeName="t111",targetState="newLuggageFound",cond=whenDispatch("planFail"))
+					transition(edgeName="t112",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("nextGoal") { //this:State
 					action { //it:State
@@ -102,8 +104,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t212",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
-					transition(edgeName="t213",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					 transition(edgeName="t213",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t214",targetState="endExploration",cond=whenDispatch("luggageDanger"))
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
@@ -112,12 +114,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.resetGoal( X, Y  )
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 						plan = itunibo.planner.plannerUtil.doPlan()
-					}
-					 transition( edgeName="goto",targetState="checkPlan", cond=doswitch() )
-				}	 
-				state("checkPlan") { //this:State
-					action { //it:State
-						println("========== robotmind: checkPlan ==========")
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitchGuarded({(plan != null)}) )
 					transition( edgeName="goto",targetState="checkNull", cond=doswitchGuarded({! (plan != null)}) )
