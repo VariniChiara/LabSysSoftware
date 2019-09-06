@@ -40,7 +40,12 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 					action { //it:State
 					}
 					 transition(edgeName="t05",targetState="startExploration",cond=whenEvent("startCmd"))
-					transition(edgeName="t06",targetState="startExploration",cond=whenEvent("temperatureOk"))
+					transition(edgeName="t06",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+				}	 
+				state("waitForTemperatureOk") { //this:State
+					action { //it:State
+					}
+					 transition(edgeName="t17",targetState="waitForStart",cond=whenEvent("temperatureOk"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
@@ -48,21 +53,26 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t17",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t18",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t19",targetState="newLuggageFound",cond=whenDispatch("planFail"))
-					transition(edgeName="t110",targetState="stopAppl",cond=whenEvent("temperatureTooHigh"))
+					 transition(edgeName="t18",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					transition(edgeName="t19",targetState="nextGoal",cond=whenDispatch("planOk"))
+					transition(edgeName="t110",targetState="newLuggageFound",cond=whenDispatch("planFail"))
+					transition(edgeName="t111",targetState="stopAppl",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
 						println("%% robotmind stopped %%")
-						forward("stopCmd", "stopCmd" ,"planexecutor" ) 
 					}
 					 transition( edgeName="goto",targetState="waitForStart", cond=doswitch() )
 				}	 
 				state("nextGoal") { //this:State
 					action { //it:State
 						dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
+								plan= null
+						
+								if(dirtyCell != null){
+									itunibo.planner.plannerUtil.setGoal(dirtyCell!!.first, dirtyCell!!.second)
+									plan = itunibo.planner.plannerUtil.doPlan()}
+						
 						if((dirtyCell != null)){ X = dirtyCell!!.first
 									Y = dirtyCell!!.second
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
@@ -92,8 +102,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t211",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
-					transition(edgeName="t212",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					 transition(edgeName="t212",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t213",targetState="endExploration",cond=whenDispatch("luggageDanger"))
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
@@ -116,48 +126,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						println("---CheckNull---")
 					}
 					 transition( edgeName="goto",targetState="nextGoal", cond=doswitchGuarded({(!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
-					transition( edgeName="goto",targetState="finishChecking", cond=doswitchGuarded({! (!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
-				}	 
-				state("finishChecking") { //this:State
-					action { //it:State
-						dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
-						println("---finishChecking---")
-					}
-					 transition( edgeName="goto",targetState="exploreDirtyCell", cond=doswitchGuarded({(dirtyCell != null)}) )
-					transition( edgeName="goto",targetState="endExploration", cond=doswitchGuarded({! (dirtyCell != null)}) )
-				}	 
-				state("exploreDirtyCell") { //this:State
-					action { //it:State
-						println("---exploreDirtyCell---")
-						
-									 X = dirtyCell!!.first
-									 Y = dirtyCell!!.second
-						itunibo.planner.plannerUtil.setGoal( X, Y  )
-						plan = itunibo.planner.plannerUtil.doPlan()
-					}
-					 transition( edgeName="goto",targetState="doExploration", cond=doswitchGuarded({(plan != null)}) )
-					transition( edgeName="goto",targetState="endExploration", cond=doswitchGuarded({! (plan != null)}) )
-				}	 
-				state("doExploration") { //this:State
-					action { //it:State
-						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
-					}
-					 transition(edgeName="t213",targetState="stopAppl",cond=whenEvent("stopCmd"))
-					transition(edgeName="t214",targetState="finishChecking",cond=whenDispatch("planOk"))
-					transition(edgeName="t215",targetState="setObstacle",cond=whenDispatch("planFail"))
-					transition(edgeName="t216",targetState="stopAppl",cond=whenEvent("temperatureTooHigh"))
-				}	 
-				state("setObstacle") { //this:State
-					action { //it:State
-						println("---setObstacle---")
-						Luggage_num++
-						forward("modelUpdate", "modelUpdate(luggage,$Luggage_num)" ,"resourcemodel" ) 
-						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
-						Map =  itunibo.planner.plannerUtil.getMapOneLine()
-						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
-					}
-					 transition(edgeName="t117",targetState="endExploration",cond=whenDispatch("luggageDanger"))
-					transition(edgeName="t118",targetState="finishChecking",cond=whenDispatch("luggageSafe"))
+					transition( edgeName="goto",targetState="endExploration", cond=doswitchGuarded({! (!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
 				}	 
 				state("endExploration") { //this:State
 					action { //it:State

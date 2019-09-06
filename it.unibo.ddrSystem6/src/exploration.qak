@@ -8,7 +8,7 @@ Dispatch sonar : sonar
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Event startCmd :	startCmd
-Dispatch stopCmd  : stopCmd
+Event stopCmd  : stopCmd
 Event dangerCmd  : dangerCmd
 
 //message try to do a step
@@ -62,7 +62,7 @@ QActor planexecutor context robotMindCtx {
  	State doPlan {	}
 
 	Transition t1 whenTime 50  -> doPlan1
- 		          whenMsg stopCmd -> stopAppl
+ 		          whenEvent stopCmd -> stopAppl
 
  	State stopAppl {
  		forward robotactuator -m robotCmd : robotCmd(h)
@@ -181,8 +181,12 @@ QActor robotmind context robotMindCtx {
 	}
 
 	Transition t0  whenEvent startCmd  -> startExploration
-				   whenEvent temperatureOk  -> startExploration
+				   whenEvent temperatureTooHigh  -> waitForTemperatureOk
 
+
+	State waitForTemperatureOk {}
+	Transition t1 whenEvent temperatureOk -> waitForStart
+	
 	State startExploration {
 		println("&&&  exploration STARTED")
 
@@ -198,18 +202,25 @@ QActor robotmind context robotMindCtx {
 
 	State stopAppl{
 		println("%% robotmind stopped %%")
-		forward planexecutor -m stopCmd : stopCmd
+		//forward planexecutor -m stopCmd : stopCmd
 	}
 
 	Goto waitForStart
 
 	State nextGoal {
-		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
+		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
+		plan= null
+
+		if(dirtyCell != null){
+			itunibo.planner.plannerUtil.setGoal(dirtyCell!!.first, dirtyCell!!.second)
+			plan = itunibo.planner.plannerUtil.doPlan()}
+
+		"]
 			
 		if "(dirtyCell != null)" {	
 			["X = dirtyCell!!.first
 			Y = dirtyCell!!.second"]
-		run itunibo.planner.plannerUtil.setGoal(X, Y)
+			run itunibo.planner.plannerUtil.setGoal(X, Y)
 			
 		} else {
 			if "backHome" {
@@ -262,16 +273,16 @@ QActor robotmind context robotMindCtx {
 		println("---CheckNull---")
 	}
 
-	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else finishChecking
+	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else endExploration
 
-	State finishChecking{
-		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
-		println("---finishChecking---")
-	}
+    //State finishChecking{
+	//	["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
+	//	println("---finishChecking---")
+	//}
 
-	Goto exploreDirtyCell if "(dirtyCell != null)" else endExploration
+	//Goto exploreDirtyCell if "(dirtyCell != null)" else endExploration
 
-	State exploreDirtyCell {
+	/*State exploreDirtyCell {
 		println("---exploreDirtyCell---")
 		["
 			 X = dirtyCell!!.first
@@ -281,21 +292,21 @@ QActor robotmind context robotMindCtx {
 		run itunibo.planner.plannerUtil.setGoal(X, Y)
 		["plan = itunibo.planner.plannerUtil.doPlan()"]
 
-	}
+	}*/
 
-	Goto doExploration if "(plan != null)" else endExploration
+	//Goto doExploration if "(plan != null)" else endExploration
 
-	State doExploration {
+	/*State doExploration {
 		forward planexecutor -m doPlan : doPlan($X,$Y)
 	}
 
 	Transition t2 whenEvent stopCmd -> stopAppl
 				  whenMsg planOk -> finishChecking
 				  whenMsg planFail -> setObstacle
-				  whenEvent temperatureTooHigh -> stopAppl
+				  whenEvent temperatureTooHigh -> stopAppl*/
 
 
-	State setObstacle {
+	/*State setObstacle {
 		println("---setObstacle---")
 		["Luggage_num++"]
 		forward resourcemodel -m modelUpdate: modelUpdate(luggage, $Luggage_num)
@@ -306,7 +317,7 @@ QActor robotmind context robotMindCtx {
 	}
 	Transition t1    whenMsg luggageDanger -> endExploration
 	 				 whenMsg luggageSafe -> finishChecking
-
+*/
 
 	State endExploration {
 		println("---endExploration---")
