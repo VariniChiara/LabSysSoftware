@@ -25,11 +25,13 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
+						println("========== planexecutor: s0 ==========")
 					}
 					 transition(edgeName="t00",targetState="loadPlan",cond=whenDispatch("doPlan"))
 				}	 
 				state("loadPlan") { //this:State
 					action { //it:State
+						println("========== planexecutor: loadPlan ==========")
 						println("$name in ${currentState.stateName} | $currentMsg")
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
@@ -37,6 +39,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("doPlan") { //this:State
 					action { //it:State
+						println("========== planexecutor: doPlan ==========")
 						stateTimer = TimerActor("timer_doPlan", 
 							scope, context!!, "local_tout_planexecutor_doPlan", 50.toLong() )
 					}
@@ -45,6 +48,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
+						println("========== planexecutor: stopAppl ==========")
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						solve("retractall(move(_))","") //set resVar	
@@ -53,6 +57,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("doPlan1") { //this:State
 					action { //it:State
+						println("========== planexecutor: doPlan1 ==========")
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 						itunibo.planner.plannerUtil.showMap(  )
@@ -68,6 +73,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("planOk") { //this:State
 					action { //it:State
+						println("========== planexecutor: planOk ==========")
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						forward("planOk", "planOk" ,"robotmind" ) 
@@ -76,12 +82,14 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("handlemove") { //this:State
 					action { //it:State
+						println("========== planexecutor: handlemove ==========")
 					}
 					 transition( edgeName="goto",targetState="domove", cond=doswitchGuarded({(Curmove != "w")}) )
 					transition( edgeName="goto",targetState="attempttogoahead", cond=doswitchGuarded({! (Curmove != "w")}) )
 				}	 
 				state("domove") { //this:State
 					action { //it:State
+						println("========== planexecutor: domove ==========")
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
 						delay(500) 
@@ -92,6 +100,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("attempttogoahead") { //this:State
 					action { //it:State
+						println("========== planexecutor: attempttogoahead ==========")
 						forward("modelUpdate", "modelUpdate(robot,w)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
@@ -100,6 +109,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
+						println("========== planexecutor: stepDone ==========")
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.doPlannedMove(myself ,"w" )
 					}
@@ -107,6 +117,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("stepFailed") { //this:State
 					action { //it:State
+						println("========== planexecutor: stepFailed ==========")
 						println("&&&  OBSTACLE FOUND")
 						var TbackLong = 0L
 						if( checkMsgContent( Term.createTerm("stepFail(R,T)"), Term.createTerm("stepFail(Obs,Time)"), 

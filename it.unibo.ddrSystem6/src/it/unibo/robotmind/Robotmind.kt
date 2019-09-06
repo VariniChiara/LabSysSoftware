@@ -28,6 +28,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
+						println("========== robotmind: s0 ==========")
 						solve("consult('resourceModel.pl')","") //set resVar	
 						println("&&&  robotmind STARTED")
 						itunibo.planner.plannerUtil.initAI(  )
@@ -38,34 +39,32 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("waitForStart") { //this:State
 					action { //it:State
+						println("========== robotmind: waitForStart ==========")
 					}
 					 transition(edgeName="t05",targetState="startExploration",cond=whenEvent("startCmd"))
 					transition(edgeName="t06",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("waitForTemperatureOk") { //this:State
 					action { //it:State
+						println("========== robotmind: waitForTemperatureOk ==========")
 					}
 					 transition(edgeName="t17",targetState="waitForStart",cond=whenEvent("temperatureOk"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
+						println("========== robotmind: startExploration ==========")
 						println("&&&  exploration STARTED")
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t18",targetState="stopAppl",cond=whenEvent("stopCmd"))
+					 transition(edgeName="t18",targetState="waitForStart",cond=whenEvent("stopCmd"))
 					transition(edgeName="t19",targetState="nextGoal",cond=whenDispatch("planOk"))
 					transition(edgeName="t110",targetState="newLuggageFound",cond=whenDispatch("planFail"))
-					transition(edgeName="t111",targetState="stopAppl",cond=whenEvent("temperatureTooHigh"))
-				}	 
-				state("stopAppl") { //this:State
-					action { //it:State
-						println("%% robotmind stopped %%")
-					}
-					 transition( edgeName="goto",targetState="waitForStart", cond=doswitch() )
+					transition(edgeName="t111",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("nextGoal") { //this:State
 					action { //it:State
+						println("========== robotmind: nextGoal ==========")
 						dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
 								plan= null
 						
@@ -73,7 +72,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 									itunibo.planner.plannerUtil.setGoal(dirtyCell!!.first, dirtyCell!!.second)
 									plan = itunibo.planner.plannerUtil.doPlan()}
 						
-						if((dirtyCell != null)){ X = dirtyCell!!.first
+						if((plan != null)){ X = dirtyCell!!.first
 									Y = dirtyCell!!.second
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						 }
@@ -96,6 +95,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("newLuggageFound") { //this:State
 					action { //it:State
+						println("========== robotmind: newLuggageFound ==========")
 						Luggage_num++
 						forward("modelUpdate", "modelUpdate(luggage,$Luggage_num)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
@@ -107,7 +107,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
-						println("---CheckIfObstacle---")
+						println("========== robotmind: handleObstacle ==========")
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 						itunibo.planner.plannerUtil.resetGoal( X, Y  )
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
@@ -117,20 +117,21 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("checkPlan") { //this:State
 					action { //it:State
+						println("========== robotmind: checkPlan ==========")
 					}
 					 transition( edgeName="goto",targetState="startExploration", cond=doswitchGuarded({(plan != null)}) )
 					transition( edgeName="goto",targetState="checkNull", cond=doswitchGuarded({! (plan != null)}) )
 				}	 
 				state("checkNull") { //this:State
 					action { //it:State
-						println("---CheckNull---")
+						println("========== robotmind: checkNull ==========")
 					}
 					 transition( edgeName="goto",targetState="nextGoal", cond=doswitchGuarded({(!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
 					transition( edgeName="goto",targetState="endExploration", cond=doswitchGuarded({! (!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
 				}	 
 				state("endExploration") { //this:State
 					action { //it:State
-						println("---endExploration---")
+						println("========== robotmind: endExploration ==========")
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
 					}
