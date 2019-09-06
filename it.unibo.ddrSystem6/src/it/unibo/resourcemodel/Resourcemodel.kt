@@ -30,8 +30,8 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitModelChange") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t024",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t025",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t019",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t020",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State
@@ -65,11 +65,11 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 						}
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(luggage,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if(payloadArg(1) == "danger"){
-								forward("luggageDanger", "luggageDanger" ,"robotmind" ) 
-								}else{
-								forward("luggageSafe", "luggageSafe" ,"robotmind" ) 
-								}
+								if((payloadArg(1) == "danger")){ forward("luggageDanger", "luggageDanger" ,"robotmind" ) 
+								 }
+								else
+								 { forward("luggageSafe", "luggageSafe" ,"robotmind" ) 
+								  }
 						}
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(temperature,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList

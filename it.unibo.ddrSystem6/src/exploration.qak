@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "localhost" : 1883
+mqttBroker "localhost" : 1883 
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
 Dispatch sonar : sonar
@@ -8,7 +8,7 @@ Dispatch sonar : sonar
 Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Event startCmd :	startCmd
-Dispatch stopCmd  : stopCmd
+Event stopCmd  : stopCmd
 Event dangerCmd  : dangerCmd
 
 //message try to do a step
@@ -34,8 +34,6 @@ Dispatch temperatureTooHigh: temperatureTooHigh
 Dispatch temperatureOk: temperatureOk
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-
-//Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 
@@ -62,7 +60,7 @@ QActor planexecutor context robotMindCtx {
  	State doPlan {	}
 
 	Transition t1 whenTime 50  -> doPlan1
- 		          whenMsg stopCmd -> stopAppl
+ 		          whenEvent stopCmd -> stopAppl
 
  	State stopAppl {
  		forward robotactuator -m robotCmd : robotCmd(h)
@@ -102,7 +100,7 @@ QActor planexecutor context robotMindCtx {
 
 		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 		forward robotactuator -m robotCmd : robotCmd($Curmove)
-		delay 500 //fisico
+		delay 500 
 		forward robotactuator -m robotCmd : robotCmd(h)
 
 		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove )
@@ -177,11 +175,17 @@ QActor robotmind context robotMindCtx {
 
 	Goto waitForStart
 
-	State waitForStart {
-	}
-
+	State waitForStart {}
 	Transition t0  whenEvent startCmd  -> startExploration
-				   whenEvent temperatureOk  -> startExploration
+				   whenEvent temperatureTooHigh  -> waitForTemperatureOk 
+				 
+	
+	State waitForTemperatureOk {
+		println("%% robotmind waitForTemperature %%")
+		//forward planexecutor -m stopCmd : stopCmd
+	}
+ 	Transition t1 whenEvent temperatureOk  -> waitForStart
+	
 
 	State startExploration {
 		println("&&&  exploration STARTED")
@@ -193,20 +197,23 @@ QActor robotmind context robotMindCtx {
 	Transition t1 whenEvent stopCmd -> stopAppl
 				  whenMsg planOk -> nextGoal
 				  whenMsg planFail -> newLuggageFound
-				  whenEvent temperatureTooHigh -> stopAppl
+				  whenEvent temperatureTooHigh -> waitForTemperatureOk
 
 
 	State stopAppl{
 		println("%% robotmind stopped %%")
-		forward planexecutor -m stopCmd : stopCmd
+		//forward planexecutor -m stopCmd : stopCmd
 	}
 
 	Goto waitForStart
 
 	State nextGoal {
-		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
-			
-		if "(dirtyCell != null)" {	
+		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
+		  plan = null
+		  if (dirtyCell != null){itunibo.planner.plannerUtil.setGoal(dirtyCell!!.first, dirtyCell!!.second)
+		  plan = itunibo.planner.plannerUtil.doPlan()}"]
+
+		if "(plan != null)" {	
 			["X = dirtyCell!!.first
 			Y = dirtyCell!!.second"]
 		run itunibo.planner.plannerUtil.setGoal(X, Y)
@@ -262,9 +269,9 @@ QActor robotmind context robotMindCtx {
 		println("---CheckNull---")
 	}
 
-	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else finishChecking
+	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else endExploration
 
-	State finishChecking{
+/* 	State finishChecking{
 		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()"]
 		println("---finishChecking---")
 	}
@@ -293,7 +300,7 @@ QActor robotmind context robotMindCtx {
 				  whenMsg planOk -> finishChecking
 				  whenMsg planFail -> setObstacle
 				  whenEvent temperatureTooHigh -> stopAppl
-
+ 
 
 	State setObstacle {
 		println("---setObstacle---")
@@ -305,7 +312,7 @@ QActor robotmind context robotMindCtx {
 
 	}
 	Transition t1    whenMsg luggageDanger -> endExploration
-	 				 whenMsg luggageSafe -> finishChecking
+	 				 whenMsg luggageSafe -> finishChecking*/
 
 
 	State endExploration {
@@ -494,11 +501,11 @@ QActor resourcemodel context robotMindCtx{
 		}
 		onMsg(  modelChange  : modelChange(luggage, V ) ) { // V= safe | danger
 
-			["if(payloadArg(1) == \"danger\"){"]
+			if "(payloadArg(1) == \"danger\")"{
 				forward robotmind -m luggageDanger:luggageDanger
-			["}else{"]
+			}else {
 				forward robotmind -m luggageSafe:luggageSafe			
-			["}"]
+			}
 		}
 		onMsg(  modelChange  : modelChange(temperature, V ) ) { // V= temperatureOk | temperatureTooHigh
 

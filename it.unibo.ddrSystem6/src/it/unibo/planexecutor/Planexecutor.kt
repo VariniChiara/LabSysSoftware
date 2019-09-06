@@ -41,7 +41,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 							scope, context!!, "local_tout_planexecutor_doPlan", 50.toLong() )
 					}
 					 transition(edgeName="t11",targetState="doPlan1",cond=whenTimeout("local_tout_planexecutor_doPlan"))   
-					transition(edgeName="t12",targetState="stopAppl",cond=whenDispatch("stopCmd"))
+					transition(edgeName="t12",targetState="stopAppl",cond=whenEvent("stopCmd"))
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
