@@ -45,7 +45,7 @@ QActor planexecutor context robotMindCtx {
 		var Map = \"\"
 		var Tback = 0   
 		//var StepTime   = 330
-	    var StepTime   = 900 //fisico
+	    var StepTime   = 1000 //fisico
 
     "]
 	State s0 initial {
@@ -107,12 +107,14 @@ QActor planexecutor context robotMindCtx {
 	State domove {
 		//println("========== planexecutor: domove ==========")
 
-run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
+		run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove )
 		forward robotactuator -m robotCmd : robotCmd($Curmove)
 		delay 500 //fisico
 		forward robotactuator -m robotCmd : robotCmd(h)
+		forward resourcemodel -m modelUpdate  : modelUpdate( robot, h )
 
-		forward resourcemodel -m modelUpdate  : modelUpdate( robot, $Curmove )
+		
 	}
 	/*Transition t1 whenTime 50  -> doPlan
  		          whenEvent stopPlan -> stopAppl
@@ -149,7 +151,7 @@ run itunibo.planner.moveUtils.doPlannedMove(myself, Curmove)
 
 		//printCurrentMessage
  		onMsg( stepFail : stepFail(Obs, Time) ) {
- 			["Tback= (payloadArg(1).toLong().toString().toInt()*0.95 ).toInt()
+ 			["Tback= (payloadArg(1).toLong().toString().toInt()*0.90 ).toInt()
 			TbackLong = Tback.toLong()"]
  		}
 
@@ -467,7 +469,7 @@ QActor sonarhandler context robotMindCtx{
  				println("trueee")
  				["foundObstacle = true"]
  				forward onestepahead -m sonar : sonar
- 				forward robotactuator -m robotCmd : robotCmd(h)
+ 				//forward robotactuator -m robotCmd : robotCmd(h)
  			}
  		}
  	}     

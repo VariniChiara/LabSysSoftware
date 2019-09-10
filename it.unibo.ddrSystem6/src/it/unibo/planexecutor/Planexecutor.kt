@@ -20,7 +20,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				var Map = ""
 				var Tback = 0   
 				//var StepTime   = 330
-			    var StepTime   = 900 //fisico
+			    var StepTime   = 1000 //fisico
 		
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -82,10 +82,11 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("domove") { //this:State
 					action { //it:State
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
+						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
 						delay(500) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
-						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
+						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 					}
 					 transition(edgeName="t22",targetState="doPlan",cond=whenEvent("startCmd"))
 					transition(edgeName="t23",targetState="stopAppl",cond=whenEvent("stopPlan"))
@@ -112,7 +113,7 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						var TbackLong = 0L
 						if( checkMsgContent( Term.createTerm("stepFail(R,T)"), Term.createTerm("stepFail(Obs,Time)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								Tback= (payloadArg(1).toLong().toString().toInt()*0.95 ).toInt()
+								Tback= (payloadArg(1).toLong().toString().toInt()*0.90 ).toInt()
 											TbackLong = Tback.toLong()
 						}
 						println(" backToCompensate stepTime=$Tback")

@@ -38,7 +38,6 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 								println("trueee")
 								foundObstacle = true
 								forward("sonar", "sonar" ,"onestepahead" ) 
-								forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 								 }
 						}
 					}
