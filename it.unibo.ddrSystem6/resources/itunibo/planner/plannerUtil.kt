@@ -321,6 +321,22 @@ object plannerUtil {
 			else            -> return "unknownDir"
  		}
   	}
+	
+	fun getPosition(): String{
+		return "" + initialState!!.x + ", " + initialState!!.y + ")"
+	}
+	
+	fun getState(move:String): String{
+		when( move ){
+			"a"  -> return "rotate left"
+			"w"  -> return "moving forward"
+			"s"  -> return "moving backward"
+			"d"  -> return "rotate right"
+			"h"  -> return "stopped"
+			else            -> return "stopped"
+ 		}
+		
+	}
 
 /*
  * Direction

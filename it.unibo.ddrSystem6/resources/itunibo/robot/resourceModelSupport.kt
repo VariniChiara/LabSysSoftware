@@ -12,14 +12,22 @@ lateinit var resourcecoap : modelResourceCoap
 	}
 
 	fun updateRobotModel( actor: ActorBasic, content: String ){
- 			actor.solve(  "action(robot, move($content) )" ) //change the robot state model
-			actor.solve(  "model( A, robot, STATE, DIR, POS)" )
-			val RobotState = actor.getCurSol("STATE")
-			val RobotDir = actor.getCurSol("DIR")
-			val RobotPos = actor.getCurSol("POS")
+ 			//actor.solve(  "action(robot, move($content) )" ) //change the robot state model
+			//actor.solve(  "model( A, robot, STATE, DIR, POS)" )
+			val RobotState = "state(" + itunibo.planner.plannerUtil.getState(content) + ")"
+			val RobotDir = "direction(" + itunibo.planner.plannerUtil.getDirection() + ")"
+			val RobotPos = "position(" + itunibo.planner.plannerUtil.getPosition() + ")"
+		
+			println(RobotState)
+		    println(RobotDir)
+		    println(RobotPos)
+		
+		   //robotState:state(stopped),direction(south),position(0,0)
+		
+		
 			//println("			resourceModelSupport updateModel RobotState=$RobotState")
 			actor.scope.launch{
- 				actor.emit( "modelChanged" , "modelChanged(  robot,  $content)" )  //for the robotmind
+ 				//actor.emit( "modelChanged" , "modelChanged(  robot,  $content)" )  //for the robotmind
 				actor.emit( "modelContent" , "content( robot( $RobotState, $RobotDir, $RobotPos ) )" ) //for the web server
 				resourcecoap.updateState( "robot( $RobotState, $RobotDir, $RobotPos )" )
   			}

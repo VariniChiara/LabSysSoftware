@@ -41,10 +41,6 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 								itunibo.robot.resourceModelSupport.updateRobotModel(myself ,payloadArg(1) )
 								solve("showResourceModel","") //set resVar	
 						}
-						if( checkMsgContent( Term.createTerm("modelUpdate(TARGET,VALUE)"), Term.createTerm("modelUpdate(sonarRobot,V)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								itunibo.robot.resourceModelSupport.updateSonarRobotModel(myself ,payloadArg(1) )
-						}
 						if( checkMsgContent( Term.createTerm("modelUpdate(TARGET,VALUE)"), Term.createTerm("modelUpdate(roomMap,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								itunibo.robot.resourceModelSupport.updateRoomMapModel(myself ,payloadArg(1) )
