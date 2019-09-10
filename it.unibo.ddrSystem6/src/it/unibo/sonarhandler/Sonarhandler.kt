@@ -15,6 +15,7 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 	}
 		
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
+		var foundObstacle = false
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -33,12 +34,34 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						println("========== sonarhandler: handleSonar ==========")
 						if( checkMsgContent( Term.createTerm("sonar(DISTANCE)"), Term.createTerm("sonar(DISTANCE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if((payloadArg(0).toInt() <= 5)){ forward("sonar", "sonar" ,"onestepahead" ) 
+								if((payloadArg(0).toInt() <= 10)){ println("$name in ${currentState.stateName} | $currentMsg")
+								println("trueee")
+								foundObstacle = true
+								forward("sonar", "sonar" ,"onestepahead" ) 
 								forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 								 }
 						}
 					}
-					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
+					 transition( edgeName="goto",targetState="waitToDiscard", cond=doswitchGuarded({(foundObstacle)}) )
+					transition( edgeName="goto",targetState="waitForEvents", cond=doswitchGuarded({! (foundObstacle)}) )
+				}	 
+				state("waitToDiscard") { //this:State
+					action { //it:State
+					}
+					 transition(edgeName="t023",targetState="discardSonar",cond=whenEvent("sonarRobot"))
+				}	 
+				state("discardSonar") { //this:State
+					action { //it:State
+						println("$name in ${currentState.stateName} | $currentMsg")
+						if( checkMsgContent( Term.createTerm("sonar(DISTANCE)"), Term.createTerm("sonar(DISTANCE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								if((payloadArg(0).toInt() > 10)){ println("falseeeee")
+								foundObstacle = false
+								 }
+						}
+					}
+					 transition( edgeName="goto",targetState="waitToDiscard", cond=doswitchGuarded({(foundObstacle)}) )
+					transition( edgeName="goto",targetState="waitForEvents", cond=doswitchGuarded({! (foundObstacle)}) )
 				}	 
 			}
 		}

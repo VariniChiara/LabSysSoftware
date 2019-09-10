@@ -18,14 +18,13 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 		
 				var Curmove     = ""
 				var Map = ""
-				var Tback = 0
-				var StepTime   = 330
-				//var StepTime   = 900 //fisico
+				var Tback = 0   
+				//var StepTime   = 330
+			    var StepTime   = 900 //fisico
 		
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("========== planexecutor: s0 ==========")
 					}
 					 transition( edgeName="goto",targetState="waitForDoPlan", cond=doswitch() )
 				}	 
@@ -37,7 +36,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("loadPlan") { //this:State
 					action { //it:State
-						println("========== planexecutor: loadPlan ==========")
 						println("$name in ${currentState.stateName} | $currentMsg")
 						itunibo.planner.moveUtils.doPlan(myself)
 					}
@@ -45,7 +43,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("doPlan") { //this:State
 					action { //it:State
-						println("========== planexecutor: doPlan ==========")
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 						itunibo.planner.plannerUtil.showMap(  )
@@ -61,7 +58,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("stopAppl") { //this:State
 					action { //it:State
-						println("========== planexecutor: stopAppl ==========")
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						solve("retractall(move(_))","") //set resVar	
@@ -70,7 +66,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("planOk") { //this:State
 					action { //it:State
-						println("========== planexecutor: planOk ==========")
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						forward("planOk", "planOk" ,"robotmind" ) 
@@ -86,22 +81,18 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("domove") { //this:State
 					action { //it:State
-						println("========== planexecutor: domove ==========")
 						itunibo.planner.moveUtils.doPlannedMove(myself ,Curmove )
 						forward("robotCmd", "robotCmd($Curmove)" ,"robotactuator" ) 
 						delay(500) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,$Curmove)" ,"resourcemodel" ) 
-						stateTimer = TimerActor("timer_domove", 
-							scope, context!!, "local_tout_planexecutor_domove", 50.toLong() )
 					}
-					 transition(edgeName="t12",targetState="doPlan",cond=whenTimeout("local_tout_planexecutor_domove"))   
-					transition(edgeName="t13",targetState="stopAppl",cond=whenEvent("stopPlan"))
-					transition(edgeName="t14",targetState="doPlan",cond=whenEvent("doPlan"))
+					 transition(edgeName="t22",targetState="doPlan",cond=whenEvent("startCmd"))
+					transition(edgeName="t23",targetState="stopAppl",cond=whenEvent("stopPlan"))
+					transition(edgeName="t24",targetState="doPlan",cond=whenEvent("doPlan"))
 				}	 
 				state("attempttogoahead") { //this:State
 					action { //it:State
-						println("========== planexecutor: attempttogoahead ==========")
 						forward("modelUpdate", "modelUpdate(robot,w)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.attemptTomoveAhead(myself ,StepTime )
 					}
@@ -110,7 +101,6 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("stepDone") { //this:State
 					action { //it:State
-						println("========== planexecutor: stepDone ==========")
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.doPlannedMove(myself ,"w" )
 					}
@@ -118,12 +108,11 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("stepFailed") { //this:State
 					action { //it:State
-						println("========== planexecutor: stepFailed ==========")
 						println("&&&  OBSTACLE FOUND")
 						var TbackLong = 0L
 						if( checkMsgContent( Term.createTerm("stepFail(R,T)"), Term.createTerm("stepFail(Obs,Time)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								Tback= (payloadArg(1).toLong().toString().toInt()*0.85 ).toInt()
+								Tback= (payloadArg(1).toLong().toString().toInt()*0.95 ).toInt()
 											TbackLong = Tback.toLong()
 						}
 						println(" backToCompensate stepTime=$Tback")

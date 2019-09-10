@@ -28,7 +28,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("========== robotmind: s0 ==========")
 						solve("consult('resourceModel.pl')","") //set resVar	
 						println("&&&  robotmind STARTED")
 						itunibo.planner.plannerUtil.initAI(  )
@@ -39,7 +38,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("waitForStart") { //this:State
 					action { //it:State
-						println("========== robotmind: waitForStart ==========")
 						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
 					 transition(edgeName="t07",targetState="startExploration",cond=whenEvent("startCmd"))
@@ -47,14 +45,12 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("waitForTemperatureOk") { //this:State
 					action { //it:State
-						println("========== robotmind: waitForTemperatureOk ==========")
 						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
 					 transition(edgeName="t19",targetState="waitForStart",cond=whenEvent("temperatureOk"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
-						println("========== robotmind: startExploration ==========")
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
@@ -65,7 +61,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("nextGoal") { //this:State
 					action { //it:State
-						println("========== robotmind: nextGoal ==========")
 						dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
 								plan= null
 						
@@ -96,7 +91,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("newLuggageFound") { //this:State
 					action { //it:State
-						println("========== robotmind: newLuggageFound ==========")
 						Luggage_num++
 						forward("modelUpdate", "modelUpdate(luggage,$Luggage_num)" ,"resourcemodel" ) 
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
@@ -108,7 +102,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
-						println("========== robotmind: handleObstacle ==========")
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 						itunibo.planner.plannerUtil.resetGoal( X, Y  )
 						itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
@@ -119,14 +112,12 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("checkNull") { //this:State
 					action { //it:State
-						println("========== robotmind: checkNull ==========")
 					}
 					 transition( edgeName="goto",targetState="nextGoal", cond=doswitchGuarded({(!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
 					transition( edgeName="goto",targetState="endExploration", cond=doswitchGuarded({! (!itunibo.planner.plannerUtil.currentGoalApplicable)}) )
 				}	 
 				state("endExploration") { //this:State
 					action { //it:State
-						println("========== robotmind: endExploration ==========")
 						itunibo.planner.plannerUtil.setBomb(  )
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
@@ -135,7 +126,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("pickBomb") { //this:State
 					action { //it:State
-						println("========== robotmind: pickBomb ==========")
 						X =  itunibo.planner.plannerUtil.getBomb().first
 								Y =  itunibo.planner.plannerUtil.getBomb().second
 								
@@ -148,7 +138,6 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				}	 
 				state("takeBagAtHome") { //this:State
 					action { //it:State
-						println("========== robotmind: takeBagAtHome ==========")
 						forward("robotCmd", "robotCmd(a)" ,"robotactuator" ) 
 						delay(500) 
 						forward("robotCmd", "robotCmd(a)" ,"robotactuator" ) 

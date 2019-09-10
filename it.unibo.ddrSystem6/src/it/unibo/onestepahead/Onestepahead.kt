@@ -23,14 +23,12 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("========== onestepahead: s0 ==========")
 						foundObstacle = false 
 					}
 					 transition(edgeName="t018",targetState="doMoveForward",cond=whenDispatch("onestep"))
 				}	 
 				state("doMoveForward") { //this:State
 					action { //it:State
-						println("========== onestepahead: doMoveForward ==========")
 						if( checkMsgContent( Term.createTerm("onestep(DURATION)"), Term.createTerm("onestep(TIME)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								StepTime = payloadArg(0).toLong()
@@ -41,11 +39,10 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 							scope, context!!, "local_tout_onestepahead_doMoveForward", StepTime )
 					}
 					 transition(edgeName="t119",targetState="endDoMoveForward",cond=whenTimeout("local_tout_onestepahead_doMoveForward"))   
-					transition(edgeName="t120",targetState="stepFail",cond=whenEvent("sonar"))
+					transition(edgeName="t120",targetState="stepFail",cond=whenDispatch("sonar"))
 				}	 
 				state("endDoMoveForward") { //this:State
 					action { //it:State
-						println("========== onestepahead: endDoMoveForward ==========")
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("stepOk", "stepOk" ,"planexecutor" ) 
 					}
@@ -53,7 +50,6 @@ class Onestepahead ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				}	 
 				state("stepFail") { //this:State
 					action { //it:State
-						println("========== onestepahead: stepFail ==========")
 						Duration=getDuration()
 						println("$name in ${currentState.stateName} | $currentMsg")
 						println("onestepahead stepFail Duration=$Duration ")

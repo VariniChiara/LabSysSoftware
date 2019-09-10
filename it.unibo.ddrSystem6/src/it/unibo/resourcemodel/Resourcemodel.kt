@@ -20,7 +20,6 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("========== resourcemodel: s0 ==========")
 						solve("consult('sysRules.pl')","") //set resVar	
 						solve("consult('resourceModel.pl')","") //set resVar	
 						solve("showResourceModel","") //set resVar	
@@ -30,14 +29,12 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				}	 
 				state("waitModelChange") { //this:State
 					action { //it:State
-						println("========== resourcemodel: waitModelChange ==========")
 					}
-					 transition(edgeName="t023",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t024",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t024",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t025",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State
-						println("========== resourcemodel: updateModel ==========")
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("modelUpdate(TARGET,VALUE)"), Term.createTerm("modelUpdate(robot,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -61,7 +58,6 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				}	 
 				state("changeModel") { //this:State
 					action { //it:State
-						println("========== resourcemodel: changeModel ==========")
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(robot,V)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
