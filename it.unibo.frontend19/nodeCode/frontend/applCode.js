@@ -88,7 +88,7 @@ app.post("/temperatureTooHigh", function(req, res,next) {
 	next();}
 );
 
-//APPLICATION
+//APPLICATION 
 app.post("/startappl", function(req, res,next) {
 	delegateForAppl( "startCmd", req, res );
 	next();
@@ -97,7 +97,10 @@ app.post("/stopappl", function(req, res,next) {
 	delegateForAppl( "stopCmd",  req, res );
 	next();
 });
-
+app.post("/backhomeappl", function(req, res,next) {
+	delegateForAppl( "backHomeCmd",  req, res );
+	next();
+});
 function handlePostMove( cmd, msg, req, res, next ){
 	result = "Web server done: " + cmd
 	delegate( cmd, msg, req, res);
@@ -127,6 +130,10 @@ function delegate( cmd, newState, req, res ){
 
 }
 function delegateForAppl( cmd, req, res, next ){
+	
+	
+	console.log("!!!!!!!!!! delegateForAppl cmd=" + cmd);
+	
 	console.log("app delegateForAppl cmd=" + cmd);
 	result = "Web server delegateForAppl: " + cmd;
 	publishEmitUserCmd(cmd)

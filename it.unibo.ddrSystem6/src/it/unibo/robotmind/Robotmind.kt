@@ -42,15 +42,15 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						println("========== robotmind: waitForStart ==========")
 						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t06",targetState="startExploration",cond=whenEvent("startCmd"))
-					transition(edgeName="t07",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+					 transition(edgeName="t07",targetState="startExploration",cond=whenEvent("startCmd"))
+					transition(edgeName="t08",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("waitForTemperatureOk") { //this:State
 					action { //it:State
 						println("========== robotmind: waitForTemperatureOk ==========")
 						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t18",targetState="waitForStart",cond=whenEvent("temperatureOk"))
+					 transition(edgeName="t19",targetState="waitForStart",cond=whenEvent("temperatureOk"))
 				}	 
 				state("startExploration") { //this:State
 					action { //it:State
@@ -58,10 +58,30 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t19",targetState="waitForStart",cond=whenEvent("stopCmd"))
-					transition(edgeName="t110",targetState="nextGoal",cond=whenDispatch("planOk"))
-					transition(edgeName="t111",targetState="newLuggageFound",cond=whenDispatch("planFail"))
-					transition(edgeName="t112",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+					 transition(edgeName="t110",targetState="waitForStart",cond=whenEvent("stopCmd"))
+					transition(edgeName="t111",targetState="nextGoal",cond=whenDispatch("planOk"))
+					transition(edgeName="t112",targetState="newLuggageFound",cond=whenDispatch("planFail"))
+					transition(edgeName="t113",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+					transition(edgeName="t114",targetState="backHome",cond=whenEvent("backHomeCmd"))
+				}	 
+				state("backHome") { //this:State
+					action { //it:State
+						println("========== robotmind: backHome ==========")
+						forward("stopPlan", "stopPlan" ,"planexecutor" ) 
+						itunibo.planner.plannerUtil.setGoal( 0, 0  )
+						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
+					}
+					 transition(edgeName="t215",targetState="handleStartAfterBackHome",cond=whenDispatch("planOk"))
+					transition(edgeName="t216",targetState="backHome",cond=whenDispatch("planFail"))
+					transition(edgeName="t217",targetState="waitForStart",cond=whenEvent("stopCmd"))
+					transition(edgeName="t218",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
+				}	 
+				state("handleStartAfterBackHome") { //this:State
+					action { //it:State
+						println("========== robotmind: handleStartAfterBackHome ==========")
+					}
+					 transition(edgeName="t019",targetState="startExploration",cond=whenEvent("startCmd"))
+					transition(edgeName="t020",targetState="waitForTemperatureOk",cond=whenEvent("temperatureTooHigh"))
 				}	 
 				state("nextGoal") { //this:State
 					action { //it:State
@@ -103,8 +123,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						Map =  itunibo.planner.plannerUtil.getMapOneLine()
 						forward("modelUpdate", "modelUpdate(roomMap,$Map)" ,"resourcemodel" ) 
 					}
-					 transition(edgeName="t213",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
-					transition(edgeName="t214",targetState="endExploration",cond=whenDispatch("luggageDanger"))
+					 transition(edgeName="t221",targetState="handleObstacle",cond=whenDispatch("luggageSafe"))
+					transition(edgeName="t222",targetState="endExploration",cond=whenDispatch("luggageDanger"))
 				}	 
 				state("handleObstacle") { //this:State
 					action { //it:State
@@ -131,8 +151,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t515",targetState="pickBomb",cond=whenDispatch("planOk"))
-					transition(edgeName="t516",targetState="endExploration",cond=whenDispatch("planFail"))
+					 transition(edgeName="t523",targetState="pickBomb",cond=whenDispatch("planOk"))
+					transition(edgeName="t524",targetState="endExploration",cond=whenDispatch("planFail"))
 				}	 
 				state("pickBomb") { //this:State
 					action { //it:State
@@ -145,8 +165,8 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( X, Y  )
 						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t517",targetState="takeBagAtHome",cond=whenDispatch("planOk"))
-					transition(edgeName="t518",targetState="pickBomb",cond=whenDispatch("planFail"))
+					 transition(edgeName="t525",targetState="takeBagAtHome",cond=whenDispatch("planOk"))
+					transition(edgeName="t526",targetState="pickBomb",cond=whenDispatch("planFail"))
 				}	 
 				state("takeBagAtHome") { //this:State
 					action { //it:State
@@ -162,7 +182,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
 					}
-					 transition(edgeName="t119",targetState="takeBagAtHome",cond=whenDispatch("planFail"))
+					 transition(edgeName="t127",targetState="takeBagAtHome",cond=whenDispatch("planFail"))
 				}	 
 			}
 		}

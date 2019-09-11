@@ -9,6 +9,7 @@ Dispatch userCmd  : userCmd( CMD ) //Message from console to robot
 Dispatch robotCmd : robotCmd (CMD) //Selfsending robot message
 Event startCmd :	startCmd
 Event stopCmd  : stopCmd
+Event backHomeCmd: backHomeCmd   
 Dispatch stopPlan : stopPlan
 
 //message try to do a step
@@ -35,7 +36,7 @@ Dispatch temperatureOk: temperatureOk
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 
-Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 //Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 
@@ -44,8 +45,8 @@ QActor planexecutor context robotMindCtx {
 		var Curmove     = \"\"
 		var Map = \"\"
 		var Tback = 0   
-		//var StepTime   = 330
-	    var StepTime   = 900 //fisico
+	    var StepTime   = 330
+	    //var StepTime   = 900 //fisico
 
     "]
 	State s0 initial {
@@ -119,15 +120,14 @@ QActor planexecutor context robotMindCtx {
 
 		
 	}
-	/*Transition t1 whenTime 50  -> doPlan
- 		          whenEvent stopPlan -> stopAppl
- 		          whenEvent doPlan -> doPlan*/
 
-	Transition t2 whenEvent startCmd -> doPlan //in order to fix the position of physical robot
-					whenEvent stopPlan -> stopAppl
- 		         //   whenMsg doPlan -> doPlan
+	//Transition t2 whenEvent startCmd -> doPlan    fisico
+	Transition t2 whenTime 50 -> doPlan //in order to fix the position of physical robot
+				whenEvent stopPlan -> stopAppl
+ 		         whenMsg doPlan -> doPlan
 
 
+	
 	//roomboundaryplanning.qak
 	State attempttogoahead {
 		println("========== planexecutor: attempttogoahead ==========")
@@ -218,13 +218,31 @@ QActor robotmind context robotMindCtx {
 
 		run itunibo.planner.plannerUtil.setGoal(X,Y)
 		forward planexecutor -m doPlan : doPlan($X,$Y)
-	}
+	} 
 
 	Transition t1 whenEvent stopCmd -> waitForStart
 				  whenMsg planOk -> nextGoal
 				  whenMsg planFail -> newLuggageFound
 				  whenEvent temperatureTooHigh -> waitForTemperatureOk
+				  whenEvent backHomeCmd -> backHome
 
+	State backHome {
+		  println("========== robotmind: backHome ==========")	  
+		  forward planexecutor -m stopPlan: stopPlan
+		  run itunibo.planner.plannerUtil.setGoal(0,0)
+		  forward planexecutor -m doPlan : doPlan(0,0)   
+	}
+	Transition t2 whenMsg planOk -> handleStartAfterBackHome 
+			      whenMsg planFail -> backHome
+			      whenEvent stopCmd -> waitForStart
+			      whenEvent temperatureTooHigh  -> waitForTemperatureOk
+	
+	State handleStartAfterBackHome {
+		 println("========== robotmind: handleStartAfterBackHome ==========")	  
+	}
+	Transition t0  whenEvent startCmd  -> startExploration
+				   whenEvent temperatureTooHigh  -> waitForTemperatureOk
+	
 
 	State nextGoal {
 		println("========== robotmind: nextGoal ==========")
@@ -262,7 +280,6 @@ QActor robotmind context robotMindCtx {
 	}
 	Goto startExploration
 
-
 	State newLuggageFound {
 		println("========== robotmind: newLuggageFound ==========")
 		["Luggage_num++"]
@@ -277,7 +294,6 @@ QActor robotmind context robotMindCtx {
 	}
 	Transition t2 whenMsg luggageSafe -> handleObstacle
 				  whenMsg luggageDanger -> endExploration
-
 
 	State handleObstacle {
 		println("========== robotmind: handleObstacle ==========")
@@ -471,7 +487,7 @@ QActor sonarhandler context robotMindCtx{
  	   
  		onMsg ( sonarRobot : sonar( DISTANCE ) ){
  			 
- 			if "(payloadArg(0).toInt() <= 10)" {
+ 			if "(payloadArg(0).toInt() <= 10)" { //10 fisico
  				["foundObstacle = true"]
  				forward onestepahead -m sonar : sonar
  				//forward robotactuator -m robotCmd : robotCmd(h)
@@ -479,8 +495,8 @@ QActor sonarhandler context robotMindCtx{
  		}
  	}     
   
- 	//Goto waitForEvents
- 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	
+ 	Goto waitForEvents
+ 	/*Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	
  	
 
 	State waitToDiscard {}
@@ -491,13 +507,13 @@ QActor sonarhandler context robotMindCtx{
  		printCurrentMessage
  		onMsg ( sonarRobot : sonar( DISTANCE ) ){
  			
- 			if "(payloadArg(0).toInt() > 10)" {
+ 			if "(payloadArg(0).toInt() > 10)" { //10 fisico
  				["foundObstacle = false"]
  			}  
  		} 
  	}
  	
- 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	
+ 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents */	
  }
 
 
@@ -534,9 +550,6 @@ QActor resourcemodel context robotMindCtx{
 			run itunibo.robot.resourceModelSupport.updateRobotModel( myself, payloadArg(1) )
 			solve( showResourceModel )
 		}
-		//onMsg( modelUpdate : modelUpdate(sonarRobot,V ) ) {
-		//	run itunibo.robot.resourceModelSupport.updateSonarRobotModel( myself, payloadArg(1) )
-		//}
 		onMsg( modelUpdate : modelUpdate(roomMap,V ) ) {
 			run itunibo.robot.resourceModelSupport.updateRoomMapModel( myself, payloadArg(1) )
 		}
