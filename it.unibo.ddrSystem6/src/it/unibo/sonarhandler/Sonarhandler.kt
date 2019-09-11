@@ -27,16 +27,14 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					action { //it:State
 						println("========== sonarhandler: waitForEvents ==========")
 					}
-					 transition(edgeName="t022",targetState="handleSonar",cond=whenEvent("sonarRobot"))
+					 transition(edgeName="t024",targetState="handleSonar",cond=whenEvent("sonarRobot"))
 				}	 
 				state("handleSonar") { //this:State
 					action { //it:State
 						println("========== sonarhandler: handleSonar ==========")
 						if( checkMsgContent( Term.createTerm("sonar(DISTANCE)"), Term.createTerm("sonar(DISTANCE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if((payloadArg(0).toInt() <= 10)){ println("$name in ${currentState.stateName} | $currentMsg")
-								println("trueee")
-								foundObstacle = true
+								if((payloadArg(0).toInt() <= 10)){ foundObstacle = true
 								forward("sonar", "sonar" ,"onestepahead" ) 
 								 }
 						}
@@ -47,15 +45,14 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("waitToDiscard") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t023",targetState="discardSonar",cond=whenEvent("sonarRobot"))
+					 transition(edgeName="t025",targetState="discardSonar",cond=whenEvent("sonarRobot"))
 				}	 
 				state("discardSonar") { //this:State
 					action { //it:State
 						println("$name in ${currentState.stateName} | $currentMsg")
 						if( checkMsgContent( Term.createTerm("sonar(DISTANCE)"), Term.createTerm("sonar(DISTANCE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if((payloadArg(0).toInt() > 10)){ println("falseeeee")
-								foundObstacle = false
+								if((payloadArg(0).toInt() > 10)){ foundObstacle = false
 								 }
 						}
 					}

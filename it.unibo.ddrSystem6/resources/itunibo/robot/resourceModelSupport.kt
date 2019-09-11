@@ -17,13 +17,7 @@ lateinit var resourcecoap : modelResourceCoap
 			val RobotState = "state(" + itunibo.planner.plannerUtil.getState(content) + ")"
 			val RobotDir = "direction(" + itunibo.planner.plannerUtil.getDirection() + ")"
 			val RobotPos = "position(" + itunibo.planner.plannerUtil.getPosition() + ")"
-		
-			println(RobotState)
-		    println(RobotDir)
-		    println(RobotPos)
-		
-		   //robotState:state(stopped),direction(south),position(0,0)
-		
+	
 		
 			//println("			resourceModelSupport updateModel RobotState=$RobotState")
 			actor.scope.launch{
