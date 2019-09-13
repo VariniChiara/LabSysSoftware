@@ -53,7 +53,7 @@ import alice.tuprolog.*
 				"l"  -> outS = "{'type': 'turnLeft', 'arg': 400 }"
  				"r"  -> outS = "{'type': 'turnRight', 'arg': 400 }"
    			    "h"  -> outS = "{'type': 'alarm', 'arg': 0 }"
-				"b"  -> blink()
+				"blinking"  -> blink()
  			}
 			val jsonObject = JSONObject(outS)
 			val msg= "$sep${jsonObject.toString()}$sep"

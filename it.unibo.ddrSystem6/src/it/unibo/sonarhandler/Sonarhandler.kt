@@ -39,7 +39,25 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 								 }
 						}
 					}
-					 transition( edgeName="goto",targetState="waitForEvents", cond=doswitch() )
+					 transition( edgeName="goto",targetState="waitToDiscard", cond=doswitchGuarded({(foundObstacle)}) )
+					transition( edgeName="goto",targetState="waitForEvents", cond=doswitchGuarded({! (foundObstacle)}) )
+				}	 
+				state("waitToDiscard") { //this:State
+					action { //it:State
+					}
+					 transition(edgeName="t035",targetState="discardSonar",cond=whenEvent("sonarRobot"))
+				}	 
+				state("discardSonar") { //this:State
+					action { //it:State
+						println("$name in ${currentState.stateName} | $currentMsg")
+						if( checkMsgContent( Term.createTerm("sonar(DISTANCE)"), Term.createTerm("sonar(DISTANCE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								if((payloadArg(0).toInt() > 10)){ foundObstacle = false
+								 }
+						}
+					}
+					 transition( edgeName="goto",targetState="waitToDiscard", cond=doswitchGuarded({(foundObstacle)}) )
+					transition( edgeName="goto",targetState="waitForEvents", cond=doswitchGuarded({! (foundObstacle)}) )
 				}	 
 			}
 		}

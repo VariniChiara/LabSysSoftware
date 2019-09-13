@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "192.168.1.55" : 1883
+mqttBroker "localhost" : 1883
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
 Dispatch sonar : sonar
@@ -37,9 +37,9 @@ Dispatch temperatureOk: temperatureOk
 Dispatch stopBlinking:stopBlinking
 Dispatch startBlinking:startBlinking
 
-Context robotMindCtx        ip [host="192.168.1.55" port=8035]   -mqtt
+Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 
-Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
 //Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 
@@ -48,8 +48,8 @@ QActor planexecutor context robotMindCtx {
 		var Curmove     = \"\"
 		var Map = \"\"
 		var Tback = 0   
-	    var StepTime   = 330
-	    //var StepTime   = 900 //fisico
+	    //var StepTime   = 330
+	    var StepTime   = 900 //fisico
 
     "]
 	State s0 initial {
@@ -124,10 +124,11 @@ QActor planexecutor context robotMindCtx {
 		
 	}
 
-	//Transition t2 whenEvent startCmd -> doPlan    fisico
-	Transition t2 whenTime 50 -> doPlan //in order to fix the position of physical robot
-				whenEvent stopPlan -> stopAppl
- 		         whenMsg doPlan -> doPlan
+	//Transition t2 whenEvent startCmd -> doPlan //fisico
+	//whenTime 50 -> doPlan //virtuale
+	Transition t2 whenEvent startCmd -> doPlan 
+				  whenEvent stopPlan -> stopAppl
+ 		          whenMsg doPlan -> doPlan
 
 
 	
@@ -220,8 +221,8 @@ QActor robotmind context robotMindCtx {
 		println("========== robotmind: startExploration ==========")
 		//run itunibo.robotRaspOnly.nanoSupport.blinking()
 		forward blinkinghandler -m startBlinking:startBlinking
-		//run itunibo.planner.plannerUtil.setGoal(X,Y)
-		//forward planexecutor -m doPlan : doPlan($X,$Y)
+		run itunibo.planner.plannerUtil.setGoal(X,Y)
+		forward planexecutor -m doPlan : doPlan($X,$Y)
 		
 		
 	} 
@@ -479,14 +480,14 @@ QActor blinkinghandler context robotResourceCtx{
 		
 		State sendBlinkingMsg{
 			println("========== blinking ==========")
-			run itunibo.robot.robotSupport.move("msg(b)")
+			run itunibo.robot.robotSupport.move("msg(blinking)")
 		  
 		}
-		Transition t1 //whenTime 100 -> sendBlinkingMsg
-					  whenMsg stopBlinking -> stopBlinking
+		Transition t1 whenMsg stopBlinking -> stopBlinking
 		
 		State stopBlinking{
-			println("stop blinking")
+			println("========== stop blinking ==========")
+			run itunibo.robot.robotSupport.move("msg(stopBlinking)")
 		}		
 		Goto s0
 }
@@ -522,8 +523,8 @@ QActor sonarhandler context robotMindCtx{
  		}
  	}     
   
- 	Goto waitForEvents
- 	/*Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	
+ 	//Goto waitForEvents
+ 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	
  	
 
 	State waitToDiscard {}
@@ -540,7 +541,7 @@ QActor sonarhandler context robotMindCtx{
  		} 
  	}
  	
- 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents */	
+ 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	
  }
 
 

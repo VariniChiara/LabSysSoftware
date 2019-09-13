@@ -17,48 +17,53 @@ import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.RaspiPin;
 
- 
+
 object nanoSupport {
-	
+
 	val SPEED_LOW     = BaseRobotSpeed(BaseRobotSpeedValue.ROBOT_SPEED_LOW)
-	val SPEED_MEDIUM  = BaseRobotSpeed(BaseRobotSpeedValue.ROBOT_SPEED_MEDIUM)
-	val SPEED_HIGH    = BaseRobotSpeed(BaseRobotSpeedValue.ROBOT_SPEED_HIGH)
-	 
-	val basicRobot    = BasicRobot.getRobot()
-	val robot         = basicRobot.getBaseRobot()
-	val ledPin = GpioFactory.getInstance().provisionDigitalOutputPin(RaspiPin.GPIO_01);
- 	
+			val SPEED_MEDIUM  = BaseRobotSpeed(BaseRobotSpeedValue.ROBOT_SPEED_MEDIUM)
+			val SPEED_HIGH    = BaseRobotSpeed(BaseRobotSpeedValue.ROBOT_SPEED_HIGH)
+
+			val basicRobot    = BasicRobot.getRobot()
+			val robot         = basicRobot.getBaseRobot()
+			val ledPin = GpioFactory.getInstance().provisionDigitalOutputPin(RaspiPin.GPIO_01);
+
 	fun create(actor: ActorBasic, withSonar : Boolean = true){
 		println("nanoSupport CREATING $robot")
 		if(withSonar)
 			sonarHCSR04Support.create( actor, " ")
 	} 
-	
+
 	fun move( cmd : String ){
 		println( "nanoSupport move $cmd $robot" )
 		var command : IBaseRobotCommand = BaseRobotStop(SPEED_LOW )
 		when( cmd ){
 			"msg(w)" -> command = BaseRobotForward( SPEED_HIGH )
-			"msg(s)" -> command = BaseRobotBackward(SPEED_HIGH )
-			"msg(a)" -> command = BaseRobotLeft(SPEED_MEDIUM )
-			"msg(d)" -> command = BaseRobotRight(SPEED_MEDIUM )
-			"msg(h)" -> command = BaseRobotStop(SPEED_LOW )
-			"msg(b)" -> blink()
+					"msg(s)" -> command = BaseRobotBackward(SPEED_HIGH )
+					"msg(a)" -> command = BaseRobotLeft(SPEED_MEDIUM )
+					"msg(d)" -> command = BaseRobotRight(SPEED_MEDIUM )
+					"msg(h)" -> command = BaseRobotStop(SPEED_LOW )
+					"msg(blinking)" -> blink(true)
+					"msg(stopBlinking)" -> blink(false)
+
 		}
 		robot.execute(command)
 	}
-	
 
-	fun blink() {
-    	 try {
-                      /** Blink every second */
-			 println("blinking")
-             ledPin.blink(1000, 15000);
-    		 //ledPin.high()
 
-         } catch (e: Exception) {
-             e.printStackTrace();
-         }
-    }
-	
+	fun blink(blink: Boolean) {
+		try {
+			if( blink) {
+
+				/** Blink every second */
+				ledPin.blink(500)
+
+			}else {
+				ledPin.blink(0)
+			}
+
+		} catch (e: Exception) {
+			e.printStackTrace();
+		}
+	}
 }

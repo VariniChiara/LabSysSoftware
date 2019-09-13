@@ -19,8 +19,8 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				var Curmove     = ""
 				var Map = ""
 				var Tback = 0   
-			    var StepTime   = 330
-			    //var StepTime   = 900 //fisico
+			    //var StepTime   = 330
+			    var StepTime   = 900 //fisico
 		
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -93,10 +93,8 @@ class Planexecutor ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 						delay(500) 
 						forward("robotCmd", "robotCmd(h)" ,"robotactuator" ) 
 						forward("modelUpdate", "modelUpdate(robot,h)" ,"resourcemodel" ) 
-						stateTimer = TimerActor("timer_domove", 
-							scope, context!!, "local_tout_planexecutor_domove", 50.toLong() )
 					}
-					 transition(edgeName="t22",targetState="doPlan",cond=whenTimeout("local_tout_planexecutor_domove"))   
+					 transition(edgeName="t22",targetState="doPlan",cond=whenEvent("startCmd"))
 					transition(edgeName="t23",targetState="stopAppl",cond=whenEvent("stopPlan"))
 					transition(edgeName="t24",targetState="doPlan",cond=whenDispatch("doPlan"))
 				}	 
