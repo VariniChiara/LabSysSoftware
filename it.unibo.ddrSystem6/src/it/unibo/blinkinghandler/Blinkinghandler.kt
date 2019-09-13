@@ -23,7 +23,7 @@ class Blinkinghandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( n
 				}	 
 				state("sendBlinkingMsg") { //this:State
 					action { //it:State
-						println("blinking")
+						println("========== blinking ==========")
 						itunibo.robot.robotSupport.move( "msg(b)"  )
 					}
 					 transition(edgeName="t133",targetState="stopBlinking",cond=whenDispatch("stopBlinking"))

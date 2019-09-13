@@ -91,7 +91,7 @@ sourceSets {
     main.java.srcDirs += 'resources'
 }
 
-mainClassName = ' it.unibo.robotResourceCtx.MainRobotResourceCtxKt'
+mainClassName = 'it.unibo.robotResourceCtx.MainRobotResourceCtxKt'
 
 jar {
     println("executing jar")

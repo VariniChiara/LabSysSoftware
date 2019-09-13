@@ -43,7 +43,7 @@ object nanoSupport {
 			"msg(a)" -> command = BaseRobotLeft(SPEED_MEDIUM )
 			"msg(d)" -> command = BaseRobotRight(SPEED_MEDIUM )
 			"msg(h)" -> command = BaseRobotStop(SPEED_LOW )
-			"msh(b)" -> blink()
+			"msg(b)" -> blink()
 		}
 		robot.execute(command)
 	}
@@ -54,7 +54,7 @@ object nanoSupport {
                       /** Blink every second */
 			 println("blinking")
              ledPin.blink(1000, 15000);
-    		// ledPin.high()
+    		 //ledPin.high()
 
          } catch (e: Exception) {
              e.printStackTrace();

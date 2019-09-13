@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "localhost" : 1883
+mqttBroker "192.168.1.55" : 1883
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
 Dispatch sonar : sonar
@@ -37,9 +37,9 @@ Dispatch temperatureOk: temperatureOk
 Dispatch stopBlinking:stopBlinking
 Dispatch startBlinking:startBlinking
 
-Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
+Context robotMindCtx        ip [host="192.168.1.55" port=8035]   -mqtt
 
-Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 //Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 
@@ -474,11 +474,11 @@ QActor robotactuator context robotResourceCtx {
 
 QActor blinkinghandler context robotResourceCtx{
 	
-		State s0 initial {}
+		State s0 initial {		}
 		Transition t0 whenMsg startBlinking -> sendBlinkingMsg
 		
 		State sendBlinkingMsg{
-			println("blinking")
+			println("========== blinking ==========")
 			run itunibo.robot.robotSupport.move("msg(b)")
 		  
 		}

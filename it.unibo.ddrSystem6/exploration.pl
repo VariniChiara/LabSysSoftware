@@ -1,9 +1,9 @@
 %====================================================================================
 % exploration description   
 %====================================================================================
-mqttBroker("localhost", "1883").
-context(robotmindctx, "localhost",  "MQTT", "0" ).
-context(robotresourcectx, "192.168.1.164",  "MQTT", "0" ).
+mqttBroker("192.168.1.55", "1883").
+context(robotmindctx, "192.168.1.55",  "MQTT", "0" ).
+context(robotresourcectx, "localhost",  "MQTT", "0" ).
  qactor( planexecutor, robotmindctx, "it.unibo.planexecutor.Planexecutor").
   qactor( robotmind, robotmindctx, "it.unibo.robotmind.Robotmind").
   qactor( onestepahead, robotmindctx, "it.unibo.onestepahead.Onestepahead").
