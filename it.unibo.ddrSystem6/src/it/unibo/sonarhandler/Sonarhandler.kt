@@ -27,7 +27,7 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 					action { //it:State
 						println("========== sonarhandler: waitForEvents ==========")
 					}
-					 transition(edgeName="t034",targetState="handleSonar",cond=whenEvent("sonarRobot"))
+					 transition(edgeName="t035",targetState="handleSonar",cond=whenEvent("sonarRobot"))
 				}	 
 				state("handleSonar") { //this:State
 					action { //it:State
@@ -45,7 +45,7 @@ class Sonarhandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name
 				state("waitToDiscard") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t035",targetState="discardSonar",cond=whenEvent("sonarRobot"))
+					 transition(edgeName="t036",targetState="discardSonar",cond=whenEvent("sonarRobot"))
 				}	 
 				state("discardSonar") { //this:State
 					action { //it:State

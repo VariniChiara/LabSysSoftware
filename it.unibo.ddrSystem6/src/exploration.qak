@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "localhost" : 1883
+mqttBroker "192.168.1.55" : 1883
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
 Dispatch sonar : sonar
@@ -37,9 +37,9 @@ Dispatch temperatureOk: temperatureOk
 Dispatch stopBlinking:stopBlinking
 Dispatch startBlinking:startBlinking
 
-Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
+Context robotMindCtx        ip [host="192.168.1.55" port=8035]   -mqtt
 
-Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 //Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 
@@ -199,6 +199,12 @@ QActor robotmind context robotMindCtx {
 		println("INITIAL MAP")
 		run itunibo.planner.plannerUtil.showMap()
 	}
+	
+	Transition t0 whenEvent startCmd -> startLed
+	
+	State startLed {
+		forward blinkinghandler -m startBlinking:startBlinking
+	}
 
 	Goto waitForStart
 
@@ -219,8 +225,6 @@ QActor robotmind context robotMindCtx {
 	
 	State startExploration {
 		println("========== robotmind: startExploration ==========")
-		//run itunibo.robotRaspOnly.nanoSupport.blinking()
-		forward blinkinghandler -m startBlinking:startBlinking
 		run itunibo.planner.plannerUtil.setGoal(X,Y)
 		forward planexecutor -m doPlan : doPlan($X,$Y)
 		
@@ -603,14 +607,7 @@ QActor resourcemodel context robotMindCtx{
 				forward robotmind -m luggageSafe:luggageSafe			
 			}
 		}
-		onMsg(  modelChange  : modelChange(temperature, V ) ) { // V= temperatureOk | temperatureTooHigh
-
-			if"(payloadArg(1) == \"temperatureTooHigh\")"{
-				forward robotmind -m temperatureTooHigh:temperatureTooHigh
-			}else{
-				forward robotmind -m temperatureOk:temperatureOk
-			}
-		}
+		
 
 	}
 	Goto  waitModelChange	

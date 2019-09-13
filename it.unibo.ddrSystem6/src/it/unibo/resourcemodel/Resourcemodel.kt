@@ -30,8 +30,8 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 				state("waitModelChange") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t036",targetState="changeModel",cond=whenDispatch("modelChange"))
-					transition(edgeName="t037",targetState="updateModel",cond=whenDispatch("modelUpdate"))
+					 transition(edgeName="t037",targetState="changeModel",cond=whenDispatch("modelChange"))
+					transition(edgeName="t038",targetState="updateModel",cond=whenDispatch("modelUpdate"))
 				}	 
 				state("updateModel") { //this:State
 					action { //it:State
@@ -65,14 +65,6 @@ class Resourcemodel ( name: String, scope: CoroutineScope ) : ActorBasicFsm( nam
 								 }
 								else
 								 { forward("luggageSafe", "luggageSafe" ,"robotmind" ) 
-								  }
-						}
-						if( checkMsgContent( Term.createTerm("modelChange(TARGET,VALUE)"), Term.createTerm("modelChange(temperature,V)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								if((payloadArg(1) == "temperatureTooHigh")){ forward("temperatureTooHigh", "temperatureTooHigh" ,"robotmind" ) 
-								 }
-								else
-								 { forward("temperatureOk", "temperatureOk" ,"robotmind" ) 
 								  }
 						}
 					}

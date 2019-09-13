@@ -19,14 +19,14 @@ class Blinkinghandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( n
 				state("s0") { //this:State
 					action { //it:State
 					}
-					 transition(edgeName="t032",targetState="sendBlinkingMsg",cond=whenDispatch("startBlinking"))
+					 transition(edgeName="t033",targetState="sendBlinkingMsg",cond=whenDispatch("startBlinking"))
 				}	 
 				state("sendBlinkingMsg") { //this:State
 					action { //it:State
 						println("========== blinking ==========")
 						itunibo.robot.robotSupport.move( "msg(blinking)"  )
 					}
-					 transition(edgeName="t133",targetState="stopBlinking",cond=whenDispatch("stopBlinking"))
+					 transition(edgeName="t134",targetState="stopBlinking",cond=whenDispatch("stopBlinking"))
 				}	 
 				state("stopBlinking") { //this:State
 					action { //it:State

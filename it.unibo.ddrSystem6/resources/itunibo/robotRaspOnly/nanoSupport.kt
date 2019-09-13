@@ -59,7 +59,8 @@ object nanoSupport {
 				ledPin.blink(500)
 
 			}else {
-				ledPin.blink(0)
+				ledPin.blink(0) //smette di blinkare
+				ledPin.low() //spengo il led
 			}
 
 		} catch (e: Exception) {
