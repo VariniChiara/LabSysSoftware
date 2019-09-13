@@ -34,9 +34,12 @@ Dispatch luggageDanger: luggageDanger
 Dispatch temperatureTooHigh: temperatureTooHigh
 Dispatch temperatureOk: temperatureOk
 
+Dispatch stopBlinking:stopBlinking
+Dispatch startBlinking:startBlinking
+
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
 
-Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
 //Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 
@@ -205,7 +208,7 @@ QActor robotmind context robotMindCtx {
 
 	Transition t0  whenEvent startCmd  -> startExploration
 				   whenEvent temperatureTooHigh  -> waitForTemperatureOk
-
+   
 
 	State waitForTemperatureOk {
 		println("========== robotmind: waitForTemperatureOk ==========")
@@ -215,9 +218,12 @@ QActor robotmind context robotMindCtx {
 	
 	State startExploration {
 		println("========== robotmind: startExploration ==========")
-
-		run itunibo.planner.plannerUtil.setGoal(X,Y)
-		forward planexecutor -m doPlan : doPlan($X,$Y)
+		//run itunibo.robotRaspOnly.nanoSupport.blinking()
+		forward blinkinghandler -m startBlinking:startBlinking
+		//run itunibo.planner.plannerUtil.setGoal(X,Y)
+		//forward planexecutor -m doPlan : doPlan($X,$Y)
+		
+		
 	} 
 
 	Transition t1 whenEvent stopCmd -> waitForStart
@@ -288,7 +294,7 @@ QActor robotmind context robotMindCtx {
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
 		forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
-		
+	
 		
 		
 	}
@@ -319,7 +325,8 @@ QActor robotmind context robotMindCtx {
 		//forward resourcemodel -m modelUpdate  : modelUpdate(luggage, )
 		run itunibo.planner.plannerUtil.setBomb()
 		run itunibo.planner.plannerUtil.setGoal(0,0)
-		forward planexecutor -m doPlan : doPlan(0,0)   
+		forward planexecutor -m doPlan : doPlan(0,0)  
+	    forward blinkinghandler -m stopBlinking:stopBlinking 
 	}
 	
 	Transition  t5 whenMsg planOk -> pickBomb
@@ -433,7 +440,7 @@ QActor robotactuator context robotResourceCtx {
    		run itunibo.robot.robotSupport.move( "msg(h)" )
 
  	}
-	Goto waitCmd
+	Goto waitCmd    
        
 	State waitCmd{ 
 			//println("========== robotactuator: waitCmd ==========")
@@ -462,6 +469,26 @@ QActor robotactuator context robotResourceCtx {
 		}
  	}
 	Goto waitCmd
+}
+
+
+QActor blinkinghandler context robotResourceCtx{
+	
+		State s0 initial {}
+		Transition t0 whenMsg startBlinking -> sendBlinkingMsg
+		
+		State sendBlinkingMsg{
+			println("blinking")
+			run itunibo.robot.robotSupport.move("msg(b)")
+		  
+		}
+		Transition t1 //whenTime 100 -> sendBlinkingMsg
+					  whenMsg stopBlinking -> stopBlinking
+		
+		State stopBlinking{
+			println("stop blinking")
+		}		
+		Goto s0
 }
 
 /*
@@ -589,3 +616,5 @@ QActor resourcemodel context robotMindCtx{
 	
 
 }
+
+

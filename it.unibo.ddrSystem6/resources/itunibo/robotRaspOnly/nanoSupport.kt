@@ -12,6 +12,11 @@ import it.unibo.iot.models.commands.baseRobot.IBaseRobotCommand
 import it.unibo.kactor.sysUtil
 import it.unibo.kactor.ActorBasic
 import itunibo.robotRaspOnly.sonarHCSR04Support
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.RaspiPin;
+
  
 object nanoSupport {
 	
@@ -21,6 +26,7 @@ object nanoSupport {
 	 
 	val basicRobot    = BasicRobot.getRobot()
 	val robot         = basicRobot.getBaseRobot()
+	val ledPin = GpioFactory.getInstance().provisionDigitalOutputPin(RaspiPin.GPIO_01);
  	
 	fun create(actor: ActorBasic, withSonar : Boolean = true){
 		println("nanoSupport CREATING $robot")
@@ -37,7 +43,22 @@ object nanoSupport {
 			"msg(a)" -> command = BaseRobotLeft(SPEED_MEDIUM )
 			"msg(d)" -> command = BaseRobotRight(SPEED_MEDIUM )
 			"msg(h)" -> command = BaseRobotStop(SPEED_LOW )
+			"msh(b)" -> blink()
 		}
 		robot.execute(command)
 	}
+	
+
+	fun blink() {
+    	 try {
+                      /** Blink every second */
+			 println("blinking")
+             ledPin.blink(1000, 15000);
+    		// ledPin.high()
+
+         } catch (e: Exception) {
+             e.printStackTrace();
+         }
+    }
+	
 }

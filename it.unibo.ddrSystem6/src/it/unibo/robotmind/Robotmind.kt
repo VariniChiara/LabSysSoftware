@@ -55,8 +55,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 				state("startExploration") { //this:State
 					action { //it:State
 						println("========== robotmind: startExploration ==========")
-						itunibo.planner.plannerUtil.setGoal( X, Y  )
-						forward("doPlan", "doPlan($X,$Y)" ,"planexecutor" ) 
+						forward("startBlinking", "startBlinking" ,"blinkinghandler" ) 
 					}
 					 transition(edgeName="t110",targetState="waitForStart",cond=whenEvent("stopCmd"))
 					transition(edgeName="t111",targetState="nextGoal",cond=whenDispatch("planOk"))
@@ -150,6 +149,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						itunibo.planner.plannerUtil.setBomb(  )
 						itunibo.planner.plannerUtil.setGoal( 0, 0  )
 						forward("doPlan", "doPlan(0,0)" ,"planexecutor" ) 
+						forward("stopBlinking", "stopBlinking" ,"blinkinghandler" ) 
 					}
 					 transition(edgeName="t523",targetState="pickBomb",cond=whenDispatch("planOk"))
 					transition(edgeName="t524",targetState="endExploration",cond=whenDispatch("planFail"))
