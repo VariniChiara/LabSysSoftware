@@ -9,9 +9,9 @@ public class Box implements Serializable{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private boolean isObstacle;
-	private boolean isDirty;
-	private boolean isRobot;
+	private boolean isObstacle; //c'è X
+	private boolean isDirty; //c'è 0
+	private boolean isRobot; //c'è il robot
 	
 	public Box(boolean isObstacle, boolean isDirty, boolean isRobot) {
 		this.isObstacle = isObstacle;

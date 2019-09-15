@@ -79,8 +79,6 @@ class modelResourceCoap (name : String ) : CoapResource(name) {
 				
 				if(value == "danger" || value == "safe"){
 					MsgUtil.sendMsg( "modelChange", "modelChange(luggage,$value )", actor )					
-				}else if(value == "temperatureOk" || value == "temperatureTooHigh"){
-					MsgUtil.sendMsg( "modelChange", "modelChange(temperature,$value )", actor )		
 				}else{		
 					MsgUtil.sendMsg( "modelChange", "modelChange(robot,$value )", actor )
 				}

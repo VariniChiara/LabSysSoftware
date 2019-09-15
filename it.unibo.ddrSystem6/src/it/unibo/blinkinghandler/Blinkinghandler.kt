@@ -23,15 +23,15 @@ class Blinkinghandler ( name: String, scope: CoroutineScope ) : ActorBasicFsm( n
 				}	 
 				state("sendBlinkingMsg") { //this:State
 					action { //it:State
-						println("========== blinking ==========")
-						itunibo.robot.robotSupport.move( "msg(blinking)"  )
+						println("========== blinkinghandler: blinking ==========")
+						forward("robotCmd", "robotCmd(blinking)" ,"robotactuator" ) 
 					}
 					 transition(edgeName="t134",targetState="stopBlinking",cond=whenDispatch("stopBlinking"))
 				}	 
 				state("stopBlinking") { //this:State
 					action { //it:State
-						println("========== stop blinking ==========")
-						itunibo.robot.robotSupport.move( "msg(stopBlinking)"  )
+						println("========== blinkinghandler: stop blinking ==========")
+						forward("robotCmd", "robotCmd(stopBlinking)" ,"robotactuator" ) 
 					}
 					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
 				}	 

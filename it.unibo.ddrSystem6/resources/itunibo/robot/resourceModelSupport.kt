@@ -26,7 +26,7 @@ lateinit var resourcecoap : modelResourceCoap
 				resourcecoap.updateState( "robot( $RobotState, $RobotDir, $RobotPos )" )
   			}
 	}
-	fun updateSonarRobotModel( actor: ActorBasic, content: String ){
+/*	fun updateSonarRobotModel( actor: ActorBasic, content: String ){
  			actor.solve( "action( sonarRobot,  $content )" ) //change the robot state model
 			actor.solve( "model( A, sonarRobot, STATE )" )
 			val SonarState = actor.getCurSol("STATE")
@@ -35,13 +35,13 @@ lateinit var resourcecoap : modelResourceCoap
  				actor.emit( "modelContent" , "content( sonarRobot( $SonarState ) )" )
 				resourcecoap.updateState( "sonarRobot( $SonarState )" )
  			}
-	}
+	}*/
 
 	fun updateRoomMapModel( actor: ActorBasic, content: String ){
 	println("			resourceModelSupport updateRoomMapModel content=$content")
 		actor.scope.launch{
-			actor.emit( "modelContent" , "content( roomMap( state( '$content' ) ) )" )
-			resourcecoap.updateState( "roomMap( '$content' )" )
+			actor.emit( "modelContent" , "content( roomMap( state( '$content' ) ) )" ) // attore manda su mqtt modelcontent
+			resourcecoap.updateState( "roomMap( '$content' )" ) //aggiorno coap ma non è con questo con aggiorno web page
 		}
 	}
 	

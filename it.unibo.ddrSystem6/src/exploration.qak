@@ -1,6 +1,6 @@
 System exploration
 
-mqttBroker "192.168.1.55" : 1883
+mqttBroker "localhost" : 1883
 
 Event  sonarRobot : sonar( DISTANCE )	    //from  sonar on robot
 Dispatch sonar : sonar
@@ -31,16 +31,15 @@ Dispatch planFail : planFail
 Dispatch luggageSafe: luggageSafe
 Dispatch luggageDanger: luggageDanger
 
-Dispatch temperatureTooHigh: temperatureTooHigh
-Dispatch temperatureOk: temperatureOk
+Event temperatureTooHigh: temperatureTooHigh
+Event temperatureOk: temperatureOk
 
 Dispatch stopBlinking:stopBlinking
 Dispatch startBlinking:startBlinking
 
-Context robotMindCtx        ip [host="192.168.1.55" port=8035]   -mqtt
+Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
+Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
 
-Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
-//Context robotResourceCtx        ip [host="localhost" port=8005]   -mqtt
 
 
 QActor planexecutor context robotMindCtx {
@@ -124,9 +123,9 @@ QActor planexecutor context robotMindCtx {
 		
 	}
 
-	//Transition t2 whenEvent startCmd -> doPlan //fisico
+	//FISICO ======= Transition t2 whenEvent startCmd -> doPlan 
 	//whenTime 50 -> doPlan //virtuale
-	Transition t2 whenEvent startCmd -> doPlan 
+	Transition t2 whenEvent startCmd -> doPlan
 				  whenEvent stopPlan -> stopAppl
  		          whenMsg doPlan -> doPlan
 
@@ -477,21 +476,20 @@ QActor robotactuator context robotResourceCtx {
 }
 
 
-QActor blinkinghandler context robotResourceCtx{
+QActor blinkinghandler context robotMindCtx{
 	
 		State s0 initial {		}
 		Transition t0 whenMsg startBlinking -> sendBlinkingMsg
 		
 		State sendBlinkingMsg{
-			println("========== blinking ==========")
-			run itunibo.robot.robotSupport.move("msg(blinking)")
-		  
+			println("========== blinkinghandler: blinking ==========")		
+		  	forward robotactuator -m robotCmd:robotCmd(blinking)
 		}
 		Transition t1 whenMsg stopBlinking -> stopBlinking
 		
 		State stopBlinking{
-			println("========== stop blinking ==========")
-			run itunibo.robot.robotSupport.move("msg(stopBlinking)")
+			println("========== blinkinghandler: stop blinking ==========") 
+			forward robotactuator -m robotCmd:robotCmd(stopBlinking)
 		}		
 		Goto s0
 }
@@ -527,8 +525,8 @@ QActor sonarhandler context robotMindCtx{
  		}
  	}     
   
- 	//Goto waitForEvents
- 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	
+ 	//Goto waitForEvents //virtuale
+ 	Goto waitToDiscard if "(foundObstacle)" else waitForEvents 	//FISICO =======
  	
 
 	State waitToDiscard {}
@@ -539,7 +537,7 @@ QActor sonarhandler context robotMindCtx{
  		printCurrentMessage
  		onMsg ( sonarRobot : sonar( DISTANCE ) ){
  			
- 			if "(payloadArg(0).toInt() > 10)" { //10 fisico
+ 			if "(payloadArg(0).toInt() > 10)" { 
  				["foundObstacle = false"]
  			}  
  		} 
