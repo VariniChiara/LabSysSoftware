@@ -1,0 +1,27 @@
+Quando l'operatore clicca il pulsante "backHome" sulla propria console tale evento viene catturato dal QKActor robotmind quando quest'ultimo si trova nello stato "startExploration". Una volta catturato tale evento prima di tutto interrompe il piano attualmente in esecuzione e poi imposta il nuovo goal a (0,0) in modo da tornare alla base. Una volta terminato il goal, robotmind, si mette in attesa dello "start". Nel caso in cui, durante tutto il procedimento, dovesse percepire l'evento di "stopCmd" oppure di "temperatureTooHigh", sospenderà l'esecuzione del compito per attendere gli opportuni comandi prima di ricominciare.
+Il listing \ref{lst:backHome-ddr-sys-6} riporta il codice per gestire la logica applicativa del backHome.
+
+\begin{lstlisting}[backgroundcolor=\color{white}, label={lst:backHome-ddr-sys-6}, caption={"Codice di robotmind per la gestione del backHome"}]
+
+State startExploration {... } 
+
+	Transition t1 ...
+	             whenEvent backHomeCmd -> backHome
+
+	State backHome {
+		  forward planexecutor -m stopPlan: stopPlan
+		  run itunibo.planner.plannerUtil.setGoal(0,0)
+		  forward planexecutor -m doPlan : doPlan(0,0)   
+	}
+	Transition t2 whenMsg planOk -> handleStartAfterBackHome 
+			      whenMsg planFail -> backHome
+			      whenEvent stopCmd -> waitForStart
+			      whenEvent temperatureTooHigh  -> waitForTemperatureOk
+	
+	State handleStartAfterBackHome {	}
+	Transition t0  whenEvent startCmd  -> startExploration
+				   whenEvent temperatureTooHigh  -> waitForTemperatureOk
+
+\end{lstlisting}
+
+

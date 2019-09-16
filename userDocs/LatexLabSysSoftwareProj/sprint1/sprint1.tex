@@ -1,0 +1,202 @@
+\newpage
+\section{Sprint 1}
+Il progetto di riferimento per questo sprint è it.unibo.ddrSystem1.
+
+\textbf {OBIETTIVO}: creazione di un sistema con un robot in grado di rispondere a dei comandi. Il robot partendo da una posizione iniziale, dovrà muoversi avanti e indietro, ruotare a destra e sinistra e fermarsi. Inoltre,  il robot dovrà rilevare la presenza delle pareti (ostacoli fissi).
+
+\subsection{Work Plan}
+\begin{enumerate}
+
+    \item progettazione del test plan per verificare che il robot si muova correttamente in presenza o meno di ostacoli (muro). 
+
+    \item definizione dei messaggi e degli eventi gestiti dal sistema: messaggi per dare i comandi di movimento e l'evento del sonar del robot; 
+    
+    \item definizione dell'interazione tra il QActor console e il QActor robot;
+    
+    \item definizione del comportamento del robot quando percepisce un evento SonarRobot.
+    
+\end{enumerate}
+
+
+\subsection{Analisi dei requisiti}
+Per la creazione di questo sistema si utilizza un robot dotato di un sonar per rilevare eventuali ostacoli di fronte ad esso. Il robot si muove su una griglia e gli spostamenti del robot sono modellati con un passi unitari, in quanto, ad ogni passo, esso si muove esattamente di una cella. Le dimensioni della cella equivalgono a quelle del robot. 
+
+\subsection{Test plan}
+I test da fare sul sistema sono:\\
+\newline
+
+\begin{center}
+
+\noindent
+\begin{tabular}{|@{}p{10cm}|p{4cm}|}
+\hline\\
+  &   \\
+%\begin{lstlisting}[language=c++,numbers=none]
+\begin{lstlisting}[backgroundcolor=\color{white} ]
+
+@Test
+	fun initialStateTest(){
+		println("%%% initialStateTest %%%")
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(south), position(0,0))")
+		printRobotState()
+		
+	}
+\end{lstlisting} & Verificare che il robot, prima dell'inizio dell'esplorazione, sia fermo, orientato verso sud e che si trovi nella posizione iniziale (0,0). \\
+
+\hline
+
+\begin{lstlisting}[backgroundcolor=\color{white} ]
+@Test
+	fun moveTest() {
+		println("%%% moveTest  %%%")
+		
+		rotateRight()
+		delay(700)
+		
+		rotateLeft()
+		delay(500)
+		
+		moveForward()
+		delay(700)
+		
+		moveBackward()
+		delay(700)
+		
+		stoprobot()
+		
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), direction(south), position(0,0))")
+		printRobotState()
+ 	}
+	
+\end{lstlisting} & \vspace{0.5ex} Test per verificare che i comandi per spostare il robot vengano eseguiti in maniera corretta. \\
+
+\hline
+
+\begin{lstlisting}[backgroundcolor=\color{white}]
+
+
+	@Test
+	fun wallDetectingTest() {
+		moveForward()	//no obstacle assumed
+		moveForwardWithWall()
+		
+		solveCheckGoal( robot!!, "model( actuator, robot, state(stopped), _, _)" )
+		printRobotState()
+	}
+
+
+\end{lstlisting} &  \vspace{0.5ex} Verificare che il robot, una volta riconosciuta la presenza di una parete, vada indietro e poi si fermi.\\
+
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Model}
+
+Per la realizzazione di questo sprint si è preso come punto di partenza il sistema modellato nello sprint 0, in cui è stato definito più nel dettaglio il comportamento del robot. In particolare si è modellato un robot in grado di ricevere ed eseguire determinati comandi. In questo prototipo le azioni vengono eseguite su una base di conoscenza prolog in modo da tener sempre aggiornato il modello. Il modello è rappresentato come un fatto prolog il quale viene aggiornato ad ogni azione invocata dal sistema. Le azioni sono modellate come predicati prolog.
+\\Il modello è: \lstinline {model( actuator, robot, state(S), direction(D), position(X,Y)).} In cui 
+\begin{itemize}
+    \item S, è la variabile che rappresenta lo stato del sistema e può assumere i seguenti valori: stopped, movingForward, movingBackward, rotateLeft, rotateRight.
+    \item D, è la direzione del sistema e può assumere i seguenti valori: north, east, south, ovest.
+    \item X,Y sono le coordinate che rappresentano la cella in cui si trova il sistema e possono essere qualsiasi combinazioni di interi compresi tra 0 e il numero massimo di celle della stanza.
+\end{itemize}
+
+Le azioni sono :\lstinline {action(robot, move(M)) :- changeModel( actuator, robot, movingForward ).} In cui M è una variabile che può assumere valori diversi a seconda dell'azione che si vuol far eseguire al sistema, può assumere i seguenti valori:
+\begin{itemize}
+    \item w: se si vuole che il robot si muova in avanti
+    \item s: se si vuole che il robot si muova indietro
+    \item d: se si vuole che il robot si giri a destra
+    \item a: se si vuole che il robot si muova a sinistra
+    \item h: se si vuole che il robot si fermi
+\end{itemize}
+
+\noindent
+
+
+    
+\begin{tabular}{|@{}p{10cm}|p{5cm}|}
+\hline\\
+  &   \\
+\begin{lstlisting}[backgroundcolor=\color{white}]
+Event  sonarRobot: sonarRobot(DISTANCE)	    //from  sonar on robot      
+Dispatch: userCmd( CMD ) //Message from console to robot
+Dispatch robotCmd: robotCmd (CMD) //Selfsending robot message
+\end{lstlisting} &  \vspace{0.5ex} A fianco sono riportati i messaggi e l'evento  che sono stati utilizzati all'interno del sistema. 
+\begin{itemize}
+\item sonarRobot: evento che si scatena quando il robot si trova in prossimità di una parete 
+\item userCmd: messaggio che viene inviato dalla console al robot per far sì che esso cambi il suo stato 
+\item robotCmd: messaggio che il robot manda a se stesso nel caso debba effettuare degli spostamenti per evitare un ostacolo.
+\end{itemize}{}\\
+\hline 
+\end{tabular}
+
+\begin{tabular}{|@{}p{10cm}|p{5cm}|}
+\hline\\
+  &   \\
+\begin{lstlisting}[backgroundcolor=\color{white}]
+QActor robot context ctx { 
+["var obstacle = false"]
+	State s0 initial {
+		solve (consult ("ddrsys.pl")) 
+		solve (consult ("resourceModel.pl")) 
+		println("Robot intialized")
+		
+	} 
+	Goto waitForEvents
+	  
+	State waitForEvents {		} 
+	
+	Transition t0   whenMsg userCmd  -> handleCmd
+					whenMsg robotCmd -> handleCmd
+					whenEvent sonarRobot -> handleSonarRobot
+ 	 
+	State handleCmd{  
+		printCurrentMessage
+		onMsg (userCmd   : userCmd( CMD )){
+			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
+		}
+		onMsg (robotCmd   : robotCmd( CMD )){
+			solve( action( robot, move($payloadArg(0)) ) ) //change the robot state model
+		}
+	}
+	
+	Goto waitForEvents
+	
+	State handleSonarRobot{
+ 		printCurrentMessage
+ 		onMsg ( sonarRobot : sonarRobot(DISTANCE) ){
+			["obstacle = Integer.parseInt( payloadArg(0) ) < 10 "]
+ 		} 	 
+ 	}
+ 	
+	Goto handeObstacle  if "obstacle" else waitForEvents 
+	
+	State handeObstacle{		
+		println("handleObstacle: going backward")  
+ 		forward robot -m robotCmd : robotCmd( s ) 		
+ 			//UPDATE the model : supported action
+ 			//run itunibo.robot.resourceModelSupport.updateModel( myself, "s" )
+ 		delay 300
+ 		println("handeObstacle: stopping")  
+	    forward robot -m robotCmd : robotCmd( h )
+ 			//UPDATE the model : supported action
+ 			//run itunibo.robot.resourceModelSupport.updateModel( myself, "h" )
+  	}
+  	
+	Goto waitForEvents
+
+} 
+
+\end{lstlisting} &  \vspace{0.5ex} Il robot è formato da tre stati principali:
+\begin{itemize}
+    \item waitForEvents: nel quale rimane in attesa: di un comando inviato dall'utente (userCmd), di un comando inviato da se stesso (robotCmd), di un evento scatenato dal proprio sonar (sonarRobot) quando si trova in prossimità di un ostacolo.
+    \item handleCmd: nel quale il robot gestisce le due tipologie di comandi, in questo caso esegue la stessa azione, ovvero cambia solamente la base di conoscenza del sistema
+    \item handeObstacle: nel quale è definita la logica di comportamento a seguito della rilevazione di un ostacolo: si fa andare un po' indietro il robot e poi lo ferma.
+\end{itemize}\\
+
+\hline
+
+\end{tabular}
+
+
+

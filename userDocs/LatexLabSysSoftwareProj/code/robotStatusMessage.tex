@@ -1,0 +1,25 @@
+\begin{lstlisting}
+Event modelContent: content(X)
+
+\end{lstlisting}
+
+
+Lo stato del robot è inizialmente modellato utilizzando Prolog come:
+
+\begin{lstlisting}
+//robot state formalisation
+state(position(X,Y), direction(D), action(A))
+
+position(X, Y)
+
+direction(west)
+direction(east)
+direction(north)
+direction(south)
+
+action(moving)
+action(stop)
+action(take_picture)
+action(send_photo)
+
+\end{lstlisting}

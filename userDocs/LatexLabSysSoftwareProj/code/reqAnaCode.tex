@@ -1,0 +1,18 @@
+\begin{lstlisting}
+System ddrSys
+
+Context ctx ip [ host= "localhost" port=8078] -g green 
+
+QActor console context ctx {
+	Plan init normal [
+		println( "console initialised" ) 
+	] 
+}
+
+QActor robot context ctx {
+	Plan init normal [
+		println( "robot initialised" ) 
+	] 
+}
+
+\end{lstlisting}

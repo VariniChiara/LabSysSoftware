@@ -1,0 +1,70 @@
+\subsection{Analisi dei requisiti}
+Questa sezione illustra tutti i passi necessari per svolgere la fase di analisi dei requisiti. Prima di tutto viene chiarito il significato di tutti i termini e concetti riportati nel file "Tema finale" (dato dal committente), cosicché l'analista abbia una chiara comprensione di ciò che il cliente si aspetta che il sistema faccia. Dopodiché è presentata una formalizzazione del sistema utilizzando i QActor: viene rappresentanto un modello per ogni componente del sistema.
+La fase di analisi dei requisiti comprende le seguenti domande:
+
+\begin{enumerate}
+
+    \item  \textbf{Di che sistema necessita il committente?} \\
+Il committente necessita di un sistema composto da un robot che deve esplorare tutta la hall di un aeroporto (R-explore) e scattare una foto (R-takePhoto) quando giunge in prossimità di una valigia. Ogni foto viene successivamente inviata ad un'altra parte del sistema denominata console (R-sendPhoto). Nel caso in cui la valigia risulti pericolosa un secondo robot deve provvedere al disinnescamento della bomba (R-reachBag).
+Si tratta dunque di un sistema distribuito eterogeneo.
+
+\item  \textbf{Da quanti componenti è composto il sistema?}\\
+Il sistema è formato da 3 componenti: 1 console e 2 robot (uno per l'esplorazione e l'altro per il disinnescamento). Anche se il committente ipotizza l'utilizzo di 2 robot fisici differenti, questi non saranno attivi contemporaneamente, dunque essi possono essere modellati come due comportamenti distinti dello stesso robot fisico.
+
+\item  \textbf{Qual è il compito della console?}\\
+Il compito della console è interpretare i comandi ricevuti dall'operatore e, nel caso in cui siano validi, inviarli al robot. Inoltre la console deve riuscire a comunicare con il robot, ad esempio, per ricevere informazioni sullo stato attuale del robot.
+
+\item  \textbf{Che cosa si intende per ostacolo?}\\
+Gli ostacoli sono entità sulle quali il robot non può passare perciò, ogni volta che il robot ne incontra uno, deve opportunamente evitarlo.
+Gli ostacoli modellati nel sistema sono: 
+    \begin{itemize}
+        \item valigie: lasciate dai passeggeri nella stanza al momento  dell’evacuazione. Esse potrebbero essere disposte in 3 modi: 
+          \begin{itemize}
+                \item nel centro della stanza;
+                \item adiacenti a un muro;
+                \item in uno degli angoli della stanza.
+           \end{itemize}
+        \item muri della stanza.
+    \end{itemize}
+
+\item  \textbf{Quando il robot può partire con l’esplorazione?}\\
+Il robot può partire con l’esplorazione quando sono verificate due condizioni: il robot riceve un comando di inizio esplorazione
+e la temperatura della stanza è inferiore ad un certa soglia.
+
+\item  \textbf{Che cosa si intende per esplorazione autonoma di un robot?}\\
+Per esplorazione autonoma di un robot si intende la capacità di perlustrare interamente una stanza con ostacoli fissi (valigie e muri) e muovendosi lungo una superficie piana. Durante questa fase il robot deve far blinkare un led posto su di esso (R-blinkLed).
+
+\item  \textbf{Quando il robot si deve fermare?}\\
+Il robot si deve fermare in 3 casi:
+\begin{itemize}
+    \item quando riceve un comando di stop (R-stopExplore) dalla console; 
+    \item quando si trova in prossimità di un ostacolo (R-stopAtBag);
+    \item quando la temperatura della hall supera la soglia fissata
+\end{itemize}
+
+\item  \textbf{Quando il robot deve tornare alla base?}\\
+Il robot deve tornare alla base quando riceve dalla console il relativo comando (R-backHomeSinceBomb o R-backHome).
+
+\item  \textbf{Cosa fa il robot quando incontra un ostacolo?}\\
+Quando il robot incontra un ostacolo, si ferma (R-stopAtBag), fa la foto (R-takePhoto), la manda alla console (R-sendPhoto) e aspetta un comando dalla console prima di riprende l'esplorazione. Dopodiché il robot può: o tornare a casa e terminare quindi l'esplorazione (R-backHomeSinceBomb) o continuare l'esplorazione (R-continueExploreAfterPhoto) .
+
+\item  \textbf{Cosa fa il robot una volta terminata l'esplorazione della stanza?}\\
+Dopo che il robot ha controllato tutta la stanza senza trovare nessuna valigia sospetta, esso torna alla sua base. 
+
+\item  \textbf{Quali informazioni deve conoscere la console riguardanti lo stato del  robot?}\\
+La console deve avere delle informazioni riguardanti lo stato del robot per sapere come si sta muovendo (robot fermo, va avanti/indietro, ruota a destra/sinistra), in quale direzione e in che posizione si trova. Inoltre, deve poter ricevere le foto dei bagagli inviati dal robot e memorizzare le relative informazioni (data/orario e posizione del robot al momento dello scatto della foto). 
+
+\item  \textbf{Cosa deve fare il robot se in fase di esplorazione la temperatura della hall supera una certa soglia?}
+Il robot si deve fermare nel punto in cui si trova e attendere che la temperatura della stanza diminuisca (R-TempOk) e che l'operatore ridia il comando di start (R-startExplore).
+
+
+\end{enumerate}
+
+\subsection{QActor formalisation}
+
+Una formalizzazione di quanto descritto nella sottosezione precedente la si può ottenere usando il linguaggio dei QActor. In particolare, si è realizzato un sistema composto da due attori (una console ed un robot) che operano nello stesso contesto.
+
+\input{code/reqAnaCode.tex}
+
+
+

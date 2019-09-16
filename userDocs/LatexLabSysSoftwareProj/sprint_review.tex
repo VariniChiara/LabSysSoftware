@@ -1,0 +1,32 @@
+\subsection*{Sprint0 Review }
+\date{30/12/2018}\\
+In questo sprint si sono definiti in modo formale i requisiti del sistema e si è analizzato in dettaglio il problema. 
+Dall'analisi del problema è emersa l'architettura logica del sistema che è stata formalizzata utilizzando i QActor. %(file $code/LogicArchitecture.qa.tex$)
+
+\subsection*{Sprint1 Review}
+\date{27/06/2019}\\
+In questo sprint si è modificato il sistema dello sprint0 in modo da permettere al robot di gestire (ricevere ed eseguire) i comandi base di spostamento: "vai avanti", "vai indietro", "gira a destra", "gira a sinistra", "fermati".  Ogni volta che esegue un comanda il sistema modifica coerentemente la sua base di conoscenza.
+
+\subsection*{Sprint2 Review}
+\date{15/07/2019}\\
+In questo sprint si è modificato il sistema dello sprint1 in modo da permettere al robot (fisico e virtuale) di esplorare una stanza rettangolare e vuota. Durante l'esplorazione il robot costruisce internamente una rappresentazione della stanza (utilizzando le plannerUtils). Essendo la stanza vuota, l'unico ostacolo modellato in questo sistema sono i muri. Quando il robot riconosce un muro (attraverso l'uso di un sonar), esso fa un passo indietro, si ferma, salva l'informazione sulla mappa e procede con il goal seguente. 
+
+\subsection*{Sprint3 Review }
+\date{11/08/2019}\\
+In questo sprint si è modificato il sistema dello sprint2 in modo da permettere al robot virtuale di partire con l'esplorazione automatizzata della stanza quando questa viene azionata sulla web page tramite il bottone start. Inoltre, si è creata una risorsa CoAP che rappresenti lo stato del robot e della stanza, il quale sarà osservabile direttamente sulla web page e aggiornato ogni qualvolta si modifichi.
+
+\subsection*{Sprint4 Review }
+\date{29/08/2019}\\
+In questo sprint si è modificato il sistema dello sprint3 in modo da permettere al robot virtuale di esplorare autonomamente una stanza che contiene ostacoli fissi diversi dai muri (valigie). Questo ha richiesto di effettuare il refactoring dei diversi task assegnati precedentemente i QKActor. In particolare si è incapsulata in un nuovo attore (planexecutor) la gestione dell'attuazione di singolo un piano, e si è esteso il comportamento di robotmind modificando la logica applicativa del nuovo sistema. 
+
+\subsection*{Sprint5 Review }
+\date{4/09/2019}\\
+In questo sprint si è modificato il sistema dello sprint4 in modo da permettere al robot virtuale di esplorare autonomamente una stanza che contiene ostacoli fissi diversi dai muri (valigie). In questo sistema, ogni volta che il robot incontra un ostacolo, si sospende in attesa dell'esito della verifica, con la relativa gestione di entrambe le casistiche.  Questo ha richiesto di modificare la logica applicativa incapsulata nel comportamento di robotmind: tale attore ora starà in attesa di ricevere due possibili messaggi: "luggageSafe" o "luggageDanger".
+
+\subsection*{Sprint6 Review}
+\date{12/09/2019}\\
+In questo sprint si è modificato il sistema dello sprint5 in modo da permettere al robot virtuale di esplorare autonomamente una stanza che contiene ostacoli fissi. In questo sistema, ogni volta che la temperatura della stanza diventa più alta di una soglia, il robot si ferma in attesa che la temperatura si abbassi e che l'operatore gli ridia il comando di "start".
+Durante l'esplorazione, quando l'operatore manda il comando di "backHome", il robot sospende il goal corrente per tornare alla base e attendere di nuovo il comando di "start", così da riprende l'esplorazione da dove l'aveva lasciata.
+Durante tutta la fase di esplorazione il robot esegue anche un altro compito: far blinkare un led posto su di esso.
+In questo sistema si è modificata la logica applicativa incapsulata nel comportamento di robotmind: tale attore ora potrà percepire anche gli eventi di: "temperatureTooHigh", "temperatureOk" e "backHome". 
+Si è aggiunto un attore blinkinghandler per la gestione del blinking del led: quest'ultimo comincia la fase di blinking non appena riceve il messaggio di "startBlinking" e la termina quando riceve quello di "stopBlinking". "startBlinking" e "stopBlinking" sono entrambi messaggi inviati da robotmind.

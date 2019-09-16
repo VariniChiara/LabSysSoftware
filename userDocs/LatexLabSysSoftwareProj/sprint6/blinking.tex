@@ -1,0 +1,25 @@
+Dal momento che si è individuato il compito del blinking del led come task separato rispetto a quello dell'esplorazione, ma che deve comunque essere svolto contemporaneamente, si è deciso di assegnare la gestione di tale compito ad un QKActor diverso da robotmind, denominato blinkinghandler. Tale attore, ogni volta che riceve il messaggio di "startBlinking" dovrà comunicare al robotactuator di iniziare il compito del blinking, e quando riceve il messaggio di stopBlinking, dovrà comunicare al robotactuator di terminarlo.
+Dati i requisiti, la robotmind indicherà al blinkinghandler di avviare tale task non appena inizia la fase di esplorazione e di terminarlo quando viene individuata la valigia con la bomba.
+Il listing \ref{lst:blinking-ddr-sys-6} riporta il codice per gestire la logica applicativa del blinkingLed.
+
+
+\begin{lstlisting}[backgroundcolor=\color{white}, label={lst:blinking-ddr-sys-6}, caption={"Codice di blinkinghandler in ddrSystem6"}]
+
+QActor blinkinghandler context robotMindCtx {
+	
+		State s0 initial {		}
+		Transition t0 whenMsg startBlinking -> sendBlinkingMsg
+		
+		State sendBlinkingMsg{
+			println("========== blinking ==========")
+			forward robotactuator -m robotCmd : robotCmd (blinking)
+		}
+		Transition t1 whenMsg stopBlinking -> stopBlinking
+		
+		State stopBlinking{
+			println("========== stop blinking ==========")
+			forward robotactuator -m robotCmd : robotCmd (stopBlinking)
+		}		
+		Goto s0
+}
+\end{lstlisting}

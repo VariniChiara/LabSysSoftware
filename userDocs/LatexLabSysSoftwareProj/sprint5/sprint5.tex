@@ -1,0 +1,119 @@
+\section{Sprint 5} 
+
+Il progetto di riferimento per questo sprint è it.unibo.ddrsystem6.
+
+OBIETTIVO: creazione di un sistema con un robot che, una volta ricevuto il comando di start (R-starExplore), inizi a esplorare autonomamente la stanza in cui si trova (R-explore). Ogni volta che il robot incontra un ostacolo dovrà fermarsi(R-stopAtBag), scattargli una foto (R-takePhoto), inviarla alla console dell'operatore (R-sendPhoto) ed aspettare l'esito della verifica. In caso in cui la valigia risulti sospetta (ovvero contenete la bomba) il robot dovrà memorizzare la posizione della valigia (R-storePhoto), tornare alla propria base (R-backHomeSincePhoto).
+In caso contrario dovrà continuare l'esplorazione (R-continueExploreAfterPhoto).
+
+\subsection{Work Plan}
+\begin{enumerate}
+\item definizione di valigia sospetta;
+\item definizione di "base del robot";
+\item gestione dell'invio della foto di ogni ostacolo;
+\item gestione della ricezione del messaggio contenente il risultato dell'analisi della bomba.
+\end{enumerate}
+
+\subsection{Analisi dei requisiti}
+
+\textbf{Cosa si intende per valigia sospetta?}\\
+Una valigia la si definisce sospetta quando, attraverso un tool esterno al sistema, si verifica se dentro di essa sia presente o meno una bomba. 
+
+\textbf{Cosa si intende per "base del robot"?}\\
+Il concetto di "base del robot" rimane invariato rispetto agli sprint precedenti: essa è il punto da cui il robot parte per esplorare la stanza. Nel caso specifico si è scelto l'angolo in alto a sinistra di una stanza, definito come (0,0).
+
+\subsection{Analisi del problema}
+\textbf{Come si deve comportare il robot quando incontra un ostacolo?}\\
+Ogni volta che il robot incontra un ostacolo effettua un passo indietro per tornare nella cella precedente (backToCompensate). Tterminata questa fase, il robot si ferma ("R-stopAtBag"), scatta una foto ("R-takePhoto") ed infine la invia ("R-sendPhoto") al device dell'operatore. Infine il robot si mette in attesa di una risposta ("luggageSafe" or "luggageDanger"). 
+
+\textbf{Cosa succede se la risposta ("luggageSafe" oppure "luggageDanger") non arriva mai al robot?}\\
+Nel caso in cui il robot non riceva la risposta dalla console rimane fermo nella sua posizione.
+
+\textbf{Cosa fa quando riceve il messaggio di "luggageDanger"?}\\
+Quando riceve questo messaggio, significa che l'ultima valigia esaminata è quella contenete la bomba, dunque  il robot dovrà tornare alla base ("R-backHomeSinceBomb"). 
+
+\textbf{Cosa fa quando riceve il messaggio di "luggageSafe"?}\\
+Quando riceve questo messaggio, significa che l'ultima valigia esaminata non contiene la bomba, dunque  il robot dovrà continuare l'esplorazione e la verifica delle altre valigie ("R-continueExploreAfterPhoto"). 
+
+\textbf{Come faccio a mostrare ed aggiornare le informazioni della valigia sulla web page?}
+Per la visualizzazione dello stato della valigia corrente si è deciso di utilizzare le informazioni gestite dalle plannerUtils. La risorsa verrà rappresentata sulla web page nel seguente modo:
+\texttt{luggage(photo\_id, position(X,Y), date\_time)}\\
+Dove:
+\begin{itemize}
+    \item photo\_id rappresenta la foto della valigia scatta dal robot;
+    \item position(X,Y) le coordinate della valigia nella mappa del robot;
+    \item la data e l'ora in cui è stata scattata la foto;
+\end{itemize}
+
+Lo stato dell'ultima valigia mostrato sulla web page sarà quello relativo alla valigia con la bomba.
+
+\subsection{Model}
+
+Il committente richiede di salvare le informazioni della valigia sospetta (immagine, posizione, ora). Dato che inizialmente non si sa quale sia la bomba e la sua posizione, si ritiene importante salvare le informazioni solamente della valigia da ispezionare attualmente e:
+\begin{itemize}
+    \item nel caso in cui la verifica risulti negativa alla verifica da parte del tool le informazioni verranno sovrascritte da quelle della valigia seguente;
+    \item altrimenti verranno salvate esattamente quelle della valigia sospetta.
+\end{itemize}
+
+Queste informazioni si potrebbero tener dentro al sistema (ad esempio per motivi di sicurezza o efficienza) oppure si potrebbero rendere accessibili da altri osservatori utilizzando la stessa strategia utilizzata per lo stato del robot e della stanza. Quest'ultima strategia potrebbe essere più efficace in quanto, essendo il tool utilizzato per la verifica esterno al sistema, potrebbe accedere a tali informazioni attraverso uno standard (CoAP) in maniera più trasparente che un messaggio "custom" della SoftwareFactory QKActor. 
+Allo stesso tempo la risorsa potrebbe (la valigia) avere un attributo chiamato "safe" settato di default a "true" e a "false" dal tool di verifica. 
+Dunque anche il nostro sistema dovrà essere un observer di tale risorsa in quanto, quando viene cambiato questo attributo, il sistema deve eseguire tutte le azioni descritte in precedenza. Tuttavia tale soluzione risulta superflua, dato che, è richiesto il salvataggio solo della valigia sospetta.
+Il Listing \ref{lst:robotmind-ddr-sys-6} contiene la logica di gestione degli ostacoli della robtmind.
+
+\begin{lstlisting}[backgroundcolor=\color{white}, label={lst:robotmind-ddr-sys-6}, caption={"Codice di robotmind in ddrSystem6"}]
+
+QActor robotmind context robotMindCtx {
+
+...
+
+    State newLuggageFound {
+    	//println("========== robotmind: newLuggageFound ==========")
+    	["Luggage_num++"]
+    	forward resourcemodel -m modelUpdate: modelUpdate(luggage, $Luggage_num)
+    
+    	run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+    	["Map =  itunibo.planner.plannerUtil.getMapOneLine()"]
+    	forward resourcemodel -m modelUpdate:modelUpdate(roomMap, $Map)
+    	
+    	
+    	
+    }
+    Transition t2 whenMsg luggageSafe -> handleObstacle
+    			  whenMsg luggageDanger -> endExploration
+    
+    
+    State handleObstacle {
+    	//println("========== robotmind: handleObstacle ==========")
+    	run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+    	run itunibo.planner.plannerUtil.resetGoal(X,Y)
+    	run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
+    	["plan = itunibo.planner.plannerUtil.doPlan()"]
+    }
+    Goto startExploration if "(plan != null)" else checkNull
+}
+\end{lstlisting}
+
+
+Ogni qualvolta la console viene notificata della presenza di un ostacolo, sulla web page si attivano due bottoni ("safe" e "dangerous") che permettono all'operatore di segnalare al sistema se l'ostacolo è pericoloso oppure no. Dopo che l'operatore ha premuto uno dei due bottoni, entrambi si disattivano fino all'ostacolo successivo.
+Il Listing \ref{lst:appl-code-frontend} contiene la PUT fatte alla risorsa CoAP nel progetto frontend (classe applCode.js).
+\begin{lstlisting}[backgroundcolor=\color{white}, label={lst:appl-code-frontend}, caption={"Put alla risorsa CoAP nel progetto frontend"}]
+
+
+app.post("/danger", function(req, res,next) { handlePostMove("danger","going to initial position", req,res,next); });
+app.post("/safe", function(req, res,next) { handlePostMove("safe","continuing the exploration", req,res,next); });
+
+\end{lstlisting}
+
+L'architettura del sistema rimane per lo più invariata rispetto allo sprint precedente. Gli unici messaggi che vi sono in più sono quelli utilizzati per segnalare la presenza di ostacolo pericoloso o meno (lato web page, tali messaggi corrispondono a delle PUT, con "safe" o "danger", alla risorsa CoAP).
+
+\subsection{Test plan}
+
+Verificare il corretto funzionamento del sistema:
+
+\begin{itemize}
+\item verificare che il robot, una volta incontrato un ostacolo, si metta in attesa del messaggio dell'operatore;
+\item verificare che il robot, una volta ricevuto il messaggio di "luggageSafe", continui l'esplorazione della stanza;
+\item verificare che il robot, una volta ricevuto il messaggio di "luggageDanger", torni alla base terminando la fase di esplorazione e senza verificare le celle non ancora visitate.
+\end{itemize}{}
+
+
+
