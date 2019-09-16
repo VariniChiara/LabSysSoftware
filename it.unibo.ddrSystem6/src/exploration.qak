@@ -38,7 +38,7 @@ Dispatch stopBlinking:stopBlinking
 Dispatch startBlinking:startBlinking
 
 Context robotMindCtx        ip [host="localhost" port=8035]   -mqtt
-Context robotResourceCtx        ip [host="192.168.1.164" port=8005]   -mqtt
+Context robotResourceCtx        ip [host="192.168.43.166" port=8005]   -mqtt
 
 
 
@@ -259,26 +259,26 @@ QActor robotmind context robotMindCtx {
 		["dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
 		plan= null
 
-		if(dirtyCell != null){
+		if(dirtyCell != null){ //se ci sono delle dirty cell
 			itunibo.planner.plannerUtil.setGoal(dirtyCell!!.first, dirtyCell!!.second)
 			plan = itunibo.planner.plannerUtil.doPlan()}
 
 		"]
 			
-		if "(plan != null)" {    	
+		if "(plan != null)" {  //se c'è un piano per raggiungerle
 			["X = dirtyCell!!.first
 			Y = dirtyCell!!.second"]
 			run itunibo.planner.plannerUtil.setGoal(X, Y)
 			
 		} else {
-			if "backHome" {
+			if "backHome" { //devo tornare alla base 
 				["
 				backHome = false
 				X = 0
 				Y = 0
 				iterCounter++"]
 			}
-			else {
+			else { //devo andare in cella lungo la diagonale
 			["
 				backHome = true
 				X = iterCounter
@@ -311,8 +311,6 @@ QActor robotmind context robotMindCtx {
 		run itunibo.planner.plannerUtil.resetGoal(X,Y)
 		run itunibo.planner.moveUtils.setObstacleOnCurrentDirection(myself)
 		["plan = itunibo.planner.plannerUtil.doPlan()"]
-
-		//per attivasre disattivare bottone danger sulla WP, false non lo uso ATTUALMENTE
  
 	}
 	Goto startExploration if "(plan != null)" else checkNull
@@ -321,6 +319,7 @@ QActor robotmind context robotMindCtx {
 		println("========== robotmind: checkNull ==========")
 	}
 
+	//(!itunibo.planner.plannerUtil.currentGoalApplicable) se goal da raggiungere coincide con ostacolo
 	Goto nextGoal if "(!itunibo.planner.plannerUtil.currentGoalApplicable)" else endExploration
 
 	State endExploration {

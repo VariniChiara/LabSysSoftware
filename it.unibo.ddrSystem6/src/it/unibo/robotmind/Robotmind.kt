@@ -95,7 +95,7 @@ class Robotmind ( name: String, scope: CoroutineScope ) : ActorBasicFsm( name, s
 						dirtyCell = itunibo.planner.moveUtils.getDirtyCell()
 								plan= null
 						
-								if(dirtyCell != null){
+								if(dirtyCell != null){ //se ci sono delle dirty cell
 									itunibo.planner.plannerUtil.setGoal(dirtyCell!!.first, dirtyCell!!.second)
 									plan = itunibo.planner.plannerUtil.doPlan()}
 						
