@@ -35,7 +35,7 @@
     "request": "^2.85.0",
     "serialport": "^7.0.2",
     "socket.io": "^2.2.0",
-    "ws": "^0.7.2"
+    "ws": "^7.2.0"
   },
   "optionalDependencies": {
     "onoff": "^1.0.4",
